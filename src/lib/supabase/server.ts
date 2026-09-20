@@ -34,9 +34,13 @@ export async function createClient() {
 /**
  * Elevated admin client (service_role) bypassing RLS for server-side management
  */
-export const supabaseAdmin = createAdminClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+export const supabaseAdmin = createAdminClient(
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseServiceRoleKey || "placeholder_service_role_key",
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
