@@ -24,13 +24,33 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const service = getServiceBySlug(slug);
   if (!service) return { title: "Услугата не е намерена" };
 
+  const fullTitle = `${service.title} за деца в Бургас | Клуб УМеНИе`;
+  const canonicalUrl = `https://www.umenie.net/uslugi/${slug}`;
+
   return {
-    title: `${service.title} | ${SITE_CONFIG.name}`,
-    description: service.seoDescription,
+    title: fullTitle,
+    description: `${service.seoDescription} Образователен клуб „УМеНИе“, гр. Бургас, к-с Славейков.`,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
-      title: `${service.title} - ${SITE_CONFIG.name}`,
+      title: fullTitle,
       description: service.shortDescription,
-      images: [{ url: service.cardImage }],
+      url: canonicalUrl,
+      images: [
+        {
+          url: service.cardImage,
+          width: 800,
+          height: 600,
+          alt: `${service.title} в клуб УМеНИе`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description: service.shortDescription,
+      images: [service.cardImage],
     },
   };
 }

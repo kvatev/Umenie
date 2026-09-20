@@ -20,42 +20,56 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.umenie.net"),
   title: {
-    default: `${SITE_CONFIG.name} | Уроци, курсове и занимания в Бургас`,
-    template: `%s | ${SITE_CONFIG.name}`,
+    default: "Образователен клуб „УМеНИе“ | Бургас",
+    template: "%s | Клуб УМеНИе",
   },
-  description: `${SITE_CONFIG.tagline}. ${SITE_CONFIG.subtagline} Малки групи, индивидуално внимание, в ж.к. Славейков, гр. Бургас.`,
+  description:
+    "Образователен клуб „УМеНИе“ в гр. Бургас, к-с Славейков. Уроци и курсове по английски, математика, български език, учебна занималня, шах, плетиво и арт занимания за успешни деца.",
   keywords: [
-    "образователен клуб УМеНИе",
-    "уроци Бургас",
-    "занималня Бургас Славейков",
-    "математика Бургас",
-    "български език",
-    "английски език",
-    "шах за деца Бургас",
-    "арт занимания Бургас",
-    "плетиво за деца",
+    "умение",
+    "клуб умение",
+    "образователен клуб умение",
+    "умение бургас",
+    "занималня бургас",
+    "занималня славейков",
+    "уроци бургас",
+    "курсове за деца бургас",
+    "шах бургас",
+    "плетиво бургас",
   ],
   authors: [{ name: SITE_CONFIG.name }],
-  metadataBase: new URL("https://ymenie.bg"),
+  alternates: {
+    canonical: "https://www.umenie.net",
+  },
   openGraph: {
-    title: SITE_CONFIG.name,
-    description: SITE_CONFIG.tagline,
+    title: "Образователен клуб „УМеНИе“ | Бургас",
+    description:
+      "Образователен клуб „УМеНИе“ в гр. Бургас, к-с Славейков. Уроци и курсове по английски, математика, български език, учебна занималня, шах, плетиво и арт занимания за успешни деца.",
+    url: "https://www.umenie.net",
+    siteName: "Образователен клуб „УМеНИе“",
     locale: "bg_BG",
     type: "website",
-    siteName: SITE_CONFIG.name,
     images: [
       {
         url: "/images/opening-photo.png",
         width: 1200,
         height: 630,
-        alt: SITE_CONFIG.name,
+        alt: "Образователен клуб „УМеНИе“ Бургас",
       },
     ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Образователен клуб „УМеНИе“ | Бургас",
+    description:
+      "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
+    images: ["/images/opening-photo.png"],
+  },
   icons: {
-    icon: "/images/logo.png",
-    apple: "/images/logo.png",
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
   },
 };
 
@@ -65,6 +79,29 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  name: "Образователен клуб „УМеНИе“",
+  alternateName: ["Клуб Умение", "УМеНИе Бургас"],
+  url: "https://www.umenie.net",
+  logo: "https://www.umenie.net/images/logo.png",
+  image: "https://www.umenie.net/images/opening-photo.png",
+  description:
+    "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
+  telephone: "+359877488481",
+  email: "umenie48@gmail.com",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "ж.к. Славейков, бл. 48, партер",
+    addressLocality: "Бургас",
+    postalCode: "8000",
+    addressCountry: "BG",
+  },
+  areaServed: "Бургас",
+  priceRange: "$$",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -72,6 +109,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="bg" className={`${comfortaa.variable} ${montserrat.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="font-sans bg-[#f1f2f6] text-brand-dark min-h-screen flex flex-col selection:bg-brand-purple selection:text-white">
         <Header />
         <main className="flex-1 w-full">{children}</main>

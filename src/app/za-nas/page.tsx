@@ -6,9 +6,18 @@ import { ParentReviewsCarousel } from "@/components/about/ParentReviewsCarousel"
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 
 export const metadata: Metadata = {
-  title: "За нас | Защо да изберете образователен клуб „УМеНИе“",
+  title: "За нас – ценности и подход | Образователен клуб УМеНИе",
   description:
-    "Запознайте се с мисията, средата и подхода в образователен клуб „УМеНИе“ Бургас – учене без екрани, индивидуално внимание, развитие на житейски умения и доверие с родителите.",
+    "Запознайте се с мисията, средата и ценностите в образователен клуб „УМеНИе“ Бургас – учене без екрани, индивидуално внимание, развитие на житейски умения и доверие с родителите.",
+  alternates: {
+    canonical: "https://www.umenie.net/za-nas",
+  },
+  openGraph: {
+    title: "За нас – ценности и подход | Образователен клуб УМеНИе",
+    description:
+      "Учене чрез преживяване, малки групи и подкрепяща среда за всяко дете в ж.к. Славейков, Бургас.",
+    url: "https://www.umenie.net/za-nas",
+  },
 };
 
 export default function AboutPage() {

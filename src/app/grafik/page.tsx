@@ -7,9 +7,18 @@ import { supabase } from "@/lib/supabase/client";
 import { DEFAULT_SCHEDULES, ScheduleItem, mapRowToScheduleItem } from "@/lib/schedule-data";
 
 export const metadata: Metadata = {
-  title: "График на заниманията | Образователен клуб „УМеНИе“ Бургас",
+  title: "Седмичен график и записване | Образователен клуб УМеНИе",
   description:
-    "Разгледайте актуалния седмичен график на уроците, арт работилниците, шаха, плетивото и занималнята в образователен клуб „УМеНИе“. Запишете се онлайн.",
+    "Разгледайте актуалния седмичен график на уроците, арт работилниците, шаха, плетивото и занималнята в образователен клуб „УМеНИе“ Бургас. Запишете се онлайн.",
+  alternates: {
+    canonical: "https://www.umenie.net/grafik",
+  },
+  openGraph: {
+    title: "Седмичен график и записване | Образователен клуб УМеНИе",
+    description:
+      "Актуална програма и онлайн записване за занимания и уроци в образователен клуб „УМеНИе“ Бургас.",
+    url: "https://www.umenie.net/grafik",
+  },
 };
 
 // Revalidate every 60 seconds or on demand
