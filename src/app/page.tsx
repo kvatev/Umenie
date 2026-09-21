@@ -9,9 +9,25 @@ import { ServiceCard } from "@/components/services/ServiceCard";
 import { KidsGallery } from "@/components/home/KidsGallery";
 import { ReviewsSection } from "@/components/home/ReviewsSection";
 import { ScheduleBanner } from "@/components/home/ScheduleBanner";
+import { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 60; // revalidate on demand or every 60s
+
+export const metadata: Metadata = {
+  title: "Образователен клуб „УМеНИе“ – Начало | Бургас",
+  description:
+    "Образователен клуб „УМеНИе“ в гр. Бургас, к-с Славейков. Уроци и курсове по английски, математика, български език, учебна занималня, шах, плетиво и арт занимания за успешни деца.",
+  alternates: {
+    canonical: "https://www.umenie.net",
+  },
+  openGraph: {
+    title: "Образователен клуб „УМеНИе“ – Начало | Бургас",
+    description:
+      "Образователен клуб „УМеНИе“ в гр. Бургас, к-с Славейков. Уроци и курсове по английски, математика, български език, учебна занималня, шах, плетиво и арт занимания за успешни деца.",
+    url: "https://www.umenie.net",
+  },
+};
 
 export default async function HomePage() {
   let heroBannerSrc = "/images/opening-photo.png";

@@ -22,7 +22,7 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.umenie.net"),
   title: {
-    default: "Образователен клуб „УМеНИе“ | Бургас",
+    default: "Образователен клуб „УМеНИе“ – Начало | Бургас",
     template: "%s | Клуб УМеНИе",
   },
   description:
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     canonical: "https://www.umenie.net",
   },
   openGraph: {
-    title: "Образователен клуб „УМеНИе“ | Бургас",
+    title: "Образователен клуб „УМеНИе“ – Начало | Бургас",
     description:
       "Образователен клуб „УМеНИе“ в гр. Бургас, к-с Славейков. Уроци и курсове по английски, математика, български език, учебна занималня, шах, плетиво и арт занимания за успешни деца.",
     url: "https://www.umenie.net",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Образователен клуб „УМеНИе“ | Бургас",
+    title: "Образователен клуб „УМеНИе“ – Начало | Бургас",
     description:
       "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
     images: ["/images/opening-photo.png"],
@@ -90,25 +90,35 @@ export const viewport: Viewport = {
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  name: "Образователен клуб „УМеНИе“",
-  alternateName: ["Клуб Умение", "УМеНИе Бургас"],
-  url: "https://www.umenie.net",
-  logo: "https://www.umenie.net/images/logo.png",
-  image: "https://www.umenie.net/images/opening-photo.png",
-  description:
-    "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
-  telephone: "+359877488481",
-  email: "umenie48@gmail.com",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "ж.к. Славейков, бл. 48, партер",
-    addressLocality: "Бургас",
-    postalCode: "8000",
-    addressCountry: "BG",
-  },
-  areaServed: "Бургас",
-  priceRange: "$$",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "Образователен клуб „УМеНИе“",
+      "alternateName": ["Умение", "Клуб Умение", "УМеНИе", "Умение Начало"],
+      "url": "https://www.umenie.net/"
+    },
+    {
+      "@type": "EducationalOrganization",
+      "name": "Образователен клуб „УМеНИе“",
+      "alternateName": ["Клуб Умение", "УМеНИе Бургас"],
+      "url": "https://www.umenie.net",
+      "logo": "https://www.umenie.net/icon.png",
+      "image": "https://www.umenie.net/images/opening-photo.png",
+      "description":
+        "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
+      "telephone": "+359877488481",
+      "email": "umenie48@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        streetAddress: "ж.к. Славейков, бл. 48, партер",
+        addressLocality: "Бургас",
+        postalCode: "8000",
+        addressCountry: "BG",
+      },
+      "areaServed": "Бургас",
+      "priceRange": "$$",
+    },
+  ],
 };
 
 export default function RootLayout({
