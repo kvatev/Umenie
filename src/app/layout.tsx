@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/opening-photo.png",
+        url: "/images/opening-photo.webp",
         width: 1200,
         height: 630,
         alt: "Образователен клуб „УМеНИе“ Бургас",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     title: "Образователен клуб „УМеНИе“ – Начало | Бургас",
     description:
       "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
-    images: ["/images/opening-photo.png"],
+    images: ["/images/opening-photo.webp"],
   },
   icons: {
     icon: [
@@ -103,7 +103,7 @@ const jsonLd = {
       "alternateName": ["Клуб Умение", "УМеНИе Бургас"],
       "url": "https://www.umenie.net",
       "logo": "https://www.umenie.net/icon.png",
-      "image": "https://www.umenie.net/images/opening-photo.png",
+      "image": "https://www.umenie.net/images/opening-photo.webp",
       "description":
         "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
       "telephone": "+359877488481",

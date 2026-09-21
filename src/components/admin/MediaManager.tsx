@@ -44,7 +44,7 @@ export function MediaManager({
 
   // 1. Hero banner state
   const [heroUrl, setHeroUrl] = useState<string>(
-    initialHeroUrl || "/images/opening-photo.png"
+    initialHeroUrl || "/images/opening-photo.webp"
   );
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);

@@ -93,7 +93,7 @@ export function AdminSidebar() {
       <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-brand-purple/15 px-4 py-3 flex items-center justify-between shadow-sm">
         <Link href="/admin" className="flex items-center gap-2">
           <div className="relative w-28 h-8">
-            <Image src="/images/logo.png" alt="УМеНИе" fill className="object-contain" />
+            <Image src="/images/logo.webp" alt="УМеНИе" fill className="object-contain" />
           </div>
           <span className="text-[11px] font-bold uppercase tracking-wider bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-md">
             Админ
@@ -122,7 +122,7 @@ export function AdminSidebar() {
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-brand-purple/10">
                 <div className="relative w-28 h-8">
-                  <Image src="/images/logo.png" alt="УМеНИе" fill className="object-contain" />
+                  <Image src="/images/logo.webp" alt="УМеНИе" fill className="object-contain" />
                 </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
@@ -165,7 +165,7 @@ export function AdminSidebar() {
           <div className="p-6 pb-8 border-b border-brand-purple/10">
             <Link href="/admin" className="flex items-center gap-3">
               <div className="relative w-32 h-10">
-                <Image src="/images/logo.png" alt="УМеНИе" fill className="object-contain" />
+                <Image src="/images/logo.webp" alt="УМеНИе" fill className="object-contain" />
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-md">
                 Admin

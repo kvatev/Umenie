@@ -53,7 +53,7 @@ export function Header() {
             aria-label="Начална страница на клуб УМеНИе"
           >
             <Image
-              src="/images/logo.png"
+              src="/images/logo.webp"
               alt={SITE_CONFIG.name}
               fill
               className="object-contain transition-transform duration-200 group-hover:scale-[1.02]"

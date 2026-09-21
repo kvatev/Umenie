@@ -5,12 +5,12 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const GALLERY_IMAGES = [
-  { src: "/images/banner/1.png", alt: "Деца по време на занятие в УМеНИе" },
-  { src: "/images/banner/2.png", alt: "Детски шах и стратегическо мислене" },
-  { src: "/images/banner/3.png", alt: "Учебна занималня и активни ученици" },
-  { src: "/images/banner/4.png", alt: "Рисуване и арт занимания за деца" },
-  { src: "/images/banner/5.png", alt: "Творчески умения и усмивки" },
-  { src: "/images/banner/6.png", alt: "Приятелства и знания в малки групи" },
+  { src: "/images/banner/1.webp", alt: "Деца по време на занятие в УМеНИе" },
+  { src: "/images/banner/2.webp", alt: "Детски шах и стратегическо мислене" },
+  { src: "/images/banner/3.webp", alt: "Учебна занималня и активни ученици" },
+  { src: "/images/banner/4.webp", alt: "Рисуване и арт занимания за деца" },
+  { src: "/images/banner/5.webp", alt: "Творчески умения и усмивки" },
+  { src: "/images/banner/6.webp", alt: "Приятелства и знания в малки групи" },
 ];
 
 export function KidsGallery() {

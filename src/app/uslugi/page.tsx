@@ -36,7 +36,7 @@ export default function ServicesPage() {
             </h1>
             <div className="relative w-12 h-12 sm:w-16 sm:h-16">
               <Image
-                src="/images/bulb.png"
+                src="/images/bulb.webp"
                 alt=""
                 fill
                 className="object-contain"
@@ -78,7 +78,7 @@ export default function ServicesPage() {
             >
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
                 <Image
-                  src="/images/phone.png"
+                  src="/images/phone.webp"
                   alt="Телефон"
                   fill
                   className="object-contain"
@@ -102,7 +102,7 @@ export default function ServicesPage() {
             >
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
                 <Image
-                  src="/images/location.png"
+                  src="/images/location.webp"
                   alt="Локация"
                   fill
                   className="object-contain"

@@ -31,7 +31,7 @@ export default function AboutPage() {
             {/* Decorative Bulb on Left */}
             <div className="absolute -top-10 -left-4 sm:left-4 w-14 h-14 sm:w-20 sm:h-20 opacity-90 transform -rotate-12 pointer-events-none hidden xs:block">
               <Image
-                src="/images/bulb.png"
+                src="/images/bulb.webp"
                 alt="Идея"
                 fill
                 sizes="80px"
@@ -73,7 +73,7 @@ export default function AboutPage() {
               {/* Decorative bulb top-right */}
               <div className="absolute -top-6 -right-3 w-10 h-10 sm:w-12 sm:h-12 pointer-events-none transform rotate-12">
                 <Image
-                  src="/images/bulb.png"
+                  src="/images/bulb.webp"
                   alt="Идея"
                   fill
                   sizes="48px"
@@ -97,10 +97,10 @@ export default function AboutPage() {
       <section className="w-full bg-[#887ed8] py-14 sm:py-20 text-white relative overflow-hidden">
         {/* Decorative cloud accents in background */}
         <div className="absolute top-2 left-6 w-32 h-20 opacity-20 pointer-events-none">
-          <Image src="/images/cloud.png" alt="Облаче" fill className="object-contain" />
+          <Image src="/images/cloud.webp" alt="Облаче" fill className="object-contain" />
         </div>
         <div className="absolute bottom-2 right-6 w-40 h-24 opacity-20 pointer-events-none">
-          <Image src="/images/cloud.png" alt="Облаче" fill className="object-contain" />
+          <Image src="/images/cloud.webp" alt="Облаче" fill className="object-contain" />
         </div>
 
         <Container size="xl" className="relative z-10 space-y-8 sm:space-y-12">
@@ -126,7 +126,7 @@ export default function AboutPage() {
             {/* Decorative Bulb Left */}
             <div className="absolute -top-8 left-0 sm:left-12 w-12 h-12 sm:w-16 sm:h-16 opacity-85 transform -rotate-12 pointer-events-none hidden sm:block">
               <Image
-                src="/images/bulb.png"
+                src="/images/bulb.webp"
                 alt="Идея"
                 fill
                 sizes="64px"
@@ -141,7 +141,7 @@ export default function AboutPage() {
             {/* Decorative Bulb Right */}
             <div className="absolute -top-10 right-0 sm:right-12 w-14 h-14 sm:w-20 sm:h-20 opacity-90 transform rotate-12 pointer-events-none hidden sm:block">
               <Image
-                src="/images/bulb.png"
+                src="/images/bulb.webp"
                 alt="Идея"
                 fill
                 sizes="80px"

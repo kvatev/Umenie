@@ -65,7 +65,7 @@ function LoginForm() {
         <div className="text-center space-y-3 mb-8">
           <Link href="/" className="inline-block relative w-36 h-12 mb-2 hover:opacity-90 transition-opacity">
             <Image
-              src="/images/logo.png"
+              src="/images/logo.webp"
               alt="УМеНИе"
               fill
               priority

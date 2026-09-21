@@ -64,7 +64,7 @@ export function Footer() {
           <div className="flex flex-col items-center justify-center text-center space-y-4 md:py-2">
             <Link href="/" className="relative block h-16 w-44">
               <Image
-                src="/images/logo.png"
+                src="/images/logo.webp"
                 alt={SITE_CONFIG.name}
                 fill
                 className="object-contain"
@@ -84,7 +84,7 @@ export function Footer() {
               >
                 <div className="relative w-full h-full">
                   <Image
-                    src="/images/fb.png"
+                    src="/images/fb.webp"
                     alt="Facebook"
                     fill
                     className="object-contain"
@@ -100,7 +100,7 @@ export function Footer() {
               >
                 <div className="relative w-full h-full">
                   <Image
-                    src="/images/ig.png"
+                    src="/images/ig.webp"
                     alt="Instagram"
                     fill
                     className="object-contain"

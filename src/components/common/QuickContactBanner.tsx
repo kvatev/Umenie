@@ -25,7 +25,7 @@ export function QuickContactBanner({ className }: QuickContactBannerProps) {
           >
             <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
               <Image
-                src="/images/phone.png"
+                src="/images/phone.webp"
                 alt="Телефон"
                 fill
                 sizes="64px"
@@ -51,7 +51,7 @@ export function QuickContactBanner({ className }: QuickContactBannerProps) {
           >
             <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
               <Image
-                src="/images/location.png"
+                src="/images/location.webp"
                 alt="Локация"
                 fill
                 sizes="64px"

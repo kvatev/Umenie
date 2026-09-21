@@ -58,7 +58,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           <div className="flex items-center justify-between pb-4 border-b border-brand-purple/15">
             <Link href="/" onClick={onClose} className="relative block h-12 w-32">
               <Image
-                src="/images/logo.png"
+                src="/images/logo.webp"
                 alt={SITE_CONFIG.name}
                 fill
                 className="object-contain"
@@ -144,7 +144,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             >
               <div className="relative w-5 h-5">
                 <Image
-                  src="/images/fb.png"
+                  src="/images/fb.webp"
                   alt="Facebook"
                   fill
                   className="object-contain"
@@ -160,7 +160,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             >
               <div className="relative w-5 h-5">
                 <Image
-                  src="/images/ig.png"
+                  src="/images/ig.webp"
                   alt="Instagram"
                   fill
                   className="object-contain"

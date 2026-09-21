@@ -70,7 +70,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
         {/* Decorative bulb */}
         <div className="absolute right-6 top-8 w-24 h-24 sm:w-36 sm:h-36 opacity-30 pointer-events-none rotate-12">
           <Image
-            src="/images/bulb.png"
+            src="/images/bulb.webp"
             alt=""
             fill
             className="object-contain"
@@ -199,7 +199,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             >
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
                 <Image
-                  src="/images/phone.png"
+                  src="/images/phone.webp"
                   alt="Телефон"
                   fill
                   className="object-contain"
@@ -223,7 +223,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             >
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
                 <Image
-                  src="/images/location.png"
+                  src="/images/location.webp"
                   alt="Локация"
                   fill
                   className="object-contain"
