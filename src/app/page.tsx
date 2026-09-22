@@ -26,6 +26,25 @@ export const metadata: Metadata = {
     description:
       "Образователен клуб „УМеНИе“ в гр. Бургас, к-с Славейков. Уроци и курсове по английски, математика, български език, учебна занималня, шах, плетиво и арт занимания за успешни деца.",
     url: "https://www.umenie.net",
+    siteName: "Образователен клуб „УМеНИе“",
+    locale: "bg_BG",
+    type: "website",
+    images: [
+      {
+        url: "https://www.umenie.net/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Образователен клуб „УМеНИе“ Бургас",
+        type: "image/jpeg",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Образователен клуб „УМеНИе“ – Начало | Бургас",
+    description:
+      "Уроци, курсове, учебна занималня, шах, плетиво и арт занимания за успешни деца в гр. Бургас, ж.к. Славейков.",
+    images: ["https://www.umenie.net/og-image.jpg"],
   },
 };
 

@@ -17,6 +17,25 @@ export const metadata: Metadata = {
     description:
       "Учене чрез преживяване, малки групи и подкрепяща среда за всяко дете в ж.к. Славейков, Бургас.",
     url: "https://www.umenie.net/za-nas",
+    siteName: "Образователен клуб „УМеНИе“",
+    locale: "bg_BG",
+    type: "website",
+    images: [
+      {
+        url: "https://www.umenie.net/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "За образователен клуб „УМеНИе“ Бургас",
+        type: "image/jpeg",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "За нас – ценности и подход | Образователен клуб УМеНИе",
+    description:
+      "Учене чрез преживяване, малки групи и подкрепяща среда за всяко дете в ж.к. Славейков, Бургас.",
+    images: ["https://www.umenie.net/og-image.jpg"],
   },
 };
 

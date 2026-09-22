@@ -53,10 +53,11 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/opening-photo.webp",
+        url: "https://www.umenie.net/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Образователен клуб „УМеНИе“ Бургас",
+        type: "image/jpeg",
       },
     ],
   },
@@ -64,8 +65,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Образователен клуб „УМеНИе“ – Начало | Бургас",
     description:
-      "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
-    images: ["/images/opening-photo.webp"],
+      "Уроци, курсове, учебна занималня, шах, плетиво и арт занимания за успешни деца в гр. Бургас, ж.к. Славейков.",
+    images: ["https://www.umenie.net/og-image.jpg"],
   },
   icons: {
     icon: [
@@ -103,7 +104,7 @@ const jsonLd = {
       "alternateName": ["Клуб Умение", "УМеНИе Бургас"],
       "url": "https://www.umenie.net",
       "logo": "https://www.umenie.net/icon.png",
-      "image": "https://www.umenie.net/images/opening-photo.webp",
+      "image": "https://www.umenie.net/og-image.jpg",
       "description":
         "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
       "telephone": "+359877488481",

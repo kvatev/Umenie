@@ -21,6 +21,25 @@ export const metadata: Metadata = {
     description:
       "Уроци, курсове, учебна занималня, шах, плетиво и творчески ателиета за деца в Бургас.",
     url: "https://www.umenie.net/uslugi",
+    siteName: "Образователен клуб „УМеНИе“",
+    locale: "bg_BG",
+    type: "website",
+    images: [
+      {
+        url: "https://www.umenie.net/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Услуги и дейности в образователен клуб „УМеНИе“ Бургас",
+        type: "image/jpeg",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Услуги и занимания за деца | Образователен клуб УМеНИе Бургас",
+    description:
+      "Уроци, курсове, учебна занималня, шах, плетиво и творчески ателиета за деца в Бургас.",
+    images: ["https://www.umenie.net/og-image.jpg"],
   },
 };
 

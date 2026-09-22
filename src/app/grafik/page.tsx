@@ -18,6 +18,25 @@ export const metadata: Metadata = {
     description:
       "Актуална програма и онлайн записване за занимания и уроци в образователен клуб „УМеНИе“ Бургас.",
     url: "https://www.umenie.net/grafik",
+    siteName: "Образователен клуб „УМеНИе“",
+    locale: "bg_BG",
+    type: "website",
+    images: [
+      {
+        url: "https://www.umenie.net/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "График на занятията в образователен клуб „УМеНИе“ Бургас",
+        type: "image/jpeg",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Седмичен график и записване | Образователен клуб УМеНИе",
+    description:
+      "Актуална програма и онлайн записване за занимания и уроци в образователен клуб „УМеНИе“ Бургас.",
+    images: ["https://www.umenie.net/og-image.jpg"],
   },
 };
 
