@@ -347,7 +347,7 @@ export const DEFAULT_SCHEDULES: ScheduleItem[] = [
   // Неделя (7)
   {
     id: "sun-1",
-    title: "Читателски клуб „Лигериа“",
+    title: "Читателски клуб",
     category: "reading",
     dayOfWeek: 7,
     dayName: "Неделя",
