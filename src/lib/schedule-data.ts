@@ -343,6 +343,22 @@ export const DEFAULT_SCHEDULES: ScheduleItem[] = [
     badgeText: "text-blue-800",
     badgeBorder: "border-blue-300",
   },
+
+  // Неделя (7)
+  {
+    id: "sun-1",
+    title: "Читателски клуб „Лигериа“",
+    category: "reading",
+    dayOfWeek: 7,
+    dayName: "Неделя",
+    startTime: "17:00",
+    endTime: "19:30",
+    ageGroup: "Възрастни",
+    location: "Славейков, блок 48, партер",
+    badgeBg: "bg-amber-100",
+    badgeText: "text-amber-800",
+    badgeBorder: "border-amber-300",
+  },
 ];
 
 export const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string }> = {

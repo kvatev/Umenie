@@ -51,6 +51,8 @@ function getActivityImage(activityName: string): { image: string; slug: string; 
     return { image: "/images/services/art.webp", slug: "art-zanimaniya", name: "Арт занимания" };
   if (norm.includes("занимал"))
     return { image: "/images/services/uchebna-zanimalnya.webp", slug: "uchebna-zanimalnya", name: "Учебна занималня" };
+  if (norm.includes("чит") || norm.includes("лигериа") || norm.includes("книг"))
+    return { image: "/images/services/chitatelski-klub.webp", slug: "chitatelski-klub", name: "Читателски клуб" };
   return { image: "/images/services/urotsi.webp", slug: "urotsi-i-kursove", name: "Уроци и курсове" };
 }
 

@@ -46,6 +46,8 @@ function getActivityThumbnail(activityName: string): string {
   if (norm.includes("арт") || norm.includes("рисув") || norm.includes("творч"))
     return "/images/services/art.webp";
   if (norm.includes("занимал")) return "/images/services/uchebna-zanimalnya.webp";
+  if (norm.includes("чит") || norm.includes("лигериа") || norm.includes("книг"))
+    return "/images/services/chitatelski-klub.webp";
   return "/images/services/urotsi.webp";
 }
 

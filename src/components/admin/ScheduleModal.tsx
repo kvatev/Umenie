@@ -29,7 +29,7 @@ const CATEGORIES = [
   { value: "math", label: "Математика (Уроци и курсове)" },
   { value: "knitting", label: "Плетиво и приложни изкуства" },
   { value: "art", label: "Арт занимания и рисуване" },
-  { value: "reading", label: "Четене с разбиране" },
+  { value: "reading", label: "Читателски клуб" },
   { value: "chess", label: "Шахмат" },
   { value: "stem", label: "STEM клуб" },
   { value: "study_hall", label: "Учебна занималня" },
