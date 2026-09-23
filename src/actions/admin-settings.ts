@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
-import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/types/site-settings";
+import { SiteSettings, DEFAULT_SETTINGS, normalizePhoneNumber } from "@/lib/types/site-settings";
 
 const BUCKET_NAME = "site-assets";
 const FILE_NAME = "settings.json";
@@ -17,23 +17,23 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
     // Current settings as base
     const current = await getSiteSettings();
 
-    // Auto-calculate phoneRaw if phoneDisplay or phoneFull was updated
-    let phoneRaw = formData.phoneRaw?.trim() || "";
-    if (!phoneRaw && (formData.phoneFull || formData.phoneDisplay)) {
-      const p = (formData.phoneFull || formData.phoneDisplay || "").replace(/\s+/g, "");
-      if (p.startsWith("+")) {
-        phoneRaw = p;
-      } else if (p.startsWith("0")) {
-        phoneRaw = "+359" + p.slice(1);
-      } else {
-        phoneRaw = p;
-      }
+    // Auto-synchronize phone fields if any phone field was provided
+    let phoneDisplay = formData.phoneDisplay?.trim() || current.phoneDisplay;
+    let phoneFull = formData.phoneFull?.trim() || current.phoneFull;
+    let phoneRaw = formData.phoneRaw?.trim() || current.phoneRaw;
+
+    const phoneInput = formData.phoneDisplay || formData.phoneFull || formData.phoneRaw;
+    if (phoneInput) {
+      const normalized = normalizePhoneNumber(phoneInput);
+      phoneDisplay = formData.phoneDisplay?.trim() || normalized.phoneDisplay;
+      phoneFull = formData.phoneFull?.trim() || normalized.phoneFull;
+      phoneRaw = formData.phoneRaw?.trim() || normalized.phoneRaw;
     }
 
     const updatedSettings: SiteSettings = {
-      phoneDisplay: formData.phoneDisplay?.trim() || current.phoneDisplay,
-      phoneFull: formData.phoneFull?.trim() || current.phoneFull,
-      phoneRaw: phoneRaw || current.phoneRaw,
+      phoneDisplay,
+      phoneFull,
+      phoneRaw,
       locationShort: formData.locationShort?.trim() || current.locationShort,
       locationFull: formData.locationFull?.trim() || current.locationFull,
       googleMapsUrl: formData.googleMapsUrl?.trim() || current.googleMapsUrl,

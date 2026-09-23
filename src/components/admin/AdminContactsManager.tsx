@@ -16,8 +16,10 @@ import {
   Sparkles,
   Globe,
   Info,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
-import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/types/site-settings";
+import { SiteSettings, DEFAULT_SETTINGS, normalizePhoneNumber } from "@/lib/types/site-settings";
 import { updateSiteSettingsAction } from "@/actions/admin-settings";
 import { cn } from "@/lib/utils";
 
@@ -27,33 +29,49 @@ interface AdminContactsManagerProps {
 
 export function AdminContactsManager({ initialSettings }: AdminContactsManagerProps) {
   const [formData, setFormData] = useState<SiteSettings>(initialSettings);
+  const [phoneInput, setPhoneInput] = useState<string>(() => {
+    return initialSettings.phoneDisplay || initialSettings.phoneFull || initialSettings.phoneRaw || "";
+  });
+  const [showAdvancedPhone, setShowAdvancedPhone] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [statusMessage, setStatusMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
+  const handleSinglePhoneChange = (value: string) => {
+    setPhoneInput(value);
+    const normalized = normalizePhoneNumber(value);
+    setFormData((prev) => ({
+      ...prev,
+      phoneDisplay: normalized.phoneDisplay || value,
+      phoneFull: normalized.phoneFull || value,
+      phoneRaw: normalized.phoneRaw || value.replace(/\s+/g, ""),
+    }));
+  };
+
+  const handlePhoneBlur = () => {
+    if (!phoneInput.trim()) return;
+    const normalized = normalizePhoneNumber(phoneInput);
+    if (normalized.phoneDisplay) {
+      setPhoneInput(normalized.phoneDisplay);
+      setFormData((prev) => ({
+        ...prev,
+        phoneDisplay: normalized.phoneDisplay,
+        phoneFull: normalized.phoneFull,
+        phoneRaw: normalized.phoneRaw,
+      }));
+    }
+  };
+
   const handleChange = (field: keyof SiteSettings, value: string) => {
-    setFormData((prev) => {
-      const updated = { ...prev, [field]: value };
-
-      // Auto-update raw phone if phoneDisplay is modified and raw was in sync
-      if (field === "phoneDisplay") {
-        const cleaned = value.replace(/\s+/g, "");
-        if (cleaned.startsWith("0")) {
-          updated.phoneRaw = "+359" + cleaned.slice(1);
-        } else if (cleaned.startsWith("+")) {
-          updated.phoneRaw = cleaned;
-        }
-      }
-
-      return updated;
-    });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleReset = () => {
     if (confirm("Сигурни ли сте, че искате да върнете стандартните данни за контакти?")) {
       setFormData(DEFAULT_SETTINGS);
+      setPhoneInput(DEFAULT_SETTINGS.phoneDisplay);
       setStatusMessage({
         type: "success",
         text: "Полетата бяха попълнени със стандартните стойности. Натиснете „Запази промените“, за да ги приложите.",
@@ -122,58 +140,130 @@ export function AdminContactsManager({ initialSettings }: AdminContactsManagerPr
         )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          {/* SECTION 1: ТЕЛЕФОНИ */}
+          {/* SECTION 1: ТЕЛЕФОНЕН НОМЕР */}
           <div className="space-y-4">
-            <h3 className="font-heading font-bold text-sm sm:text-base text-brand-purple flex items-center gap-2">
-              <Phone className="w-4 h-4" /> 1. Телефонни номера
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Телефон за показване (напр. в банери и бутони)
-                </label>
-                <input
-                  type="text"
-                  value={formData.phoneDisplay}
-                  onChange={(e) => handleChange("phoneDisplay", e.target.value)}
-                  placeholder="0877 488 481"
-                  required
-                  className="w-full px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-medium text-brand-dark"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Телефон пълен формат (за футъра)
-                </label>
-                <input
-                  type="text"
-                  value={formData.phoneFull}
-                  onChange={(e) => handleChange("phoneFull", e.target.value)}
-                  placeholder="+359 877 488 481"
-                  required
-                  className="w-full px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-medium text-brand-dark"
-                />
-              </div>
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading font-bold text-sm sm:text-base text-brand-purple flex items-center gap-2">
+                <Phone className="w-4 h-4" /> 1. Телефонен номер
+              </h3>
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                Синхронизира се навсякъде
+              </span>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-brand-dark mb-1">
-                Технически номер за набиране (link <code className="text-brand-purple">tel:</code>)
+              <label className="block text-xs font-bold text-brand-dark mb-1.5">
+                Основен телефонен номер на центъра
               </label>
-              <input
-                type="text"
-                value={formData.phoneRaw}
-                onChange={(e) => handleChange("phoneRaw", e.target.value)}
-                placeholder="+359877488481"
-                required
-                className="w-full px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-medium text-brand-dark"
-              />
-              <p className="text-[11px] text-brand-muted mt-1">
-                Използва се директно при клик върху бутона за обаждане от телефони.
+              <div className="relative">
+                <input
+                  type="text"
+                  value={phoneInput}
+                  onChange={(e) => handleSinglePhoneChange(e.target.value)}
+                  onBlur={handlePhoneBlur}
+                  placeholder="напр. 0877 488 481 или +359 877 488 481"
+                  required
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-base font-semibold text-brand-dark tracking-wide placeholder:font-normal placeholder:text-gray-400 shadow-xs"
+                />
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 rounded-xl bg-brand-purple/10 text-brand-purple">
+                  <Phone className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-[11px] text-brand-muted mt-1.5 flex items-center gap-1">
+                <Info className="w-3.5 h-3.5 text-brand-purple shrink-0" />
+                <span>
+                  Въвежда се само на едно място. Системата автоматично го обновява във всички бутони, мобилното меню, футъра и линковете за обаждане.
+                </span>
               </p>
             </div>
+
+            {/* LIVE AUTO-GENERATED FORMATS PREVIEW */}
+            <div className="p-3.5 rounded-2xl bg-brand-purple/5 border border-brand-purple/15 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-brand-purple flex items-center gap-1.5 text-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-brand-purple" />
+                  Автоматично генерирани формати за сайта:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedPhone(!showAdvancedPhone)}
+                  className="text-[11px] font-semibold text-brand-purple hover:underline flex items-center gap-0.5 cursor-pointer"
+                >
+                  <span>{showAdvancedPhone ? "Скрий ръчните" : "Ръчни настройки"}</span>
+                  {showAdvancedPhone ? (
+                    <ChevronUp className="w-3 h-3" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3" />
+                  )}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
+                <div className="bg-white/90 p-2.5 rounded-xl border border-brand-purple/10 shadow-xs">
+                  <span className="text-[10px] text-brand-muted block font-medium">Бутони & Навигация:</span>
+                  <span className="font-bold text-brand-dark truncate block mt-0.5">
+                    {formData.phoneDisplay || "—"}
+                  </span>
+                </div>
+                <div className="bg-white/90 p-2.5 rounded-xl border border-brand-purple/10 shadow-xs">
+                  <span className="text-[10px] text-brand-muted block font-medium">Футър (международен):</span>
+                  <span className="font-bold text-brand-dark truncate block mt-0.5">
+                    {formData.phoneFull || "—"}
+                  </span>
+                </div>
+                <div className="bg-white/90 p-2.5 rounded-xl border border-brand-purple/10 shadow-xs">
+                  <span className="text-[10px] text-brand-muted block font-medium">Директно набиране (tel:):</span>
+                  <span className="font-mono font-bold text-brand-purple truncate block mt-0.5">
+                    {formData.phoneRaw || "—"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* OPTIONAL ADVANCED MANUAL OVERRIDE */}
+            {showAdvancedPhone && (
+              <div className="mt-3 p-4 rounded-2xl bg-gray-50 border border-dashed border-gray-300 space-y-3">
+                <div className="text-xs font-bold text-brand-dark">
+                  Ръчна фина настройка на отделните формати (по избор):
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-brand-dark mb-1">
+                      Формат за показване (бутони & хедър)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.phoneDisplay}
+                      onChange={(e) => handleChange("phoneDisplay", e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-xs font-medium text-brand-dark"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-brand-dark mb-1">
+                      Пълен формат за футъра
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.phoneFull}
+                      onChange={(e) => handleChange("phoneFull", e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-xs font-medium text-brand-dark"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-brand-dark mb-1">
+                    Технически линк за набиране (<code className="text-brand-purple">tel:</code>)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.phoneRaw}
+                    onChange={(e) => handleChange("phoneRaw", e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-xs font-mono font-medium text-brand-dark"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <hr className="border-gray-100" />
