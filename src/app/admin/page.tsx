@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ClipboardList,
   CalendarDays,
@@ -9,8 +10,13 @@ import {
   ArrowRight,
   Phone,
   User,
+  Sparkles,
+  ExternalLink,
+  Layers,
+  MapPin,
 } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { SERVICES_DATA } from "@/lib/services-data";
 
 export const dynamic = "force-dynamic";
 
@@ -26,16 +32,50 @@ interface BookingItem {
   created_at: string;
 }
 
+const DEFAULT_BANNER_PREVIEW = [
+  "/images/banner/1.webp",
+  "/images/banner/2.webp",
+  "/images/banner/3.webp",
+  "/images/banner/4.webp",
+];
+
+function getActivityThumbnail(activityName: string): string {
+  const norm = (activityName || "").toLowerCase();
+  if (norm.includes("плет")) return "/images/services/pletivo.webp";
+  if (norm.includes("шах")) return "/images/services/shah.webp";
+  if (norm.includes("арт") || norm.includes("рисув") || norm.includes("творч"))
+    return "/images/services/art.webp";
+  if (norm.includes("занимал")) return "/images/services/uchebna-zanimalnya.webp";
+  if (norm.includes("чит") || norm.includes("лигериа") || norm.includes("книг"))
+    return "/images/services/chitatelski-klub.webp";
+  return "/images/services/urotsi.webp";
+}
+
 export default async function AdminDashboardPage() {
-  // Fetch metrics and recent bookings
+  // Fetch metrics, recent bookings, and active hero
   let totalBookings = 0;
   let pendingBookings = 0;
   let confirmedBookings = 0;
   let activeSchedules = 0;
   let recentBookings: BookingItem[] = [];
+  let heroBannerSrc = "/images/opening-photo.webp";
 
   try {
-    // 1. Bookings stats
+    // 1. Hero banner check
+    const { data: files } = await supabaseAdmin.storage
+      .from("site-assets")
+      .list("", { search: "hero-banner" });
+
+    if (files && files.some((f) => f.name === "hero-banner.webp")) {
+      const { data: urlData } = supabaseAdmin.storage
+        .from("site-assets")
+        .getPublicUrl("hero-banner.webp");
+      if (urlData?.publicUrl) {
+        heroBannerSrc = urlData.publicUrl;
+      }
+    }
+
+    // 2. Bookings stats
     const { data: bookingsData } = await supabaseAdmin
       .from("bookings")
       .select("id, status, activity_name, child_name, child_age, parent_name, phone, email, created_at")
@@ -48,7 +88,7 @@ export default async function AdminDashboardPage() {
       recentBookings = bookingsData.slice(0, 5) as BookingItem[];
     }
 
-    // 2. Schedules stats
+    // 3. Schedules stats
     const { count } = await supabaseAdmin
       .from("schedules")
       .select("*", { count: "exact", head: true })
@@ -90,10 +130,10 @@ export default async function AdminDashboardPage() {
             + Ново занятие
           </Link>
           <Link
-            href="/admin/bookings"
+            href="/admin/media"
             className="px-5 py-2.5 rounded-full bg-brand-purple/10 text-brand-purple font-heading font-bold text-xs sm:text-sm hover:bg-brand-purple/20 transition-all text-center"
           >
-            Всички заявки
+            Банери и снимки
           </Link>
         </div>
       </div>
@@ -102,7 +142,7 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Card 1: Pending */}
         <Link
-          href="/admin/bookings?status=pending"
+          href="/admin/bookings"
           className="bg-white p-6 rounded-3xl shadow-card border border-brand-purple/15 hover:border-brand-purple transition-all duration-300 group"
         >
           <div className="flex items-center justify-between mb-4">
@@ -125,7 +165,7 @@ export default async function AdminDashboardPage() {
 
         {/* Card 2: Confirmed */}
         <Link
-          href="/admin/bookings?status=confirmed"
+          href="/admin/bookings"
           className="bg-white p-6 rounded-3xl shadow-card border border-brand-purple/15 hover:border-brand-purple transition-all duration-300 group"
         >
           <div className="flex items-center justify-between mb-4">
@@ -193,7 +233,193 @@ export default async function AdminDashboardPage() {
         </Link>
       </div>
 
-      {/* Quick Access Grid */}
+      {/* ======================================================== */}
+      {/* LIVE SNIPPETS: Как изглежда уебсайтът на живо в момента */}
+      {/* ======================================================== */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <h2 className="font-heading font-bold text-lg sm:text-xl text-brand-dark">
+              Отрязъци на живо: Как изглежда уебсайтът в момента
+            </h2>
+          </div>
+          <a
+            href="/"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-purple hover:underline"
+          >
+            <span>Отвори уебсайта на живо</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Snippet 1: Hero Banner */}
+          <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-brand-purple/15 flex flex-col justify-between group">
+            <div className="p-4 border-b border-brand-purple/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-brand-purple" />
+                <span className="font-heading font-bold text-xs text-brand-dark">
+                  Главен начален банер
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                Активен
+              </span>
+            </div>
+
+            <div className="relative h-44 w-full bg-brand-bg overflow-hidden">
+              <Image
+                src={heroBannerSrc}
+                alt="Начален банер"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-3 text-white">
+                <p className="font-heading font-bold text-xs drop-shadow truncate">
+                  УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-brand-bg/50 flex items-center justify-between">
+              <span className="text-[11px] text-brand-muted">Начална страница</span>
+              <Link
+                href="/admin/media"
+                className="text-xs font-bold text-brand-purple hover:underline flex items-center gap-1"
+              >
+                <span>Смени банера</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Snippet 2: Kids Gallery */}
+          <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-brand-purple/15 flex flex-col justify-between group">
+            <div className="p-4 border-b border-brand-purple/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-brand-purple" />
+                <span className="font-heading font-bold text-xs text-brand-dark">
+                  Слайдер „Деца с умения“
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-brand-purple bg-brand-purple-light px-2 py-0.5 rounded-full">
+                6+ кадъра
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1 p-2 bg-brand-bg h-44">
+              {DEFAULT_BANNER_PREVIEW.map((img, i) => (
+                <div key={i} className="relative rounded-xl overflow-hidden shadow-xs">
+                  <Image src={img} alt="Деца" fill className="object-cover" />
+                </div>
+              ))}
+            </div>
+
+            <div className="p-3 bg-brand-bg/50 flex items-center justify-between">
+              <span className="text-[11px] text-brand-muted">Фотогалерия</span>
+              <Link
+                href="/admin/media"
+                className="text-xs font-bold text-brand-purple hover:underline flex items-center gap-1"
+              >
+                <span>Управлявай</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Snippet 3: Services */}
+          <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-brand-purple/15 flex flex-col justify-between group">
+            <div className="p-4 border-b border-brand-purple/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-brand-purple" />
+                <span className="font-heading font-bold text-xs text-brand-dark">
+                  6-те дейности и услуги
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                6 услуги
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5 p-2 bg-brand-bg h-44 items-center">
+              {SERVICES_DATA.slice(0, 6).map((srv) => (
+                <div
+                  key={srv.slug}
+                  className="relative h-18 rounded-xl overflow-hidden group/item border border-brand-purple/10 shadow-xs"
+                >
+                  <Image src={srv.cardImage} alt={srv.title} fill className="object-cover" />
+                  <div className="absolute inset-0 bg-black/40 flex items-end p-1 text-[9px] font-bold text-white truncate">
+                    {srv.shortTitle}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-3 bg-brand-bg/50 flex items-center justify-between">
+              <span className="text-[11px] text-brand-muted">Страници & Слайдери</span>
+              <Link
+                href="/admin/media"
+                className="text-xs font-bold text-brand-purple hover:underline flex items-center gap-1"
+              >
+                <span>Слайдери</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Snippet 4: Weekly Schedule */}
+          <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-brand-purple/15 flex flex-col justify-between group">
+            <div className="p-4 border-b border-brand-purple/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-brand-purple" />
+                <span className="font-heading font-bold text-xs text-brand-dark">
+                  Седмичен график
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                {activeSchedules} активни
+              </span>
+            </div>
+
+            <div className="p-3 bg-brand-bg h-44 flex flex-col justify-between space-y-2">
+              <div className="p-2.5 rounded-2xl bg-white border border-brand-purple/15 shadow-xs space-y-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-brand-purple">Пн - Пт</span>
+                  <span className="text-brand-muted">16:00 - 19:30</span>
+                </div>
+                <p className="font-heading font-bold text-xs text-brand-dark">
+                  Математика, Шах, Плетиво, Занималня
+                </p>
+              </div>
+
+              <div className="p-2.5 rounded-2xl bg-white border border-brand-purple/15 shadow-xs space-y-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-brand-purple">Събота</span>
+                  <span className="text-brand-muted">10:00 - 15:30</span>
+                </div>
+                <p className="font-heading font-bold text-xs text-brand-dark">
+                  Арт, Плетиво, Шахматни турнири
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-brand-bg/50 flex items-center justify-between">
+              <span className="text-[11px] text-brand-muted">Календар за родители</span>
+              <Link
+                href="/admin/schedule"
+                className="text-xs font-bold text-brand-purple hover:underline flex items-center gap-1"
+              >
+                <span>Редактирай</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Access Grid: Recent Bookings + Shortcuts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left 2 Cols: Recent Bookings Table */}
         <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-7 shadow-card border border-brand-purple/15 space-y-4">
@@ -217,37 +443,47 @@ export default async function AdminDashboardPage() {
                   key={b.id}
                   className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-brand-bg/60 px-2 rounded-xl transition-colors"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-heading font-bold text-sm text-brand-dark">
-                        {b.child_name} ({b.child_age})
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          b.status === "confirmed"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : b.status === "declined"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {b.status === "confirmed"
-                          ? "Потвърдена"
-                          : b.status === "declined"
-                          ? "Отказана"
-                          : "Чакаща"}
-                      </span>
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-brand-bg border border-brand-purple/20 shrink-0 shadow-xs">
+                      <Image
+                        src={getActivityThumbnail(b.activity_name)}
+                        alt={b.activity_name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-heading font-bold text-sm text-brand-dark">
+                          {b.child_name} ({b.child_age})
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            b.status === "confirmed"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : b.status === "declined"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {b.status === "confirmed"
+                            ? "Потвърдена"
+                            : b.status === "declined"
+                            ? "Отказана"
+                            : "Чакаща"}
+                        </span>
+                      </div>
 
-                    <p className="text-xs text-brand-purple font-semibold">
-                      {b.activity_name}
-                    </p>
+                      <p className="text-xs text-brand-purple font-semibold">
+                        {b.activity_name}
+                      </p>
 
-                    <div className="flex items-center gap-3 text-[11px] text-brand-muted">
-                      <span className="flex items-center gap-1">
-                        <User className="w-3 h-3 text-brand-purple/60" />
-                        {b.parent_name}
-                      </span>
+                      <div className="flex items-center gap-3 text-[11px] text-brand-muted">
+                        <span className="flex items-center gap-1">
+                          <User className="w-3 h-3 text-brand-purple/60" />
+                          {b.parent_name}
+                        </span>
+                      </div>
                     </div>
                   </div>
 

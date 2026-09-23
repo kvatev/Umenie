@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import Link from "next/link";
 import {
   Plus,
   Edit2,
@@ -10,6 +11,11 @@ import {
   Loader2,
   CheckCircle2,
   EyeOff,
+  Eye,
+  ExternalLink,
+  CalendarDays,
+  Table as TableIcon,
+  Sparkles,
 } from "lucide-react";
 import { DAYS_OF_WEEK, CATEGORY_STYLES } from "@/lib/schedule-data";
 import { toggleScheduleActiveAction, deleteScheduleAction } from "@/actions/admin-schedules";
@@ -23,6 +29,7 @@ interface ScheduleTableProps {
 export function ScheduleTable({ initialSchedules }: ScheduleTableProps) {
   const [schedules, setSchedules] = useState<ScheduleRecord[]>(initialSchedules);
   const [activeDayFilter, setActiveDayFilter] = useState<number>(0); // 0 = All
+  const [viewMode, setViewMode] = useState<"snippet" | "table">("snippet"); // default to live snippet
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<ScheduleRecord | null>(null);
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
@@ -91,20 +98,49 @@ export function ScheduleTable({ initialSchedules }: ScheduleTableProps) {
 
   return (
     <div className="space-y-6">
-      {/* Top Bar: Day Filters + Add Button */}
+      {/* View Mode Switcher + Add Button */}
       <div className="bg-white p-4 sm:p-5 rounded-3xl shadow-card border border-brand-purple/15 flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* View Toggle */}
+        <div className="flex items-center gap-2 bg-brand-bg p-1.5 rounded-2xl border border-brand-purple/15 w-full md:w-auto">
+          <button
+            onClick={() => setViewMode("snippet")}
+            className={cn(
+              "flex-1 md:flex-initial px-4 py-2 rounded-xl font-heading text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+              viewMode === "snippet"
+                ? "bg-brand-purple text-white shadow-button"
+                : "text-brand-dark/80 hover:text-brand-purple"
+            )}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Отрязък от сайта на живо</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode("table")}
+            className={cn(
+              "flex-1 md:flex-initial px-4 py-2 rounded-xl font-heading text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+              viewMode === "table"
+                ? "bg-brand-purple text-white shadow-button"
+                : "text-brand-dark/80 hover:text-brand-purple"
+            )}
+          >
+            <TableIcon className="w-3.5 h-3.5" />
+            <span>Табличен изглед ({schedules.length})</span>
+          </button>
+        </div>
+
         {/* Day Filters */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
           <button
             onClick={() => setActiveDayFilter(0)}
             className={cn(
-              "px-4 py-2 rounded-2xl font-heading text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer",
+              "px-3.5 py-1.5 rounded-xl font-heading text-xs font-bold transition-all shrink-0 cursor-pointer",
               activeDayFilter === 0
-                ? "bg-brand-purple text-white shadow-button"
+                ? "bg-brand-purple text-white shadow-sm"
                 : "bg-brand-bg text-brand-dark/80 hover:bg-brand-purple/10"
             )}
           >
-            Всички дни ({schedules.length})
+            Всички ({schedules.length})
           </button>
 
           {DAYS_OF_WEEK.map((day) => {
@@ -116,21 +152,14 @@ export function ScheduleTable({ initialSchedules }: ScheduleTableProps) {
                 key={day.dayNumber}
                 onClick={() => setActiveDayFilter(day.dayNumber)}
                 className={cn(
-                  "px-3.5 py-2 rounded-2xl font-heading text-xs sm:text-sm font-bold transition-all shrink-0 flex items-center gap-1 cursor-pointer",
+                  "px-3 py-1.5 rounded-xl font-heading text-xs font-bold transition-all shrink-0 flex items-center gap-1 cursor-pointer",
                   isSelected
-                    ? "bg-brand-purple text-white shadow-button"
+                    ? "bg-brand-purple text-white shadow-sm"
                     : "bg-brand-bg text-brand-dark/80 hover:bg-brand-purple/10"
                 )}
               >
                 <span>{day.shortName}</span>
-                <span
-                  className={cn(
-                    "text-[10px] px-1 rounded-full font-bold",
-                    isSelected ? "bg-white text-brand-purple" : "text-brand-muted"
-                  )}
-                >
-                  ({count})
-                </span>
+                <span className="text-[10px] opacity-75">({count})</span>
               </button>
             );
           })}
@@ -146,230 +175,405 @@ export function ScheduleTable({ initialSchedules }: ScheduleTableProps) {
         </button>
       </div>
 
-      {/* DESKTOP TABLE */}
-      <div className="hidden lg:block bg-white rounded-3xl shadow-card border border-brand-purple/15 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-brand-purple/15 bg-brand-purple/5 text-[11px] font-heading font-bold text-brand-purple uppercase tracking-wider">
-                <th className="py-4 px-4">Ден</th>
-                <th className="py-4 px-4">Час</th>
-                <th className="py-4 px-4">Заглавие / Клас</th>
-                <th className="py-4 px-4">Категория</th>
-                <th className="py-4 px-4">Възрастова група</th>
-                <th className="py-4 px-4 text-center">Видимост</th>
-                <th className="py-4 px-4 text-right">Действия</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-brand-purple/10 text-xs sm:text-sm">
-              {filtered.map((item) => {
-                const isWorking = activeActionId === item.id && isPending;
-                const catStyle = CATEGORY_STYLES[item.category] || {
-                  bg: "bg-purple-100",
-                  text: "text-purple-800",
-                  border: "border-purple-300",
-                };
+      {/* ======================================================== */}
+      {/* VIEW 1: LIVE WEBSITE SCHEDULE SNIPPET */}
+      {/* ======================================================== */}
+      {viewMode === "snippet" && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-brand-purple/10">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h3 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
+                  Отрязък на живо: Как родителите и учениците виждат графика на сайта (/grafik)
+                </h3>
+              </div>
+              <Link
+                href="/grafik"
+                target="_blank"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-purple hover:underline"
+              >
+                <span>Отвори страницата с графика в сайта</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            </div>
 
-                return (
-                  <tr
-                    key={item.id}
-                    className={cn(
-                      "hover:bg-brand-bg/60 transition-colors",
-                      !item.is_active && "opacity-60 bg-gray-50/50"
-                    )}
-                  >
-                    {/* Day */}
-                    <td className="py-4 px-4 font-bold text-brand-purple whitespace-nowrap">
-                      {getDayName(item.day_of_week)}
-                    </td>
+            {/* Live Calendar Cards Grid */}
+            <div className="rounded-3xl border border-brand-purple/20 bg-brand-bg p-4 sm:p-6 shadow-inner space-y-6">
+              {DAYS_OF_WEEK.filter((d) => activeDayFilter === 0 || d.dayNumber === activeDayFilter).map(
+                (day) => {
+                  const daySchedules = schedules
+                    .filter((s) => s.day_of_week === day.dayNumber)
+                    .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
-                    {/* Time */}
-                    <td className="py-4 px-4 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5 font-semibold text-brand-dark">
-                        <Clock className="w-3.5 h-3.5 text-brand-purple/70" />
-                        {item.start_time.slice(0, 5)} - {item.end_time.slice(0, 5)}
-                      </span>
-                    </td>
+                  if (activeDayFilter === 0 && daySchedules.length === 0) return null;
 
-                    {/* Title */}
-                    <td className="py-4 px-4 font-bold text-brand-dark">
-                      {item.title}
-                    </td>
+                  return (
+                    <div key={day.dayNumber} className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 rounded-full bg-brand-purple text-white text-xs font-heading font-bold uppercase tracking-wider">
+                          {day.name}
+                        </span>
+                        <span className="text-xs text-brand-muted">
+                          ({daySchedules.length} {daySchedules.length === 1 ? "занятие" : "занятия"})
+                        </span>
+                      </div>
 
-                    {/* Category Badge */}
-                    <td className="py-4 px-4 whitespace-nowrap">
-                      <span
-                        className={cn(
-                          "px-2.5 py-1 rounded-full text-xs font-bold border",
-                          catStyle.bg,
-                          catStyle.text,
-                          catStyle.border
-                        )}
-                      >
-                        {item.category}
-                      </span>
-                    </td>
+                      {daySchedules.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {daySchedules.map((item) => {
+                            const isWorking = activeActionId === item.id && isPending;
+                            const catStyle = CATEGORY_STYLES[item.category] || {
+                              bg: "bg-purple-100",
+                              text: "text-purple-800",
+                              border: "border-purple-300",
+                            };
 
-                    {/* Age Group */}
-                    <td className="py-4 px-4 text-brand-muted whitespace-nowrap">
-                      {item.age_group}
-                    </td>
+                            return (
+                              <div
+                                key={item.id}
+                                className={cn(
+                                  "relative bg-white rounded-2xl p-5 shadow-card border-2 transition-all duration-300 flex flex-col justify-between space-y-3 group",
+                                  item.is_active
+                                    ? "border-brand-purple/20 hover:border-brand-purple/50 hover:shadow-lg"
+                                    : "border-dashed border-gray-300 opacity-60 bg-gray-50/80"
+                                )}
+                              >
+                                {/* Active Status Tag */}
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-purple/10 text-brand-purple text-xs font-bold">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    <span>
+                                      {item.start_time.slice(0, 5)} - {item.end_time.slice(0, 5)}
+                                    </span>
+                                  </span>
 
-                    {/* Active Toggle */}
-                    <td className="py-4 px-4 text-center whitespace-nowrap">
-                      <button
-                        onClick={() => handleToggleActive(item.id, item.is_active)}
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
-                          item.is_active
-                            ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                        )}
-                        title="Кликнете за превключване на видимостта в сайта"
-                      >
-                        {item.is_active ? (
-                          <>
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>Активно</span>
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="w-3.5 h-3.5" />
-                            <span>Скрито</span>
-                          </>
-                        )}
-                      </button>
-                    </td>
+                                  <button
+                                    onClick={() => handleToggleActive(item.id, item.is_active)}
+                                    className={cn(
+                                      "px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer",
+                                      item.is_active
+                                        ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                    )}
+                                  >
+                                    {item.is_active ? (
+                                      <>
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        <span>Активно на сайта</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <EyeOff className="w-3 h-3" />
+                                        <span>Скрито</span>
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
 
-                    {/* Actions */}
-                    <td className="py-4 px-4 text-right whitespace-nowrap">
-                      {isWorking ? (
-                        <Loader2 className="w-5 h-5 animate-spin text-brand-purple inline-block" />
+                                {/* Class Title and Age */}
+                                <div>
+                                  <h4 className="font-heading font-black text-lg text-brand-dark">
+                                    {item.title}
+                                  </h4>
+                                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                                    <span
+                                      className={cn(
+                                        "px-2.5 py-0.5 rounded-full text-[11px] font-bold border",
+                                        catStyle.bg,
+                                        catStyle.text,
+                                        catStyle.border
+                                      )}
+                                    >
+                                      {item.category}
+                                    </span>
+                                    <span className="px-2.5 py-0.5 rounded-full bg-brand-purple-light text-brand-purple text-[11px] font-bold">
+                                      {item.age_group}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1 text-[11px] text-brand-muted">
+                                  <MapPin className="w-3.5 h-3.5 text-brand-purple shrink-0" />
+                                  <span className="truncate">{item.location}</span>
+                                </div>
+
+                                {/* Website CTA Button Preview & Admin Controls */}
+                                <div className="pt-3 border-t border-brand-purple/10 flex items-center justify-between gap-2">
+                                  <span className="px-3 py-1.5 rounded-full bg-brand-purple/10 text-brand-purple font-heading font-bold text-xs">
+                                    Бутон „Запиши се“
+                                  </span>
+
+                                  {isWorking ? (
+                                    <Loader2 className="w-4 h-4 animate-spin text-brand-purple" />
+                                  ) : (
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        onClick={() => openEdit(item)}
+                                        className="p-1.5 rounded-lg bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-colors"
+                                        title="Редактирай часа"
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDelete(item.id, item.title)}
+                                        className="p-1.5 rounded-lg text-brand-muted hover:bg-red-100 hover:text-red-700 transition-colors"
+                                        title="Изтрий"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       ) : (
-                        <div className="inline-flex items-center gap-1.5">
-                          <button
-                            onClick={() => openEdit(item)}
-                            className="p-2 rounded-xl bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-colors cursor-pointer"
-                            title="Редактирай"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-
-                          <button
-                            onClick={() => handleDelete(item.id, item.title)}
-                            className="p-2 rounded-xl text-brand-muted hover:bg-red-100 hover:text-red-700 transition-colors cursor-pointer"
-                            title="Изтрий"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                        <div className="py-6 text-center text-xs text-brand-muted bg-white/50 rounded-2xl border border-dashed border-brand-purple/20">
+                          Няма насрочени часове за {day.name}.
                         </div>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {filtered.length === 0 && (
-          <div className="py-16 text-center space-y-2">
-            <p className="text-brand-dark font-heading font-bold text-base">
-              Няма намерени часове за този филтър
-            </p>
-            <p className="text-xs text-brand-muted">
-              Кликнете на „Добави занятие“, за да създадете нов час в графика.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* MOBILE CARDS */}
-      <div className="lg:hidden space-y-4">
-        {filtered.map((item) => {
-          const isWorking = activeActionId === item.id && isPending;
-
-          return (
-            <div
-              key={item.id}
-              className={cn(
-                "bg-white p-5 rounded-3xl shadow-card border border-brand-purple/15 space-y-3",
-                !item.is_active && "opacity-75 bg-gray-50/50"
+                    </div>
+                  );
+                }
               )}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-heading font-bold text-xs text-brand-purple">
-                  {getDayName(item.day_of_week)}
-                </span>
-                <span className="text-xs font-semibold text-brand-dark flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-brand-purple" />
-                  {item.start_time.slice(0, 5)} - {item.end_time.slice(0, 5)}
-                </span>
-              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-              <div>
-                <h4 className="font-heading font-bold text-base text-brand-dark">
-                  {item.title}
-                </h4>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs font-semibold text-brand-muted">
-                    {item.age_group}
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-purple-light text-brand-purple">
-                    {item.category}
-                  </span>
-                </div>
-              </div>
+      {/* ======================================================== */}
+      {/* VIEW 2: STANDARD MANAGEMENT TABLE */}
+      {/* ======================================================== */}
+      {viewMode === "table" && (
+        <div className="space-y-6 animate-fade-in">
+          {/* DESKTOP TABLE */}
+          <div className="hidden lg:block bg-white rounded-3xl shadow-card border border-brand-purple/15 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-brand-purple/15 bg-brand-purple/5 text-[11px] font-heading font-bold text-brand-purple uppercase tracking-wider">
+                    <th className="py-4 px-4">Ден</th>
+                    <th className="py-4 px-4">Час</th>
+                    <th className="py-4 px-4">Заглавие / Клас</th>
+                    <th className="py-4 px-4">Категория</th>
+                    <th className="py-4 px-4">Възрастова група</th>
+                    <th className="py-4 px-4 text-center">Видимост</th>
+                    <th className="py-4 px-4 text-right">Действия</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-brand-purple/10 text-xs sm:text-sm">
+                  {filtered.map((item) => {
+                    const isWorking = activeActionId === item.id && isPending;
+                    const catStyle = CATEGORY_STYLES[item.category] || {
+                      bg: "bg-purple-100",
+                      text: "text-purple-800",
+                      border: "border-purple-300",
+                    };
 
-              <div className="pt-3 border-t border-brand-purple/10 flex items-center justify-between gap-2">
-                <button
-                  onClick={() => handleToggleActive(item.id, item.is_active)}
+                    return (
+                      <tr
+                        key={item.id}
+                        className={cn(
+                          "hover:bg-brand-bg/60 transition-colors",
+                          !item.is_active && "opacity-60 bg-gray-50/50"
+                        )}
+                      >
+                        {/* Day */}
+                        <td className="py-4 px-4 font-bold text-brand-purple whitespace-nowrap">
+                          {getDayName(item.day_of_week)}
+                        </td>
+
+                        {/* Time */}
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 font-semibold text-brand-dark">
+                            <Clock className="w-3.5 h-3.5 text-brand-purple/70" />
+                            {item.start_time.slice(0, 5)} - {item.end_time.slice(0, 5)}
+                          </span>
+                        </td>
+
+                        {/* Title */}
+                        <td className="py-4 px-4 font-bold text-brand-dark">
+                          {item.title}
+                        </td>
+
+                        {/* Category Badge */}
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <span
+                            className={cn(
+                              "px-2.5 py-1 rounded-full text-xs font-bold border",
+                              catStyle.bg,
+                              catStyle.text,
+                              catStyle.border
+                            )}
+                          >
+                            {item.category}
+                          </span>
+                        </td>
+
+                        {/* Age Group */}
+                        <td className="py-4 px-4 text-brand-muted whitespace-nowrap">
+                          {item.age_group}
+                        </td>
+
+                        {/* Active Toggle */}
+                        <td className="py-4 px-4 text-center whitespace-nowrap">
+                          <button
+                            onClick={() => handleToggleActive(item.id, item.is_active)}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
+                              item.is_active
+                                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            )}
+                            title="Кликнете за превключване на видимостта в сайта"
+                          >
+                            {item.is_active ? (
+                              <>
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Активно</span>
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff className="w-3.5 h-3.5" />
+                                <span>Скрито</span>
+                              </>
+                            )}
+                          </button>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-4 px-4 text-right whitespace-nowrap">
+                          {isWorking ? (
+                            <Loader2 className="w-5 h-5 animate-spin text-brand-purple inline-block" />
+                          ) : (
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                onClick={() => openEdit(item)}
+                                className="p-2 rounded-xl bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-colors cursor-pointer"
+                                title="Редактирай"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+
+                              <button
+                                onClick={() => handleDelete(item.id, item.title)}
+                                className="p-2 rounded-xl text-brand-muted hover:bg-red-100 hover:text-red-700 transition-colors cursor-pointer"
+                                title="Изтрий"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {filtered.length === 0 && (
+              <div className="py-16 text-center space-y-2">
+                <p className="text-brand-dark font-heading font-bold text-base">
+                  Няма намерени часове за този филтър
+                </p>
+                <p className="text-xs text-brand-muted">
+                  Кликнете на „Добави занятие“, за да създадете нов час в графика.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* MOBILE CARDS */}
+          <div className="lg:hidden space-y-4">
+            {filtered.map((item) => {
+              const isWorking = activeActionId === item.id && isPending;
+
+              return (
+                <div
+                  key={item.id}
                   className={cn(
-                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
-                    item.is_active
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-gray-200 text-gray-700"
+                    "bg-white p-5 rounded-3xl shadow-card border border-brand-purple/15 space-y-3",
+                    !item.is_active && "opacity-75 bg-gray-50/50"
                   )}
                 >
-                  {item.is_active ? "Активно" : "Скрито"}
-                </button>
-
-                {isWorking ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-brand-purple" />
-                ) : (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => openEdit(item)}
-                      className="p-2 rounded-xl bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-colors"
-                      title="Редактирай"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id, item.title)}
-                      className="p-2 rounded-xl text-brand-muted hover:bg-red-100 hover:text-red-700 transition-colors"
-                      title="Изтрий"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="flex items-center justify-between">
+                    <span className="font-heading font-bold text-xs text-brand-purple">
+                      {getDayName(item.day_of_week)}
+                    </span>
+                    <span className="text-xs font-semibold text-brand-dark flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-brand-purple" />
+                      {item.start_time.slice(0, 5)} - {item.end_time.slice(0, 5)}
+                    </span>
                   </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
 
-        {filtered.length === 0 && (
-          <div className="bg-white rounded-3xl p-8 text-center space-y-2 border border-brand-purple/15">
-            <p className="text-brand-dark font-heading font-bold text-sm">
-              Няма намерени часове
-            </p>
-            <p className="text-xs text-brand-muted">
-              Кликнете на бутона горе, за да добавите час в графика.
-            </p>
+                  <div>
+                    <h4 className="font-heading font-bold text-base text-brand-dark">
+                      {item.title}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-semibold text-brand-muted">
+                        {item.age_group}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-purple-light text-brand-purple">
+                        {item.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-brand-purple/10 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleToggleActive(item.id, item.is_active)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                        item.is_active
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-gray-200 text-gray-700"
+                      )}
+                    >
+                      {item.is_active ? "Активно" : "Скрито"}
+                    </button>
+
+                    {isWorking ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-brand-purple" />
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => openEdit(item)}
+                          className="p-2 rounded-xl bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-colors"
+                          title="Редактирай"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id, item.title)}
+                          className="p-2 rounded-xl text-brand-muted hover:bg-red-100 hover:text-red-700 transition-colors"
+                          title="Изтрий"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {filtered.length === 0 && (
+              <div className="bg-white rounded-3xl p-8 text-center space-y-2 border border-brand-purple/15">
+                <p className="text-brand-dark font-heading font-bold text-sm">
+                  Няма намерени часове
+                </p>
+                <p className="text-xs text-brand-muted">
+                  Кликнете на бутона горе, за да добавите час в графика.
+                </p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Modal Component */}
       <ScheduleModal
@@ -377,7 +581,6 @@ export function ScheduleTable({ initialSchedules }: ScheduleTableProps) {
         scheduleToEdit={editingSchedule}
         onClose={() => setModalOpen(false)}
         onSaved={() => {
-          // Re-trigger router refresh or reload state
           window.location.reload();
         }}
       />
