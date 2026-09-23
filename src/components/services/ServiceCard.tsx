@@ -21,7 +21,7 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
         href={`/uslugi/${service.slug}`}
         className="group flex flex-col items-center text-center space-y-3 focus:outline-none"
       >
-        <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-card group-hover:shadow-card-hover transition-all duration-300 border-2 border-white transform group-hover:-translate-y-1">
+        <div className="relative w-full aspect-square rounded-3xl overflow-hidden shadow-card group-hover:shadow-card-hover transition-all duration-300 border-2 border-white transform group-hover:-translate-y-1 bg-white">
           <Image
             src={service.cardImage}
             alt={service.title}
@@ -29,7 +29,6 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
         </div>
 
         {/* Purple Pill Button with Title */}
@@ -46,7 +45,7 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
   return (
     <div
       onClick={() => setIsTapped((prev) => !prev)}
-      className="group relative aspect-[4/3] rounded-3xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 border-2 border-white cursor-pointer select-none"
+      className="group relative aspect-square rounded-3xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 border-2 border-white cursor-pointer select-none bg-white"
     >
       {/* Background Image */}
       <Image
