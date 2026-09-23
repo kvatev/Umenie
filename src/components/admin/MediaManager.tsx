@@ -58,6 +58,12 @@ export function MediaManager({
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [heroMessage, setHeroMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  useEffect(() => {
+    if (initialHeroUrl) {
+      setHeroUrl(initialHeroUrl);
+    }
+  }, [initialHeroUrl]);
+
   // 2. Kids gallery state
   const [kidsItems, setKidsItems] = useState<StorageMediaItem[]>(initialKidsGallery);
   const [kidsFile, setKidsFile] = useState<File | null>(null);
@@ -354,6 +360,26 @@ export function MediaManager({
               </a>
             </div>
 
+            {/* Context Information Badge */}
+            <div className="bg-brand-purple/5 border border-brand-purple/15 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-purple/10 text-brand-purple flex items-center justify-center shrink-0">
+                  <ImageIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-brand-dark">
+                    Главен заглавен екран на сайта
+                  </p>
+                  <p className="text-brand-muted mt-0.5">
+                    Фоновата снимка на началния екран зад заглавието „УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА“.
+                  </p>
+                </div>
+              </div>
+              <span className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-brand-dark border border-brand-purple/20 shrink-0">
+                {heroUrl.includes("supabase.co") ? "Качен файл в Supabase Storage" : "Вградена снимка (/images/opening-photo.webp)"}
+              </span>
+            </div>
+
             {/* Browser Mockup Window */}
             <div className="rounded-2xl border border-brand-purple/20 overflow-hidden bg-brand-bg shadow-lg">
               {/* Fake Browser Toolbar */}
@@ -368,45 +394,44 @@ export function MediaManager({
                 </div>
               </div>
 
-              {/* Realistic Hero Mockup */}
-              <div className="relative w-full h-[320px] sm:h-[420px] md:h-[480px] bg-brand-bg overflow-hidden flex flex-col justify-end p-6 sm:p-10">
+              {/* Realistic Hero Mockup matching homepage 1:1 */}
+              <div className="relative w-full h-[320px] sm:h-[400px] md:h-[450px] bg-brand-bg overflow-hidden flex flex-col justify-center p-6 sm:p-12">
                 <Image
-                  src={heroPreview || heroUrl}
-                  alt="Главен банер"
+                  src={heroPreview || heroUrl || "/images/opening-photo.webp"}
+                  alt="Главен банер на сайта"
                   fill
                   priority
                   className="object-cover object-center transition-all duration-500"
+                  onError={() => {
+                    if (heroUrl !== "/images/opening-photo.webp") {
+                      setHeroUrl("/images/opening-photo.webp");
+                    }
+                  }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/85 via-brand-dark/40 to-black/20" />
+                {/* Soft dark overlay matching src/app/page.tsx */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/40 to-transparent" />
 
-                {/* Live Floating Badge */}
-                <div className="relative z-10 space-y-3 max-w-xl text-white">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-purple/90 text-white text-xs font-bold uppercase tracking-wider backdrop-blur-sm shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Образователен клуб „УМеНИе“ • Бургас</span>
-                  </div>
-                  <h1 className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-white drop-shadow-md leading-tight">
+                {/* Live Exact Homepage Hero Content */}
+                <div className="relative z-10 space-y-4 max-w-xl text-white">
+                  <h1 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-white drop-shadow-md leading-tight">
                     УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА
                   </h1>
-                  <p className="text-white/85 text-xs sm:text-sm line-clamp-2 max-w-md drop-shadow">
-                    Уроци и курсове по английски, математика, български език, учебна занималня, шах, плетиво и арт занимания.
+                  <p className="text-white/95 text-xs sm:text-sm md:text-base font-medium drop-shadow-sm leading-relaxed max-w-lg">
+                    Място, където всяко дете развива увереност, самостоятелност и радост от знанието.
                   </p>
 
-                  <div className="pt-2 flex flex-wrap items-center gap-3">
-                    <span className="px-5 py-2 rounded-full bg-brand-purple text-white font-heading font-bold text-xs shadow-button">
-                      Калeндар / График →
-                    </span>
-                    <span className="px-5 py-2 rounded-full bg-white/20 text-white font-heading font-bold text-xs backdrop-blur-sm border border-white/30">
-                      0877 488 481
+                  <div className="pt-2">
+                    <span className="inline-block px-7 py-3 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button">
+                      НАУЧЕТЕ ПОВЕЧЕ
                     </span>
                   </div>
                 </div>
 
-                {/* State Tag bottom right */}
+                {/* State Tag top right */}
                 <div className="absolute top-4 right-4 z-10">
                   <span
                     className={cn(
-                      "px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-md flex items-center gap-1.5",
+                      "px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md shadow-md flex items-center gap-1.5",
                       heroPreview
                         ? "bg-amber-500 text-white"
                         : "bg-emerald-600 text-white"

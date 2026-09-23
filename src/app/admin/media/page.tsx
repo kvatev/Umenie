@@ -14,12 +14,18 @@ export default async function AdminMediaPage() {
   let heroUrl: string | null = null;
 
   try {
-    const { data: heroData } = supabaseAdmin.storage
+    const { data: files } = await supabaseAdmin.storage
       .from("site-assets")
-      .getPublicUrl("hero-banner.webp");
+      .list("", { search: "hero-banner" });
 
-    if (heroData?.publicUrl) {
-      heroUrl = `${heroData.publicUrl}?t=${Date.now()}`;
+    if (files && files.some((f) => f.name === "hero-banner.webp")) {
+      const { data: heroData } = supabaseAdmin.storage
+        .from("site-assets")
+        .getPublicUrl("hero-banner.webp");
+
+      if (heroData?.publicUrl) {
+        heroUrl = `${heroData.publicUrl}?t=${Date.now()}`;
+      }
     }
   } catch (err) {
     console.error("Error getting hero banner url:", err);
