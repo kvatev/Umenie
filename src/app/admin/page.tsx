@@ -16,7 +16,7 @@ import {
   MapPin,
   PhoneCall,
 } from "lucide-react";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { SERVICES_DATA } from "@/lib/services-data";
 import { getSiteSettings } from "@/lib/site-settings";
 

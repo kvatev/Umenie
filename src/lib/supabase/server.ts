@@ -1,14 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { supabaseAdmin } from "./admin";
-
-export { supabaseAdmin };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 /**
- * Server client reading/writing cookies for user session management in Server Components & Actions
+ * Server client reading/writing cookies for user session management in Server Components & Actions.
+ * NOTE: supabaseAdmin is intentionally NOT exported from this module to prevent
+ * the next/headers import from being transitively bundled into client components.
+ * Import supabaseAdmin from "@/lib/supabase/admin" directly.
  */
 export async function createClient() {
   const cookieStore = await cookies();
@@ -31,4 +31,3 @@ export async function createClient() {
     },
   });
 }
-

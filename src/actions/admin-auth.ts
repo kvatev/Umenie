@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient, supabaseAdmin } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function changeAdminPasswordAction(formData: FormData) {
   const newPassword = (formData.get("newPassword") as string) || "";

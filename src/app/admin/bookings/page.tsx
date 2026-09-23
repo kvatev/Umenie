@@ -1,7 +1,7 @@
 import React from "react";
 import { Metadata } from "next";
 import { BookingsTable, BookingRecord } from "@/components/admin/BookingsTable";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
   title: "Заявки за записване | Административен панел",

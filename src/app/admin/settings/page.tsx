@@ -1,7 +1,7 @@
 import React from "react";
 import { Metadata } from "next";
 import { AdminSecuritySettings } from "@/components/admin/AdminSecuritySettings";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
   title: "Сигурност и парола | Административен панел",

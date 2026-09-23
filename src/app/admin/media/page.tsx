@@ -2,7 +2,7 @@ import React from "react";
 import { Metadata } from "next";
 import { MediaManager } from "@/components/admin/MediaManager";
 import { listMediaFolderAction } from "@/actions/admin-media";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
   title: "Банери и Снимки | Административен панел",

@@ -2,7 +2,7 @@ import React from "react";
 import { Metadata } from "next";
 import { ScheduleTable } from "@/components/admin/ScheduleTable";
 import { ScheduleRecord } from "@/components/admin/ScheduleModal";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { DEFAULT_SCHEDULES } from "@/lib/schedule-data";
 
 export const metadata: Metadata = {
