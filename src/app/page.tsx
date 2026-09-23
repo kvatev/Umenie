@@ -172,10 +172,21 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* 4. Quick Contact Banner 1 (Mid-page) */}
-      <section className="w-full bg-[#e9e7f8] py-8 sm:py-12 border-y border-brand-purple/20 my-8">
-        <Container size="xl">
-          <div className="flex flex-col md:flex-row items-center justify-around gap-8 text-center md:text-left">
+      {/* 4. Quick Contact Banner 1 (Mid-page) with Cloud Element */}
+      <section className="relative w-full my-6 sm:my-10 px-4 sm:px-6">
+        <div className="relative max-w-6xl mx-auto py-8 sm:py-12 px-6 sm:px-12 flex items-center justify-center">
+          {/* Cloud Graphic Background */}
+          <div className="absolute inset-0 w-full h-full pointer-events-none -z-10">
+            <Image
+              src="/images/cloud.webp"
+              alt="Облак фон"
+              fill
+              priority
+              className="object-fill drop-shadow-sm"
+            />
+          </div>
+
+          <div className="w-full flex flex-col md:flex-row items-center justify-around gap-8 text-center md:text-left z-10">
             <a
               href={`tel:${SITE_CONFIG.phoneRaw}`}
               className="flex items-center gap-4 group p-3 rounded-2xl hover:bg-white/50 transition-all"
@@ -222,7 +233,7 @@ export default async function HomePage() {
               </div>
             </a>
           </div>
-        </Container>
+        </div>
       </section>
 
       {/* 5. Reviews & Why Choose Us Section */}
