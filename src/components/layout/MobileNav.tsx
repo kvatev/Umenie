@@ -22,8 +22,8 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
   const phoneRaw = settings?.phoneRaw || SITE_CONFIG.phoneRaw;
   const locationFull = settings?.locationFull || SITE_CONFIG.locationFull;
   const googleMapsUrl = settings?.googleMapsUrl || SITE_CONFIG.googleMapsUrl;
-  const facebookUrl = settings?.facebook || SITE_CONFIG.social.facebook;
-  const instagramUrl = settings?.instagram || SITE_CONFIG.social.instagram;
+  const facebookUrl = settings?.facebookUrl || SITE_CONFIG.social.facebook;
+  const instagramUrl = settings?.instagramUrl || SITE_CONFIG.social.instagram;
 
   const prevPathnameRef = React.useRef(pathname);
 
