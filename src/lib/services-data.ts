@@ -147,40 +147,6 @@ export const SERVICES_DATA: ServiceData[] = [
       "Арт работилници и уроци по рисуване и приложни изкуства за деца в Бургас. Творческа среда и изразяване в клуб УМеНИе.",
   },
   {
-    slug: "chitatelski-klub",
-    title: "ЧИТАТЕЛСКИ КЛУБ",
-    shortTitle: "Читателски клуб",
-    cardImage: "/images/services/chitatelski-klub.webp",
-    shortDescription:
-      "Колко рядко си подарявате време за себе си? Четенето се допълва с вино, разговори и нови приятелства. Време за възрастните да се откъснат от ежедневието и да се потопят във вдъхновяваща атмосфера.",
-    sloganPart1: "Днес е книга.",
-    sloganPart2: "Утре е усещането, че сте презаредили.",
-    intro:
-      "Колко рядко си подарявате време само за вас? Читателски клуб е уютно пространство за възрастни, където хубавата книга се съчетава с хубаво вино, задълбочени разговори и истинско откъсване от забързаното ежедневие.",
-    bulletPoints: [
-      "Всеки месец – нова интригуваща книга и споделен разговор, в който всеки може да сподели своя личен прочит.",
-      "Книгите вървят с чаша селектирано вино и приятна компания – защото това е заслужено време за релакс.",
-      "Понякога обръщаме страницата заедно с автора – със специални гостувания, въпроси и вдъхновяващи истории от първо лице.",
-      "Малък спомен от всяка история – за всяка среща подготвяме уникален ръчно изработен тематичен подарък.",
-    ],
-    sliderImages: [
-      "/images/services/chitatelski-klub/slider/slide-1.webp",
-      "/images/services/chitatelski-klub/slider/slide-2.webp",
-      "/images/services/chitatelski-klub/slider/slide-3.webp",
-      "/images/services/chitatelski-klub/slider/slide-4.webp",
-      "/images/services/chitatelski-klub/slider/slide-5.webp",
-      "/images/services/chitatelski-klub/slider/slide-6.webp",
-      "/images/services/chitatelski-klub/slider/slide-7.webp",
-      "/images/services/chitatelski-klub/slider/slide-8.webp",
-    ],
-    pageImages: [
-      "/images/services/chitatelski-klub/page/page-1.webp",
-      "/images/services/chitatelski-klub/page/page-2.webp",
-    ],
-    seoDescription:
-      "Читателски клуб в Бургас за възрастни. Литература, селектирано вино, приятни срещи и вдъхновение в клуб УМеНИе.",
-  },
-  {
     slug: "shah",
     title: "ШАХ",
     shortTitle: "Шах",
