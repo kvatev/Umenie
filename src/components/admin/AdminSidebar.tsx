@@ -9,6 +9,7 @@ import {
   ClipboardList,
   CalendarDays,
   Image as ImageIcon,
+  KeyRound,
   LogOut,
   Menu,
   X,
@@ -37,6 +38,11 @@ const NAV_ITEMS = [
     label: "Банери и Снимки",
     href: "/admin/media",
     icon: ImageIcon,
+  },
+  {
+    label: "Сигурност и парола",
+    href: "/admin/settings",
+    icon: KeyRound,
   },
 ];
 
@@ -137,6 +143,20 @@ export function AdminSidebar() {
 
             <div className="pt-4 border-t border-brand-purple/10 space-y-2">
               <Link
+                href="/admin/settings"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-brand-bg hover:bg-brand-purple/10 border border-brand-purple/15 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-xl bg-brand-purple text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  A
+                </div>
+                <div className="truncate flex-1">
+                  <p className="text-xs font-bold text-brand-dark truncate">admin@umenie.net</p>
+                  <p className="text-[10px] text-emerald-600 font-semibold">Смяна на парола →</p>
+                </div>
+              </Link>
+
+              <Link
                 href="/"
                 target="_blank"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-brand-muted hover:text-brand-purple transition-colors"
@@ -179,10 +199,28 @@ export function AdminSidebar() {
 
         {/* Bottom controls */}
         <div className="p-4 border-t border-brand-purple/10 space-y-2">
+          {/* User Profile Badge */}
+          <Link
+            href="/admin/settings"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-brand-bg hover:bg-brand-purple/10 border border-brand-purple/15 transition-colors group"
+          >
+            <div className="w-7 h-7 rounded-xl bg-brand-purple text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+              A
+            </div>
+            <div className="truncate flex-1">
+              <p className="text-xs font-bold text-brand-dark group-hover:text-brand-purple truncate">
+                admin@umenie.net
+              </p>
+              <p className="text-[10px] text-emerald-600 font-semibold">
+                Смяна на парола →
+              </p>
+            </div>
+          </Link>
+
           <Link
             href="/"
             target="_blank"
-            className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-semibold text-brand-muted hover:text-brand-purple hover:bg-brand-purple/5 transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2 rounded-2xl text-xs font-semibold text-brand-muted hover:text-brand-purple hover:bg-brand-purple/5 transition-colors"
           >
             <ExternalLink className="w-4 h-4 text-brand-purple/70" />
             <span>Преглед на уебсайта</span>
@@ -191,7 +229,7 @@ export function AdminSidebar() {
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-4 py-2 rounded-2xl text-xs font-bold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>{isLoggingOut ? "Излизане..." : "Изход"}</span>

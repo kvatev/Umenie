@@ -29,22 +29,40 @@ function LoginForm() {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+      const trimmedEmail = email.trim();
+      let res = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
         password,
       });
 
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
+      // Seamless alias fallback between admin@umenie.net and admin@umenie.bg
+      if (res.error && res.error.message.includes("Invalid login credentials")) {
+        const altEmail =
+          trimmedEmail.toLowerCase() === "admin@umenie.net"
+            ? "admin@umenie.bg"
+            : trimmedEmail.toLowerCase() === "admin@umenie.bg"
+            ? "admin@umenie.net"
+            : null;
+
+        if (altEmail) {
+          res = await supabase.auth.signInWithPassword({
+            email: altEmail,
+            password,
+          });
+        }
+      }
+
+      if (res.error) {
+        if (res.error.message.includes("Invalid login credentials")) {
           setErrorMsg("Невалиден имейл адрес или парола.");
         } else {
-          setErrorMsg(error.message || "Грешка при вход в системата.");
+          setErrorMsg(res.error.message || "Грешка при вход в системата.");
         }
         setIsLoading(false);
         return;
       }
 
-      if (data?.session) {
+      if (res.data?.session) {
         // Successful login -> Redirect
         router.push(redirectUrl);
         router.refresh();
@@ -103,7 +121,7 @@ function LoginForm() {
                 type="email"
                 required
                 autoComplete="email"
-                placeholder="admin@umenie.bg"
+                placeholder="admin@umenie.net"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 rounded-2xl bg-brand-bg text-sm text-brand-dark border border-brand-purple/20 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-brand-purple transition-all"
