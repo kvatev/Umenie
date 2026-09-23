@@ -16,22 +16,44 @@ interface MobileNavProps {
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const pathname = usePathname();
 
+  const prevPathnameRef = React.useRef(pathname);
+
   // Prevent background scrolling when menu is open
   useEffect(() => {
     if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+      return () => {
+        document.body.style.overflow = originalOverflow || "unset";
+      };
     }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
   }, [isOpen]);
 
-  // Close when pathname changes
+  // Close when pathname actually changes (e.g. navigation via browser history or link)
   useEffect(() => {
-    onClose();
-  }, [pathname, onClose]);
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      if (isOpen) {
+        onClose();
+      }
+    }
+  }, [pathname, isOpen, onClose]);
+
+  // Close on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   return (
     <>
@@ -48,7 +70,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
       {/* Drawer panel */}
       <aside
         className={cn(
-          "fixed top-0 right-0 bottom-0 z-50 w-[85%] max-w-sm bg-[#f1f2f6] shadow-2xl flex flex-col justify-between p-6 transition-transform duration-300 ease-out md:hidden border-l border-brand-purple/20",
+          "fixed top-0 right-0 bottom-0 z-50 w-[85%] max-w-sm h-full max-h-[100dvh] overflow-y-auto bg-[#f1f2f6] shadow-2xl flex flex-col justify-between p-6 transition-transform duration-300 ease-out md:hidden border-l border-brand-purple/20",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
         aria-label="Мобилно меню"
@@ -56,7 +78,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
         <div>
           {/* Drawer Header */}
           <div className="flex items-center justify-between pb-4 border-b border-brand-purple/15">
-            <Link href="/" onClick={onClose} className="relative block h-12 w-32">
+            <Link href="/" onClick={onClose} className="relative block h-12 w-32 focus:outline-none">
               <Image
                 src="/images/logo.webp"
                 alt={SITE_CONFIG.name}
@@ -67,8 +89,9 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               />
             </Link>
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 rounded-full text-brand-dark hover:text-brand-purple hover:bg-brand-purple/10 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-purple"
+              className="p-2 rounded-full text-brand-dark hover:text-brand-purple hover:bg-brand-purple/10 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer"
               aria-label="Затвори менюто"
             >
               <X className="w-6 h-6" />

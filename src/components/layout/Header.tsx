@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -14,8 +14,16 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  const closeMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
+  const toggleMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen((prev) => !prev);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-30 w-full transition-all duration-200">
+    <header className="sticky top-0 z-40 w-full transition-all duration-200">
       {/* Top micro bar for desktop info: Location & Phone */}
       <div className="hidden lg:block bg-[#887ed8]/10 border-b border-[#887ed8]/15 text-xs text-brand-dark py-1.5">
         <Container size="xl" className="flex items-center justify-between">
@@ -106,9 +114,10 @@ export function Header() {
 
           {/* Mobile Hamburger Button */}
           <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="md:hidden flex flex-col justify-center items-center w-11 h-11 rounded-2xl bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-all focus:outline-none focus:ring-2 focus:ring-brand-purple"
-            aria-label="Отвори навигационното меню"
+            type="button"
+            onClick={toggleMobileMenu}
+            className="md:hidden flex flex-col justify-center items-center w-11 h-11 rounded-2xl bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-all focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer active:scale-95"
+            aria-label={isMobileMenuOpen ? "Затвори навигационното меню" : "Отвори навигационното меню"}
             aria-expanded={isMobileMenuOpen}
           >
             <span className="w-6 h-0.5 bg-brand-purple rounded-full my-0.5" />
@@ -121,7 +130,7 @@ export function Header() {
       {/* Mobile Drawer */}
       <MobileNav
         isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
+        onClose={closeMobileMenu}
       />
     </header>
   );
