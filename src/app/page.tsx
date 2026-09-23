@@ -10,7 +10,7 @@ import { KidsGallery } from "@/components/home/KidsGallery";
 import { ReviewsSection } from "@/components/home/ReviewsSection";
 import { ScheduleBanner } from "@/components/home/ScheduleBanner";
 import { Metadata } from "next";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export const revalidate = 60; // revalidate on demand or every 60s

@@ -19,6 +19,11 @@ export function Header({ initialSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  // Do not render public header in the admin panel
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   const phoneDisplay = initialSettings?.phoneDisplay || SITE_CONFIG.phoneDisplay;
   const phoneRaw = initialSettings?.phoneRaw || SITE_CONFIG.phoneRaw;
   const locationShort = initialSettings?.locationShort || SITE_CONFIG.locationShort;

@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { supabaseAdmin } from "@/lib/supabase/server";
-import { getSiteSettings, SiteSettings, DEFAULT_SETTINGS } from "@/lib/site-settings";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getSiteSettings } from "@/lib/site-settings";
+import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/types/site-settings";
 
 const BUCKET_NAME = "site-assets";
 const FILE_NAME = "settings.json";

@@ -3,6 +3,7 @@ import { Comfortaa, Montserrat } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ConditionalFooter } from "@/components/layout/ConditionalFooter";
 import { SITE_CONFIG } from "@/lib/constants";
 
 const comfortaa = Comfortaa({
@@ -142,7 +143,9 @@ export default function RootLayout({
       <body className="font-sans bg-[#f1f2f6] text-brand-dark min-h-screen flex flex-col selection:bg-brand-purple selection:text-white">
         <Header />
         <main className="flex-1 w-full">{children}</main>
-        <Footer />
+        <ConditionalFooter>
+          <Footer />
+        </ConditionalFooter>
       </body>
     </html>
   );

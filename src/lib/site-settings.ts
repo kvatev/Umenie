@@ -1,5 +1,5 @@
 import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/types/site-settings";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export * from "@/lib/types/site-settings";
 

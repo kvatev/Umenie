@@ -1,7 +1,7 @@
 "use server";
 
 import { BookingSchema, BookingResult } from "@/lib/validations/booking";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function createBookingAction(formData: unknown): Promise<BookingResult> {
   // 1. Validation with Zod

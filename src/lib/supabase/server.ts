@@ -1,10 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { supabaseAdmin } from "./admin";
+
+export { supabaseAdmin };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 /**
  * Server client reading/writing cookies for user session management in Server Components & Actions
@@ -31,16 +32,3 @@ export async function createClient() {
   });
 }
 
-/**
- * Elevated admin client (service_role) bypassing RLS for server-side management
- */
-export const supabaseAdmin = createAdminClient(
-  supabaseUrl || "https://placeholder.supabase.co",
-  supabaseServiceRoleKey || "placeholder_service_role_key",
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
