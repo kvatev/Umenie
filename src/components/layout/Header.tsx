@@ -23,8 +23,8 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 w-full transition-all duration-200">
-      {/* Top micro bar for desktop info: Location & Phone */}
+    <>
+      {/* Top micro bar for desktop info: Location & Phone (scrolls away naturally) */}
       <div className="hidden lg:block bg-[#887ed8]/10 border-b border-[#887ed8]/15 text-xs text-brand-dark py-1.5">
         <Container size="xl" className="flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -51,8 +51,8 @@ export function Header() {
         </Container>
       </div>
 
-      {/* Main navigation bar */}
-      <div className="bg-[#f1f2f6]/95 backdrop-blur-md border-b border-brand-purple/15 shadow-sm">
+      {/* Main navigation bar (stays sticky at top when scrolling) */}
+      <header className="sticky top-0 z-40 w-full bg-[#f1f2f6]/95 backdrop-blur-md border-b border-brand-purple/15 shadow-sm transition-all duration-200">
         <Container size="xl" className="flex items-center justify-between h-20 md:h-24">
           {/* Logo */}
           <Link
@@ -125,13 +125,13 @@ export function Header() {
             <span className="w-6 h-0.5 bg-brand-purple rounded-full my-0.5" />
           </button>
         </Container>
-      </div>
 
-      {/* Mobile Drawer */}
-      <MobileNav
-        isOpen={isMobileMenuOpen}
-        onClose={closeMobileMenu}
-      />
-    </header>
+        {/* Mobile Drawer */}
+        <MobileNav
+          isOpen={isMobileMenuOpen}
+          onClose={closeMobileMenu}
+        />
+      </header>
+    </>
   );
 }
