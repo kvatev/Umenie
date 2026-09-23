@@ -89,44 +89,52 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "name": "Образователен клуб „УМеНИе“",
-      "alternateName": ["Умение", "Клуб Умение", "УМеНИе", "Умение Начало"],
-      "url": "https://www.umenie.net/"
-    },
-    {
-      "@type": "EducationalOrganization",
-      "name": "Образователен клуб „УМеНИе“",
-      "alternateName": ["Клуб Умение", "УМеНИе Бургас"],
-      "url": "https://www.umenie.net",
-      "logo": "https://www.umenie.net/icon.png",
-      "image": "https://www.umenie.net/og-image.jpg",
-      "description":
-        "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
-      "telephone": "+359877488481",
-      "email": "umenie48@gmail.com",
-      "address": {
-        "@type": "PostalAddress",
-        streetAddress: "ж.к. Славейков, бл. 48, партер",
-        addressLocality: "Бургас",
-        postalCode: "8000",
-        addressCountry: "BG",
-      },
-      "areaServed": "Бургас",
-      "priceRange": "$$",
-    },
-  ],
-};
+import { getSiteSettings } from "@/lib/site-settings";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSiteSettings();
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "name": "Образователен клуб „УМеНИе“",
+        "alternateName": ["Умение", "Клуб Умение", "УМеНИе", "Умение Начало"],
+        "url": "https://www.umenie.net/"
+      },
+      {
+        "@type": "EducationalOrganization",
+        "name": "Образователен клуб „УМеНИе“",
+        "alternateName": ["Клуб Умение", "УМеНИе Бургас"],
+        "url": "https://www.umenie.net",
+        "logo": "https://www.umenie.net/icon.png",
+        "image": "https://www.umenie.net/og-image.jpg",
+        "description":
+          "Уроци, курсове, занималня, шах, плетиво и арт занимания за деца в гр. Бургас, ж.к. Славейков.",
+        "telephone": settings.phoneRaw,
+        "email": settings.email,
+        "address": {
+          "@type": "PostalAddress",
+          streetAddress: settings.locationFull,
+          addressLocality: "Бургас",
+          postalCode: "8000",
+          addressCountry: "BG",
+        },
+        "sameAs": [
+          settings.facebook,
+          settings.instagram,
+        ],
+        "areaServed": "Бургас",
+        "priceRange": "$$",
+      },
+    ],
+  };
+
   return (
     <html lang="bg" className={`${comfortaa.variable} ${montserrat.variable}`}>
       <head>
@@ -136,7 +144,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans bg-[#f1f2f6] text-brand-dark min-h-screen flex flex-col selection:bg-brand-purple selection:text-white">
-        <Header />
+        <Header initialSettings={settings} />
         <main className="flex-1 w-full">{children}</main>
         <Footer />
       </body>

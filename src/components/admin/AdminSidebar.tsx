@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   ExternalLink,
+  PhoneCall,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,11 @@ const NAV_ITEMS = [
     label: "Банери и Снимки",
     href: "/admin/media",
     icon: ImageIcon,
+  },
+  {
+    label: "Контакти и мрежи",
+    href: "/admin/contacts",
+    icon: PhoneCall,
   },
   {
     label: "Сигурност и парола",

@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { SERVICES_DATA } from "@/lib/services-data";
 import { ServiceCard } from "@/components/services/ServiceCard";
-import { SITE_CONFIG } from "@/lib/constants";
+import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { Calendar } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -89,55 +89,7 @@ export default function ServicesPage() {
         </div>
 
         {/* Quick Contact Banner */}
-        <div className="w-full bg-[#e9e7f8] py-8 sm:py-12 px-6 rounded-3xl border border-brand-purple/20 mt-16 sm:mt-24">
-          <div className="flex flex-col md:flex-row items-center justify-around gap-8 text-center md:text-left">
-            <a
-              href={`tel:${SITE_CONFIG.phoneRaw}`}
-              className="flex items-center gap-4 group p-3 rounded-2xl hover:bg-white/50 transition-all"
-            >
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
-                <Image
-                  src="/images/phone.webp"
-                  alt="Телефон"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-              <div className="text-left">
-                <p className="text-xs sm:text-sm font-heading font-bold text-brand-dark tracking-wide uppercase">
-                  ИМАТЕ ВЪПРОСИ? ОБАДЕТЕ НИ СЕ!
-                </p>
-                <p className="font-heading font-bold text-2xl sm:text-3xl text-brand-purple">
-                  {SITE_CONFIG.phoneDisplay}
-                </p>
-              </div>
-            </a>
-
-            <a
-              href={SITE_CONFIG.googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-4 group p-3 rounded-2xl hover:bg-white/50 transition-all"
-            >
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
-                <Image
-                  src="/images/location.webp"
-                  alt="Локация"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-              <div className="text-left">
-                <p className="text-xs sm:text-sm font-heading font-bold text-brand-dark tracking-wide uppercase">
-                  КЪДЕ?
-                </p>
-                <p className="font-heading font-bold text-lg sm:text-xl text-brand-purple uppercase">
-                  {SITE_CONFIG.locationShort}
-                </p>
-              </div>
-            </a>
-          </div>
-        </div>
+        <QuickContactBanner className="rounded-3xl border border-brand-purple/20 mt-16 sm:mt-24" />
       </Container>
     </div>
   );

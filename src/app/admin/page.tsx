@@ -14,9 +14,11 @@ import {
   ExternalLink,
   Layers,
   MapPin,
+  PhoneCall,
 } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { SERVICES_DATA } from "@/lib/services-data";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +54,8 @@ function getActivityThumbnail(activityName: string): string {
 }
 
 export default async function AdminDashboardPage() {
+  const siteSettings = await getSiteSettings();
+
   // Fetch metrics, recent bookings, and active hero
   let totalBookings = 0;
   let pendingBookings = 0;
@@ -254,7 +258,7 @@ export default async function AdminDashboardPage() {
           </a>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
           {/* Snippet 1: Hero Banner */}
           <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-brand-purple/15 flex flex-col justify-between group">
             <div className="p-4 border-b border-brand-purple/10 flex items-center justify-between">
@@ -409,6 +413,53 @@ export default async function AdminDashboardPage() {
               <span className="text-[11px] text-brand-muted">Календар за родители</span>
               <Link
                 href="/admin/schedule"
+                className="text-xs font-bold text-brand-purple hover:underline flex items-center gap-1"
+              >
+                <span>Редактирай</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Snippet 5: Contacts & Socials */}
+          <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-brand-purple/15 flex flex-col justify-between group">
+            <div className="p-4 border-b border-brand-purple/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PhoneCall className="w-4 h-4 text-brand-purple" />
+                <span className="font-heading font-bold text-xs text-brand-dark">
+                  Контакти & Мрежи
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                На живо
+              </span>
+            </div>
+
+            <div className="p-3 bg-brand-bg h-44 flex flex-col justify-between space-y-2">
+              <div className="p-2.5 rounded-2xl bg-white border border-brand-purple/15 shadow-xs space-y-1">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-brand-dark truncate">
+                  <Phone className="w-3 h-3 text-brand-purple shrink-0" />
+                  <span>{siteSettings.phoneDisplay}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-brand-muted truncate">
+                  <MapPin className="w-3 h-3 text-brand-purple shrink-0" />
+                  <span>{siteSettings.locationShort}</span>
+                </div>
+              </div>
+
+              <div className="p-2 rounded-2xl bg-white border border-brand-purple/15 shadow-xs flex items-center justify-between text-[10px]">
+                <span className="text-brand-muted truncate pr-1">{siteSettings.email}</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[9px] font-bold">f</span>
+                  <span className="w-4 h-4 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center text-[9px] font-bold">ig</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 bg-brand-bg/50 flex items-center justify-between">
+              <span className="text-[11px] text-brand-muted">Телефон, адрес, линкове</span>
+              <Link
+                href="/admin/contacts"
                 className="text-xs font-bold text-brand-purple hover:underline flex items-center gap-1"
               >
                 <span>Редактирай</span>

@@ -4,9 +4,11 @@ import Image from "next/image";
 import { Phone, MapPin, Mail } from "lucide-react";
 import { SITE_CONFIG, FOOTER_LEGAL_LINKS } from "@/lib/constants";
 import { Container } from "@/components/ui/Container";
+import { getSiteSettings } from "@/lib/site-settings";
 
-export function Footer() {
+export async function Footer() {
   const currentYear = new Date().getFullYear();
+  const settings = await getSiteSettings();
 
   return (
     <footer className="w-full bg-[#f1f2f6] border-t border-brand-purple/20 pt-12 pb-8 mt-auto">
@@ -20,18 +22,18 @@ export function Footer() {
             <ul className="space-y-3.5 text-sm md:text-base font-medium text-brand-dark">
               <li>
                 <a
-                  href={`tel:${SITE_CONFIG.phoneRaw}`}
+                  href={`tel:${settings.phoneRaw}`}
                   className="inline-flex items-center gap-3 hover:text-brand-purple transition-colors group"
                 >
                   <span className="p-2 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors">
                     <Phone className="w-4 h-4 shrink-0" />
                   </span>
-                  <span className="font-semibold">{SITE_CONFIG.phoneFull}</span>
+                  <span className="font-semibold">{settings.phoneFull}</span>
                 </a>
               </li>
               <li>
                 <a
-                  href={SITE_CONFIG.googleMapsUrl}
+                  href={settings.googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-start gap-3 hover:text-brand-purple transition-colors group"
@@ -40,20 +42,20 @@ export function Footer() {
                     <MapPin className="w-4 h-4 shrink-0" />
                   </span>
                   <span className="uppercase text-xs md:text-sm font-semibold leading-relaxed">
-                    {SITE_CONFIG.locationFull}
+                    {settings.locationFull}
                   </span>
                 </a>
               </li>
               <li>
                 <a
-                  href={`mailto:${SITE_CONFIG.email}`}
+                  href={`mailto:${settings.email}`}
                   className="inline-flex items-center gap-3 hover:text-brand-purple transition-colors group"
                 >
                   <span className="p-2 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors">
                     <Mail className="w-4 h-4 shrink-0" />
                   </span>
                   <span className="uppercase text-xs md:text-sm font-semibold tracking-wide">
-                    {SITE_CONFIG.email}
+                    {settings.email}
                   </span>
                 </a>
               </li>
@@ -72,11 +74,11 @@ export function Footer() {
               />
             </Link>
             <p className="text-xs md:text-sm text-brand-muted max-w-xs font-medium">
-              {SITE_CONFIG.tagline}
+              {settings.tagline}
             </p>
             <div className="flex items-center gap-4 pt-2">
               <a
-                href={SITE_CONFIG.social.facebook}
+                href={settings.facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook страница на УМеНИе"
@@ -92,7 +94,7 @@ export function Footer() {
                 </div>
               </a>
               <a
-                href={SITE_CONFIG.social.instagram}
+                href={settings.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram профил на УМеНИе"
@@ -134,7 +136,7 @@ export function Footer() {
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-muted gap-3">
           <p>© {currentYear} Образователен клуб „УМеНИе“. Всички права запазени.</p>
           <p className="text-brand-muted/70">
-            гр. Бургас, кв. Славейков
+            {settings.locationShort}
           </p>
         </div>
       </Container>

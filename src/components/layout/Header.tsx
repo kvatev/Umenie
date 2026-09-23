@@ -9,10 +9,21 @@ import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { MobileNav } from "./MobileNav";
+import { SiteSettings } from "@/lib/site-settings";
 
-export function Header() {
+interface HeaderProps {
+  initialSettings?: SiteSettings;
+}
+
+export function Header({ initialSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  const phoneDisplay = initialSettings?.phoneDisplay || SITE_CONFIG.phoneDisplay;
+  const phoneRaw = initialSettings?.phoneRaw || SITE_CONFIG.phoneRaw;
+  const locationShort = initialSettings?.locationShort || SITE_CONFIG.locationShort;
+  const googleMapsUrl = initialSettings?.googleMapsUrl || SITE_CONFIG.googleMapsUrl;
+  const tagline = initialSettings?.tagline || SITE_CONFIG.tagline;
 
   const closeMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(false);
@@ -29,24 +40,24 @@ export function Header() {
         <Container size="xl" className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <a
-              href={SITE_CONFIG.googleMapsUrl}
+              href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-brand-dark/80 hover:text-brand-purple transition-colors font-medium"
             >
               <MapPin className="w-3.5 h-3.5 text-brand-purple shrink-0" />
-              <span>{SITE_CONFIG.locationShort}</span>
+              <span>{locationShort}</span>
             </a>
             <span className="text-brand-purple/30">•</span>
-            <span className="text-brand-muted">{SITE_CONFIG.tagline}</span>
+            <span className="text-brand-muted">{tagline}</span>
           </div>
 
           <a
-            href={`tel:${SITE_CONFIG.phoneRaw}`}
+            href={`tel:${phoneRaw}`}
             className="flex items-center gap-1.5 text-brand-dark font-bold hover:text-brand-purple transition-colors"
           >
             <Phone className="w-3.5 h-3.5 text-brand-purple shrink-0" />
-            <span>{SITE_CONFIG.phoneDisplay}</span>
+            <span>{phoneDisplay}</span>
           </a>
         </Container>
       </div>
@@ -104,11 +115,11 @@ export function Header() {
           {/* Desktop Right Contact CTA */}
           <div className="hidden md:flex items-center gap-3">
             <a
-              href={`tel:${SITE_CONFIG.phoneRaw}`}
+              href={`tel:${phoneRaw}`}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-sm shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-[0.98]"
             >
               <Phone className="w-4 h-4 shrink-0" />
-              <span>{SITE_CONFIG.phoneDisplay}</span>
+              <span>{phoneDisplay}</span>
             </a>
           </div>
 
@@ -130,6 +141,7 @@ export function Header() {
         <MobileNav
           isOpen={isMobileMenuOpen}
           onClose={closeMobileMenu}
+          settings={initialSettings}
         />
       </header>
     </>

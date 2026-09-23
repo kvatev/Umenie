@@ -11,6 +11,7 @@ import { ReviewsSection } from "@/components/home/ReviewsSection";
 import { ScheduleBanner } from "@/components/home/ScheduleBanner";
 import { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const revalidate = 60; // revalidate on demand or every 60s
 
@@ -49,6 +50,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
+  const settings = await getSiteSettings();
   let heroBannerSrc = "/images/opening-photo.webp";
 
   try {
@@ -188,7 +190,7 @@ export default async function HomePage() {
 
           <div className="w-full flex flex-col md:flex-row items-center justify-around gap-8 text-center md:text-left z-10">
             <a
-              href={`tel:${SITE_CONFIG.phoneRaw}`}
+              href={`tel:${settings.phoneRaw}`}
               className="flex items-center gap-4 group p-3 rounded-2xl hover:bg-white/50 transition-all"
             >
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
@@ -204,13 +206,13 @@ export default async function HomePage() {
                   ИМАТЕ ВЪПРОСИ? ОБАДЕТЕ НИ СЕ!
                 </p>
                 <p className="font-heading font-bold text-2xl sm:text-3xl text-brand-purple">
-                  {SITE_CONFIG.phoneDisplay}
+                  {settings.phoneDisplay}
                 </p>
               </div>
             </a>
 
             <a
-              href={SITE_CONFIG.googleMapsUrl}
+              href={settings.googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-4 group p-3 rounded-2xl hover:bg-white/50 transition-all"
@@ -228,7 +230,7 @@ export default async function HomePage() {
                   КЪДЕ?
                 </p>
                 <p className="font-heading font-bold text-lg sm:text-xl text-brand-purple uppercase">
-                  {SITE_CONFIG.locationShort}
+                  {settings.locationShort}
                 </p>
               </div>
             </a>

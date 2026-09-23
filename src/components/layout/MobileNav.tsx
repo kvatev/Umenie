@@ -7,14 +7,23 @@ import { usePathname } from "next/navigation";
 import { X, Phone, MapPin, Mail, ArrowRight } from "lucide-react";
 import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { SiteSettings } from "@/lib/site-settings";
 
 interface MobileNavProps {
   isOpen: boolean;
   onClose: () => void;
+  settings?: SiteSettings;
 }
 
-export function MobileNav({ isOpen, onClose }: MobileNavProps) {
+export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
   const pathname = usePathname();
+
+  const phoneDisplay = settings?.phoneDisplay || SITE_CONFIG.phoneDisplay;
+  const phoneRaw = settings?.phoneRaw || SITE_CONFIG.phoneRaw;
+  const locationFull = settings?.locationFull || SITE_CONFIG.locationFull;
+  const googleMapsUrl = settings?.googleMapsUrl || SITE_CONFIG.googleMapsUrl;
+  const facebookUrl = settings?.facebook || SITE_CONFIG.social.facebook;
+  const instagramUrl = settings?.instagram || SITE_CONFIG.social.instagram;
 
   const prevPathnameRef = React.useRef(pathname);
 
@@ -135,16 +144,16 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
         <div className="pt-6 border-t border-brand-purple/15 space-y-4">
           {/* Quick Call Button */}
           <a
-            href={`tel:${SITE_CONFIG.phoneRaw}`}
+            href={`tel:${phoneRaw}`}
             className="flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-brand-purple text-white rounded-full font-heading font-bold text-sm shadow-button hover:bg-brand-purple-hover transition-all active:scale-[0.98]"
           >
             <Phone className="w-4 h-4" />
-            <span>{SITE_CONFIG.phoneDisplay}</span>
+            <span>{phoneDisplay}</span>
           </a>
 
           {/* Location Badge */}
           <a
-            href={SITE_CONFIG.googleMapsUrl}
+            href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-start gap-2.5 p-3 rounded-2xl bg-white/70 hover:bg-white text-xs text-brand-dark transition-colors"
@@ -152,14 +161,14 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             <MapPin className="w-4 h-4 text-brand-purple shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-brand-purple">Локация</p>
-              <p className="text-brand-muted">{SITE_CONFIG.locationFull}</p>
+              <p className="text-brand-muted">{locationFull}</p>
             </div>
           </a>
 
           {/* Social Icons */}
           <div className="flex items-center justify-center gap-4 pt-2">
             <a
-              href={SITE_CONFIG.social.facebook}
+              href={facebookUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook страница"
@@ -175,7 +184,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               </div>
             </a>
             <a
-              href={SITE_CONFIG.social.instagram}
+              href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram профил"
