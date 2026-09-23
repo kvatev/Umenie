@@ -178,7 +178,7 @@ export default async function HomePage() {
       <section className="relative w-full my-6 sm:my-10 px-4 sm:px-6">
         <div className="relative max-w-6xl mx-auto py-8 sm:py-12 px-6 sm:px-12 flex items-center justify-center">
           {/* Cloud Graphic Background */}
-          <div className="absolute inset-0 w-full h-full pointer-events-none -z-10">
+          <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
             <Image
               src="/images/cloud.webp"
               alt="Облак фон"
@@ -188,7 +188,7 @@ export default async function HomePage() {
             />
           </div>
 
-          <div className="w-full flex flex-col md:flex-row items-center justify-around gap-8 text-center md:text-left z-10">
+          <div className="relative w-full flex flex-col md:flex-row items-center justify-around gap-8 text-center md:text-left z-10">
             <a
               href={`tel:${settings.phoneRaw}`}
               className="flex items-center gap-4 group p-3 rounded-2xl hover:bg-white/50 transition-all"

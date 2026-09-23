@@ -1,31 +1,7 @@
-import { SITE_CONFIG } from "@/lib/constants";
+import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/types/site-settings";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
-export interface SiteSettings {
-  phoneDisplay: string;
-  phoneFull: string;
-  phoneRaw: string;
-  locationShort: string;
-  locationFull: string;
-  googleMapsUrl: string;
-  email: string;
-  tagline: string;
-  facebookUrl: string;
-  instagramUrl: string;
-}
-
-export const DEFAULT_SETTINGS: SiteSettings = {
-  phoneDisplay: SITE_CONFIG.phoneDisplay,
-  phoneFull: SITE_CONFIG.phoneFull,
-  phoneRaw: SITE_CONFIG.phoneRaw,
-  locationShort: SITE_CONFIG.locationShort,
-  locationFull: SITE_CONFIG.locationFull,
-  googleMapsUrl: SITE_CONFIG.googleMapsUrl,
-  email: SITE_CONFIG.email,
-  tagline: SITE_CONFIG.tagline,
-  facebookUrl: SITE_CONFIG.social.facebook,
-  instagramUrl: SITE_CONFIG.social.instagram,
-};
+export * from "@/lib/types/site-settings";
 
 const BUCKET_NAME = "site-assets";
 const FILE_NAME = "settings.json";
@@ -35,6 +11,13 @@ const FILE_NAME = "settings.json";
  * Falls back safely to DEFAULT_SETTINGS (SITE_CONFIG) on any error.
  */
 export async function getSiteSettings(): Promise<SiteSettings> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceKey || supabaseUrl.includes("placeholder")) {
+    return DEFAULT_SETTINGS;
+  }
+
   try {
     const { data, error } = await supabaseAdmin.storage
       .from(BUCKET_NAME)

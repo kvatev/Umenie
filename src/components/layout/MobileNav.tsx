@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { X, Phone, MapPin, Mail, ArrowRight } from "lucide-react";
 import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { SiteSettings } from "@/lib/site-settings";
+import type { SiteSettings } from "@/lib/types/site-settings";
 
 interface MobileNavProps {
   isOpen: boolean;

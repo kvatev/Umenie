@@ -9,7 +9,7 @@ import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { MobileNav } from "./MobileNav";
-import { SiteSettings } from "@/lib/site-settings";
+import type { SiteSettings } from "@/lib/types/site-settings";
 
 interface HeaderProps {
   initialSettings?: SiteSettings;

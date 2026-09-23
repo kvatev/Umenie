@@ -17,7 +17,7 @@ import {
   Globe,
   Info,
 } from "lucide-react";
-import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/site-settings";
+import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/types/site-settings";
 import { updateSiteSettingsAction } from "@/actions/admin-settings";
 import { cn } from "@/lib/utils";
 
