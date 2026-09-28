@@ -1,5 +1,7 @@
 import React from "react";
 import { Metadata } from "next";
+import Link from "next/link";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 
 export const metadata: Metadata = {
@@ -10,12 +12,28 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="py-12 sm:py-16 md:py-20 bg-brand-bg">
+    <div className="py-10 sm:py-16 md:py-20 bg-brand-bg">
       <Container size="md">
+        {/* Top Back Link */}
+        <div className="mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-heading font-bold text-brand-purple hover:text-brand-purple-hover transition-colors group cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            <span>Назад към началната страница</span>
+          </Link>
+        </div>
+
         <div className="bg-white p-6 sm:p-10 md:p-12 rounded-3xl shadow-card border border-brand-purple/15 space-y-6">
-          <h1 className="font-heading font-bold text-2xl sm:text-3xl text-brand-purple leading-snug border-b border-brand-purple/15 pb-4">
-            ПОЛИТИКА ЗА ПОВЕРИТЕЛНОСТ И ЗАЩИТА НА ЛИЧНИТЕ ДАННИ
-          </h1>
+          <div className="flex items-center gap-3 border-b border-brand-purple/15 pb-4">
+            <div className="p-2.5 rounded-2xl bg-brand-purple/10 text-brand-purple shrink-0">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <h1 className="font-heading font-bold text-xl sm:text-2xl md:text-3xl text-brand-purple leading-snug">
+              ПОЛИТИКА ЗА ПОВЕРИТЕЛНОСТ И ЗАЩИТА НА ЛИЧНИТЕ ДАННИ
+            </h1>
+          </div>
 
           <div className="space-y-4 text-sm sm:text-base text-brand-dark/90 leading-relaxed font-sans">
             <p>
@@ -209,6 +227,19 @@ export default function PrivacyPolicyPage() {
                   umenie48@gmail.com
                 </a>
               </p>
+            </div>
+
+            <div className="pt-6 border-t border-brand-purple/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <p className="text-xs text-brand-muted">
+                Последна актуализация: 28 септември 2026 г.
+              </p>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 text-xs font-heading font-bold text-brand-purple hover:underline"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Обратно към началната страница</span>
+              </Link>
             </div>
           </div>
         </div>

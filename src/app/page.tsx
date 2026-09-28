@@ -67,8 +67,22 @@ export default async function HomePage() {
   // 2. Resolve Review Screenshot
   let reviewScreenshotUrl: string | null = settings.reviewScreenshotUrl || null;
 
-  // 3. Resolve Gallery
+  // 3. Resolve Gallery from gallery_images table or storage
   let dynamicGalleryImages: { src: string; alt: string }[] | undefined = undefined;
+
+  try {
+    const { data: dbGallery } = await supabaseAdmin
+      .from("gallery_images")
+      .select("public_url, caption")
+      .order("display_order", { ascending: true });
+
+    if (dbGallery && dbGallery.length > 0) {
+      dynamicGalleryImages = dbGallery.map((g) => ({
+        src: g.public_url,
+        alt: g.caption || "Деца с умения в образователен клуб УМеНИе",
+      }));
+    }
+  } catch {}
 
   try {
     const { data: files } = await supabaseAdmin.storage
@@ -124,20 +138,22 @@ export default async function HomePage() {
         }
       }
 
-      // Check for Kids Gallery dynamic photos
-      const galleryFiles = files.filter(
-        (f) => f.name.startsWith("kids-") || f.name.startsWith("gallery-")
-      );
-      if (galleryFiles.length > 0) {
-        dynamicGalleryImages = galleryFiles.map((f) => {
-          const { data } = supabaseAdmin.storage
-            .from("site-assets")
-            .getPublicUrl(f.name);
-          return {
-            src: data.publicUrl,
-            alt: "Деца с умения в образователен клуб УМеНИе",
-          };
-        });
+      // Fallback: Check for Kids Gallery dynamic photos in storage if table was empty
+      if (!dynamicGalleryImages || dynamicGalleryImages.length === 0) {
+        const galleryFiles = files.filter(
+          (f) => f.name.startsWith("kids-") || f.name.startsWith("gallery-")
+        );
+        if (galleryFiles.length > 0) {
+          dynamicGalleryImages = galleryFiles.map((f) => {
+            const { data } = supabaseAdmin.storage
+              .from("site-assets")
+              .getPublicUrl(f.name);
+            return {
+              src: data.publicUrl,
+              alt: "Деца с умения в образователен клуб УМеНИе",
+            };
+          });
+        }
       }
     }
   } catch (err) {
