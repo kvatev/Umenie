@@ -67,6 +67,9 @@ export async function createBookingAction(formData: unknown): Promise<BookingRes
     revalidatePath("/admin/bookings");
     revalidatePath("/admin");
     revalidatePath("/grafik");
+    revalidatePath("/");
+    revalidatePath("/za-nas");
+    revalidatePath("/uslugi");
 
     return {
       success: true,

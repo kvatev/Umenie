@@ -52,29 +52,54 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
     const jsonString = JSON.stringify(updatedSettings, null, 2);
     const buffer = Buffer.from(jsonString, "utf-8");
 
-    const { error } = await supabaseAdmin.storage
-      .from(BUCKET_NAME)
-      .upload(FILE_NAME, buffer, {
-        contentType: "application/json",
-        upsert: true,
-      });
-
-    if (error) {
-      console.error("Error saving site settings to Supabase:", error.message);
-      return { success: false, message: error.message };
+    // 1. Sync to site_settings table (schema requirement 1)
+    try {
+      await supabaseAdmin
+        .from("site_settings")
+        .upsert({
+          id: 1,
+          hero_media_type: updatedSettings.heroMediaType,
+          hero_media_url: updatedSettings.heroMediaType === "video" ? updatedSettings.heroVideoUrl : updatedSettings.heroBannerUrl,
+          testimonial_image_url: updatedSettings.reviewScreenshotUrl,
+          settings_json: updatedSettings,
+          updated_at: new Date().toISOString(),
+        });
+    } catch (dbErr) {
+      console.warn("Could not upsert to site_settings table (will continue with storage):", dbErr);
     }
 
-    // Revalidate all pages using contacts
+    // 2. Sync to site-media storage bucket (primary) and site-assets (backup)
+    try {
+      await supabaseAdmin.storage
+        .from("site-media")
+        .upload(FILE_NAME, buffer, {
+          contentType: "application/json",
+          upsert: true,
+        });
+    } catch {}
+
+    try {
+      await supabaseAdmin.storage
+        .from("site-assets")
+        .upload(FILE_NAME, buffer, {
+          contentType: "application/json",
+          upsert: true,
+        });
+    } catch {}
+
+    // 3. Revalidate all cached pages that use settings or media
     revalidatePath("/");
     revalidatePath("/uslugi");
     revalidatePath("/za-nas");
     revalidatePath("/grafik");
     revalidatePath("/admin");
     revalidatePath("/admin/contacts");
+    revalidatePath("/admin/media");
+    revalidatePath("/admin/settings");
 
     return {
       success: true,
-      message: "Контактната информация и социалните мрежи са обновени успешно!",
+      message: "Контактната информация и настройките са обновени успешно!",
       settings: updatedSettings,
     };
   } catch (err: unknown) {

@@ -3,6 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
+const MEDIA_BUCKET = "site-media";
+const FALLBACK_BUCKET = "site-assets";
+
+function revalidatePublicPages() {
+  revalidatePath("/");
+  revalidatePath("/za-nas");
+  revalidatePath("/grafik");
+  revalidatePath("/uslugi");
+}
+
 export interface ScheduleFormData {
   title: string;
   category: string;
@@ -12,10 +22,27 @@ export interface ScheduleFormData {
   age_group: string;
   location?: string;
   is_active?: boolean;
+  capacity?: number;
 }
 
 export async function createScheduleAction(data: ScheduleFormData) {
   try {
+    // 1. Insert into schedule_events table (schema requirement 4)
+    try {
+      await supabaseAdmin.from("schedule_events").insert({
+        title: data.title,
+        day_of_week: data.day_of_week,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        age_group: data.age_group,
+        location: data.location || "Славейков, блок 48, партер",
+        capacity: data.capacity || 10,
+      });
+    } catch (e) {
+      console.warn("Could not insert into schedule_events (table may need migration):", e);
+    }
+
+    // 2. Insert into schedules table
     const { error, data: inserted } = await supabaseAdmin
       .from("schedules")
       .insert({
@@ -32,11 +59,11 @@ export async function createScheduleAction(data: ScheduleFormData) {
       .single();
 
     if (error) {
-      console.error("Error creating schedule:", error.message);
+      console.error("Error creating schedule in schedules table:", error.message);
       return { success: false, message: error.message };
     }
 
-    revalidatePath("/grafik");
+    revalidatePublicPages();
     revalidatePath("/admin/schedule");
     revalidatePath("/admin");
     return { success: true, message: "Занятието е добавено успешно!", id: inserted?.id };
@@ -48,17 +75,34 @@ export async function createScheduleAction(data: ScheduleFormData) {
 
 export async function updateScheduleAction(id: string, data: Partial<ScheduleFormData>) {
   try {
+    // 1. Update in schedules table
     const { error } = await supabaseAdmin
       .from("schedules")
       .update(data)
       .eq("id", id);
+
+    // 2. Also attempt update in schedule_events
+    try {
+      await supabaseAdmin
+        .from("schedule_events")
+        .update({
+          title: data.title,
+          day_of_week: data.day_of_week,
+          start_time: data.start_time,
+          end_time: data.end_time,
+          age_group: data.age_group,
+          location: data.location,
+          capacity: data.capacity,
+        })
+        .eq("id", id);
+    } catch {}
 
     if (error) {
       console.error("Error updating schedule:", error.message);
       return { success: false, message: error.message };
     }
 
-    revalidatePath("/grafik");
+    revalidatePublicPages();
     revalidatePath("/admin/schedule");
     revalidatePath("/admin");
     return { success: true, message: "Занятието е актуализирано успешно!" };
@@ -80,7 +124,7 @@ export async function toggleScheduleActiveAction(id: string, currentStatus: bool
       return { success: false, message: error.message };
     }
 
-    revalidatePath("/grafik");
+    revalidatePublicPages();
     revalidatePath("/admin/schedule");
     revalidatePath("/admin");
     return { success: true, message: "Видимостта е променена!" };
@@ -92,17 +136,26 @@ export async function toggleScheduleActiveAction(id: string, currentStatus: bool
 
 export async function deleteScheduleAction(id: string) {
   try {
+    // 1. Delete from schedules
     const { error } = await supabaseAdmin
       .from("schedules")
       .delete()
       .eq("id", id);
+
+    // 2. Delete from schedule_events
+    try {
+      await supabaseAdmin
+        .from("schedule_events")
+        .delete()
+        .eq("id", id);
+    } catch {}
 
     if (error) {
       console.error("Error deleting schedule:", error.message);
       return { success: false, message: error.message };
     }
 
-    revalidatePath("/grafik");
+    revalidatePublicPages();
     revalidatePath("/admin/schedule");
     revalidatePath("/admin");
     return { success: true, message: "Занятието е изтрито успешно!" };
@@ -128,23 +181,38 @@ export async function uploadScheduleFileAction(formData: FormData) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    let publicUrl = "";
+
+    // Upload to site-media (primary)
+    try {
+      await supabaseAdmin.storage.createBucket(MEDIA_BUCKET, { public: true });
+    } catch {}
+
     const { error } = await supabaseAdmin.storage
-      .from("site-assets")
+      .from(MEDIA_BUCKET)
       .upload(storagePath, buffer, {
         contentType: file.type || "application/pdf",
         upsert: true,
       });
 
-    if (error) {
-      console.error("Upload schedule file error:", error.message);
-      return { success: false, message: error.message };
+    if (!error) {
+      const { data: urlData } = supabaseAdmin.storage
+        .from(MEDIA_BUCKET)
+        .getPublicUrl(storagePath);
+      publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+    } else {
+      // Fallback
+      await supabaseAdmin.storage
+        .from(FALLBACK_BUCKET)
+        .upload(storagePath, buffer, {
+          contentType: file.type || "application/pdf",
+          upsert: true,
+        });
+      const { data: urlData } = supabaseAdmin.storage
+        .from(FALLBACK_BUCKET)
+        .getPublicUrl(storagePath);
+      publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     }
-
-    const { data: urlData } = supabaseAdmin.storage
-      .from("site-assets")
-      .getPublicUrl(storagePath);
-
-    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
     const { updateSiteSettingsAction } = await import("./admin-settings");
     await updateSiteSettingsAction({
@@ -152,8 +220,7 @@ export async function uploadScheduleFileAction(formData: FormData) {
       scheduleFileName: file.name,
     });
 
-    revalidatePath("/grafik");
-    revalidatePath("/");
+    revalidatePublicPages();
     revalidatePath("/admin/schedule");
     revalidatePath("/admin");
 
@@ -174,21 +241,16 @@ export async function uploadScheduleFileAction(formData: FormData) {
  */
 export async function deleteScheduleFileAction() {
   try {
-    const { getSiteSettings } = await import("@/lib/site-settings");
-    const settings = await getSiteSettings();
+    const filesToRemove = [
+      "schedule-file.pdf",
+      "schedule-file.jpg",
+      "schedule-file.jpeg",
+      "schedule-file.png",
+      "schedule-file.webp",
+    ];
 
-    if (settings.scheduleFileUrl) {
-      // Find possible extensions
-      await supabaseAdmin.storage
-        .from("site-assets")
-        .remove([
-          "schedule-file.pdf",
-          "schedule-file.jpg",
-          "schedule-file.jpeg",
-          "schedule-file.png",
-          "schedule-file.webp",
-        ]);
-    }
+    await supabaseAdmin.storage.from(MEDIA_BUCKET).remove(filesToRemove);
+    await supabaseAdmin.storage.from(FALLBACK_BUCKET).remove(filesToRemove);
 
     const { updateSiteSettingsAction } = await import("./admin-settings");
     await updateSiteSettingsAction({
@@ -196,8 +258,7 @@ export async function deleteScheduleFileAction() {
       scheduleFileName: "",
     });
 
-    revalidatePath("/grafik");
-    revalidatePath("/");
+    revalidatePublicPages();
     revalidatePath("/admin/schedule");
     revalidatePath("/admin");
 

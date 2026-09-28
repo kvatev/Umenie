@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function updateBookingStatusAction(
   bookingId: string,
-  newStatus: "pending" | "confirmed" | "declined"
+  newStatus: "pending" | "confirmed" | "cancelled" | "declined"
 ) {
   try {
     const { error } = await supabaseAdmin
@@ -20,6 +20,11 @@ export async function updateBookingStatusAction(
 
     revalidatePath("/admin/bookings");
     revalidatePath("/admin");
+    revalidatePath("/grafik");
+    revalidatePath("/");
+    revalidatePath("/za-nas");
+    revalidatePath("/uslugi");
+
     return { success: true, message: "Статусът е актуализиран успешно!" };
   } catch (err: unknown) {
     console.error("Booking status action error:", err);
@@ -41,6 +46,11 @@ export async function deleteBookingAction(bookingId: string) {
 
     revalidatePath("/admin/bookings");
     revalidatePath("/admin");
+    revalidatePath("/grafik");
+    revalidatePath("/");
+    revalidatePath("/za-nas");
+    revalidatePath("/uslugi");
+
     return { success: true, message: "Заявката е изтрита успешно!" };
   } catch (err: unknown) {
     console.error("Delete booking action error:", err);

@@ -79,30 +79,58 @@ const DEFAULT_REVIEWS: SocialReview[] = [
   },
 ];
 
-interface ParentReviewsCarouselProps {
-  screenshotUrl?: string | null;
+export interface ParentReviewImage {
+  id: string;
+  public_url: string;
+  display_order?: number;
 }
 
-export function ParentReviewsCarousel({ screenshotUrl }: ParentReviewsCarouselProps) {
+interface ParentReviewsCarouselProps {
+  screenshotUrl?: string | null;
+  reviewImages?: ParentReviewImage[];
+}
+
+export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentReviewsCarouselProps) {
   const reviews = useMemo(() => {
-    if (screenshotUrl) {
-      return [
-        {
-          id: "review-screenshot",
-          name: "Родител в УМеНИе",
+    const list: SocialReview[] = [];
+
+    // 1. If uploaded review screenshots exist from reviews_images
+    if (reviewImages && reviewImages.length > 0) {
+      reviewImages.forEach((img, idx) => {
+        list.push({
+          id: img.id || `uploaded-review-${idx}`,
+          name: `Родител в УМеНИе #${idx + 1}`,
           date: "Актуален отзив",
           avatarBg: "bg-purple-200 text-purple-800",
           avatarText: "УМ",
-          image: screenshotUrl,
-          text: "Оригинален отзив от родител в клуб УМеНИе.",
-          likesCount: 48,
-          commentsCount: 7,
-        },
-        ...DEFAULT_REVIEWS,
-      ];
+          image: img.public_url,
+          text: "Оригинален отзив от доволен родител в клуб УМеНИе.",
+          likesCount: 30 + ((idx * 7) % 25),
+          commentsCount: 2 + ((idx * 2) % 6),
+        });
+      });
     }
-    return DEFAULT_REVIEWS;
-  }, [screenshotUrl]);
+
+    // 2. If homepage review screenshot exists and not already included
+    if (screenshotUrl && !list.some((r) => r.image === screenshotUrl)) {
+      list.push({
+        id: "review-screenshot",
+        name: "Родител в УМеНИе",
+        date: "Актуален отзив",
+        avatarBg: "bg-purple-200 text-purple-800",
+        avatarText: "УМ",
+        image: screenshotUrl,
+        text: "Оригинален отзив от родител в клуб УМеНИе.",
+        likesCount: 48,
+        commentsCount: 7,
+      });
+    }
+
+    // 3. Append default social reviews so carousel remains lively and rich
+    list.push(...DEFAULT_REVIEWS);
+
+    return list;
+  }, [screenshotUrl, reviewImages]);
 
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isPaused, setIsPaused] = useState(false);

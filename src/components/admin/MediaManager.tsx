@@ -34,7 +34,10 @@ import {
   uploadReviewScreenshotAction,
   deleteReviewScreenshotAction,
   saveKidsGalleryOrderAction,
+  uploadReviewImageAction,
+  deleteReviewImageAction,
   StorageMediaItem,
+  ReviewImageRecord,
 } from "@/actions/admin-media";
 import { SERVICES_DATA, getServiceBySlug } from "@/lib/services-data";
 import { cn } from "@/lib/utils";
@@ -46,6 +49,7 @@ interface MediaManagerProps {
   initialHeroVideoUrl?: string;
   initialHeroMediaType?: "image" | "video";
   initialReviewScreenshotUrl?: string;
+  initialReviewsImages?: ReviewImageRecord[];
   initialKidsGalleryOrder?: string[];
 }
 
@@ -66,6 +70,7 @@ export function MediaManager({
   initialHeroVideoUrl = "",
   initialHeroMediaType = "image",
   initialReviewScreenshotUrl = "",
+  initialReviewsImages = [],
   initialKidsGalleryOrder = [],
 }: MediaManagerProps) {
   const [activeTab, setActiveTab] = useState<"hero" | "reviews" | "kids" | "services">("hero");
@@ -84,7 +89,7 @@ export function MediaManager({
     if (initialHeroMediaType) setHeroMediaType(initialHeroMediaType);
   }, [initialHeroUrl, initialHeroVideoUrl, initialHeroMediaType]);
 
-  // 2. Reviews state
+  // 2. Reviews state (Homepage screenshot)
   const [reviewScreenshotUrl, setReviewScreenshotUrl] = useState<string>(initialReviewScreenshotUrl);
   const [reviewFile, setReviewFile] = useState<File | null>(null);
   const [reviewPreview, setReviewPreview] = useState<string | null>(null);
@@ -93,6 +98,16 @@ export function MediaManager({
   useEffect(() => {
     if (initialReviewScreenshotUrl) setReviewScreenshotUrl(initialReviewScreenshotUrl);
   }, [initialReviewScreenshotUrl]);
+
+  // 2b. "За Нас" parent reviews state (reviews_images table)
+  const [reviewsImages, setReviewsImages] = useState<ReviewImageRecord[]>(initialReviewsImages);
+  const [reviewImgFile, setReviewImgFile] = useState<File | null>(null);
+  const [reviewImgPreview, setReviewImgPreview] = useState<string | null>(null);
+  const [reviewImgMessage, setReviewImgMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    if (initialReviewsImages) setReviewsImages(initialReviewsImages);
+  }, [initialReviewsImages]);
 
   // 3. Kids gallery state
   const [kidsItems, setKidsItems] = useState<StorageMediaItem[]>(initialKidsGallery);
@@ -279,6 +294,54 @@ export function MediaManager({
         setReviewMessage({ type: "success", text: res.message });
       } else {
         setReviewMessage({ type: "error", text: res.message || "Грешка при премахване." });
+      }
+    });
+  };
+
+  // "ЗА НАС" REVIEWS HANDLERS (reviews_images table)
+  const handleReviewImgFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setReviewImgFile(file);
+      setReviewImgPreview(URL.createObjectURL(file));
+      setReviewImgMessage(null);
+    }
+  };
+
+  const handleUploadReviewImage = () => {
+    if (!reviewImgFile) return;
+
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append("file", reviewImgFile);
+
+      const res = await uploadReviewImageAction(formData);
+      if (res.success && res.url) {
+        const newRecord: ReviewImageRecord = {
+          id: `review-${Date.now()}`,
+          public_url: res.url,
+          display_order: reviewsImages.length + 1,
+        };
+        setReviewsImages((prev) => [...prev, newRecord]);
+        setReviewImgFile(null);
+        setReviewImgPreview(null);
+        setReviewImgMessage({ type: "success", text: res.message || "Отзивът е качен успешно!" });
+      } else {
+        setReviewImgMessage({ type: "error", text: res.message || "Грешка при качване на отзива." });
+      }
+    });
+  };
+
+  const handleDeleteReviewImage = (id: string, publicUrl?: string) => {
+    if (!window.confirm("Сигурни ли сте, че искате да изтриете този отзив за страница 'За нас'?")) {
+      return;
+    }
+
+    startTransition(async () => {
+      setReviewsImages((prev) => prev.filter((item) => item.id !== id));
+      const res = await deleteReviewImageAction(id, publicUrl);
+      if (!res.success) {
+        alert(res.message || "Грешка при изтриване на отзива.");
       }
     });
   };
@@ -814,6 +877,164 @@ export function MediaManager({
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Възстанови стандартния отзив</span>
                   </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* SECTION 2: "ЗА НАС" REVIEWS SCREENSHOTS (reviews_images) */}
+          {/* ======================================================== */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-brand-purple/10">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-brand-purple animate-pulse" />
+                <h3 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
+                  Скрийншоти на отзиви за страница „За Нас“ (/za-nas)
+                </h3>
+              </div>
+              <span className="text-xs text-brand-muted">
+                Таблица <strong className="text-brand-purple">reviews_images</strong> ({reviewsImages.length} качени)
+              </span>
+            </div>
+
+            <p className="text-xs sm:text-sm text-brand-muted">
+              Качвайте директни скрийншоти от доволни родители. Те се появяват автоматично в карусела
+              „Ето какво казват родителите“ в страницата <strong>/za-nas</strong>.
+            </p>
+
+            {/* Notification messages */}
+            {reviewImgMessage && (
+              <div
+                className={cn(
+                  "p-4 rounded-2xl text-xs sm:text-sm font-medium border flex items-center gap-2",
+                  reviewImgMessage.type === "success"
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    : "bg-red-50 text-red-800 border-red-200"
+                )}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{reviewImgMessage.text}</span>
+              </div>
+            )}
+
+            {/* Upload form */}
+            <div className="bg-brand-bg/70 p-5 rounded-3xl border border-brand-purple/15 space-y-4">
+              <div>
+                <h4 className="font-heading font-bold text-sm text-brand-dark">
+                  Добавяне на нов скрийншот от родител
+                </h4>
+                <p className="text-xs text-brand-muted mt-0.5">
+                  Формати: WebP, PNG, JPG (препоръчително хоризонтално или квадратно съотношение).
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleReviewImgFileChange}
+                  className="block w-full text-xs text-brand-muted file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-heading file:font-bold file:bg-brand-purple/10 file:text-brand-purple hover:file:bg-brand-purple/20 cursor-pointer"
+                />
+
+                {reviewImgFile && (
+                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                    <button
+                      onClick={() => {
+                        setReviewImgFile(null);
+                        setReviewImgPreview(null);
+                      }}
+                      className="px-4 py-2.5 rounded-full bg-white text-brand-dark text-xs font-bold hover:bg-gray-100 transition-colors border border-brand-purple/20 cursor-pointer"
+                    >
+                      Отказ
+                    </button>
+                    <button
+                      onClick={handleUploadReviewImage}
+                      disabled={isPending}
+                      className="px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button hover:bg-brand-purple-hover transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                    >
+                      {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      <span>Качи към „За Нас“</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload preview */}
+              {reviewImgPreview && (
+                <div className="relative w-48 h-32 rounded-xl overflow-hidden border border-brand-purple/20">
+                  <Image
+                    src={reviewImgPreview}
+                    alt="Преглед на новия отзив"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* List of uploaded reviews */}
+            <div className="space-y-3">
+              <h4 className="font-heading font-bold text-sm text-brand-dark">
+                Качени отзиви в базата данни ({reviewsImages.length})
+              </h4>
+
+              {reviewsImages.length === 0 ? (
+                <div className="text-center py-8 bg-brand-bg/50 rounded-2xl border border-dashed border-brand-purple/20">
+                  <p className="text-xs text-brand-muted">
+                    Все още няма качени скрийншоти в <code className="text-brand-purple">reviews_images</code>.
+                    <br />
+                    Страницата показва форматираните отзиви по подразбиране.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {reviewsImages.map((img, idx) => (
+                    <div
+                      key={img.id || idx}
+                      className="relative group bg-brand-bg rounded-2xl overflow-hidden border border-brand-purple/15 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                    >
+                      <div
+                        className="relative w-full aspect-[4/3] cursor-pointer"
+                        onClick={() =>
+                          setLightboxImage({
+                            src: img.public_url,
+                            title: `Отзив от родител #${idx + 1}`,
+                          })
+                        }
+                      >
+                        <Image
+                          src={img.public_url}
+                          alt={`Отзив ${idx + 1}`}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          sizes="(max-width: 640px) 50vw, 25vw"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 text-brand-dark text-[11px] font-semibold px-2 py-1 rounded-full shadow flex items-center gap-1">
+                            <Eye className="w-3 h-3 text-brand-purple" />
+                            Преглед
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 flex items-center justify-between bg-white border-t border-brand-purple/10">
+                        <span className="text-[11px] font-bold text-brand-purple">
+                          #{idx + 1}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReviewImage(img.id, img.public_url)}
+                          disabled={isPending}
+                          className="p-1 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Изтрий отзива"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

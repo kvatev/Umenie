@@ -14,6 +14,7 @@ export interface ScheduleRecord {
   end_time: string;
   age_group: string;
   location?: string;
+  capacity?: number;
   is_active: boolean;
 }
 
@@ -50,6 +51,7 @@ export function ScheduleModal({
   const [endTime, setEndTime] = useState("17:30");
   const [ageGroup, setAgeGroup] = useState("6-10 години");
   const [location, setLocation] = useState("Славейков, блок 48, партер");
+  const [capacity, setCapacity] = useState<number>(10);
   const [isActive, setIsActive] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,6 +66,7 @@ export function ScheduleModal({
       setEndTime(scheduleToEdit.end_time.slice(0, 5));
       setAgeGroup(scheduleToEdit.age_group);
       setLocation(scheduleToEdit.location || "Славейков, блок 48, партер");
+      setCapacity(scheduleToEdit.capacity || 10);
       setIsActive(scheduleToEdit.is_active);
     } else {
       // Default reset
@@ -74,6 +77,7 @@ export function ScheduleModal({
       setEndTime("17:30");
       setAgeGroup("6-10 години");
       setLocation("Славейков, блок 48, партер");
+      setCapacity(10);
       setIsActive(true);
     }
     setErrorMessage(null);
@@ -99,6 +103,7 @@ export function ScheduleModal({
       end_time: endTime,
       age_group: ageGroup.trim(),
       location: location.trim(),
+      capacity: Number(capacity) || 10,
       is_active: isActive,
     };
 
@@ -250,17 +255,32 @@ export function ScheduleModal({
             />
           </div>
 
-          {/* Location */}
-          <div>
-            <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
-              Локация
-            </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-2xl bg-brand-bg text-sm text-brand-dark border border-brand-purple/20 focus:outline-none focus:ring-2 focus:ring-brand-purple"
-            />
+          {/* Location & Capacity */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
+                Локация
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-2xl bg-brand-bg text-sm text-brand-dark border border-brand-purple/20 focus:outline-none focus:ring-2 focus:ring-brand-purple"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
+                Капацитет (места)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={capacity}
+                onChange={(e) => setCapacity(Number(e.target.value))}
+                className="w-full px-4 py-2.5 rounded-2xl bg-brand-bg text-sm text-brand-dark border border-brand-purple/20 focus:outline-none focus:ring-2 focus:ring-brand-purple"
+              />
+            </div>
           </div>
 
           {/* Is Active Toggle */}

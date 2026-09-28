@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
-const BUCKET_NAME = "site-assets";
+const MEDIA_BUCKET = "site-media";
+const FALLBACK_BUCKET = "site-assets";
 
 export interface StorageMediaItem {
   name: string;
@@ -16,8 +17,72 @@ export interface StorageMediaItem {
   path: string;
 }
 
+export interface ReviewImageRecord {
+  id: string;
+  public_url: string;
+  display_order: number;
+  created_at?: string;
+}
+
 /**
- * Upload or replace the main hero banner: site-assets/hero-banner.webp
+ * Revalidate all public pages that consume media or settings
+ */
+function revalidatePublicPages() {
+  revalidatePath("/");
+  revalidatePath("/za-nas");
+  revalidatePath("/grafik");
+  revalidatePath("/uslugi");
+}
+
+/**
+ * Ensure public bucket exists
+ */
+async function ensureBucket(bucket: string = MEDIA_BUCKET) {
+  try {
+    await supabaseAdmin.storage.createBucket(bucket, {
+      public: true,
+      fileSizeLimit: 20971520, // 20MB
+    });
+  } catch {
+    // Bucket likely already exists
+  }
+}
+
+/**
+ * Safe upload helper trying primary bucket then fallback
+ */
+async function safeUpload(
+  path: string,
+  buffer: Buffer,
+  contentType: string,
+  upsert: boolean = true
+): Promise<{ bucket: string; publicUrl: string }> {
+  await ensureBucket(MEDIA_BUCKET);
+
+  const { error } = await supabaseAdmin.storage
+    .from(MEDIA_BUCKET)
+    .upload(path, buffer, { contentType, upsert });
+
+  if (!error) {
+    const { data } = supabaseAdmin.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+    return { bucket: MEDIA_BUCKET, publicUrl: data.publicUrl };
+  }
+
+  // Fallback to site-assets
+  const { error: fbError } = await supabaseAdmin.storage
+    .from(FALLBACK_BUCKET)
+    .upload(path, buffer, { contentType, upsert });
+
+  if (fbError) {
+    throw new Error(error.message || fbError.message);
+  }
+
+  const { data } = supabaseAdmin.storage.from(FALLBACK_BUCKET).getPublicUrl(path);
+  return { bucket: FALLBACK_BUCKET, publicUrl: data.publicUrl };
+}
+
+/**
+ * 1. Upload or replace the main hero banner
  */
 export async function uploadHeroBannerAction(formData: FormData) {
   try {
@@ -29,31 +94,33 @@ export async function uploadHeroBannerAction(formData: FormData) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Save as hero-banner.webp
-    const { error } = await supabaseAdmin.storage
-      .from(BUCKET_NAME)
-      .upload("hero-banner.webp", buffer, {
-        contentType: file.type || "image/webp",
-        upsert: true,
+    const { publicUrl } = await safeUpload("hero-banner.webp", buffer, file.type || "image/webp", true);
+    const freshUrl = `${publicUrl}?t=${Date.now()}`;
+
+    // Update site_settings table
+    try {
+      await supabaseAdmin.from("site_settings").upsert({
+        id: 1,
+        hero_media_type: "image",
+        hero_media_url: freshUrl,
+        updated_at: new Date().toISOString(),
       });
+    } catch {}
 
-    if (error) {
-      console.error("Hero banner upload error:", error.message);
-      return { success: false, message: error.message };
-    }
+    const { updateSiteSettingsAction } = await import("./admin-settings");
+    await updateSiteSettingsAction({
+      heroBannerUrl: freshUrl,
+      heroMediaType: "image",
+    });
 
-    const { data: urlData } = supabaseAdmin.storage
-      .from(BUCKET_NAME)
-      .getPublicUrl("hero-banner.webp");
-
-    revalidatePath("/");
+    revalidatePublicPages();
     revalidatePath("/admin/media");
     revalidatePath("/admin");
 
     return {
       success: true,
       message: "Главният банер е качен и обновен успешно!",
-      url: `${urlData.publicUrl}?t=${Date.now()}`,
+      url: freshUrl,
     };
   } catch (err: unknown) {
     console.error("Upload hero banner exception:", err);
@@ -62,7 +129,7 @@ export async function uploadHeroBannerAction(formData: FormData) {
 }
 
 /**
- * Upload a photo to a specific folder in site-assets (e.g., 'kids-gallery' or 'services/pletivo')
+ * 2. Upload a photo to gallery or service folder, inserting into gallery_images
  */
 export async function uploadGalleryPhotoAction(formData: FormData) {
   try {
@@ -73,7 +140,6 @@ export async function uploadGalleryPhotoAction(formData: FormData) {
       return { success: false, message: "Няма избран файл." };
     }
 
-    // Generate clean filename
     const sanitizedName = file.name
       .toLowerCase()
       .replace(/[^a-z0-9.]/g, "-")
@@ -84,26 +150,35 @@ export async function uploadGalleryPhotoAction(formData: FormData) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { error } = await supabaseAdmin.storage
-      .from(BUCKET_NAME)
-      .upload(filePath, buffer, {
-        contentType: file.type || "image/jpeg",
-        upsert: false,
-      });
+    const { publicUrl } = await safeUpload(filePath, buffer, file.type || "image/jpeg", false);
 
-    if (error) {
-      console.error("Gallery photo upload error:", error.message);
-      return { success: false, message: error.message };
+    // If uploading to kids-gallery, insert into gallery_images table
+    if (folder.includes("kids")) {
+      try {
+        const { count } = await supabaseAdmin
+          .from("gallery_images")
+          .select("*", { count: "exact", head: true });
+
+        await supabaseAdmin.from("gallery_images").insert({
+          bucket_path: filePath,
+          public_url: publicUrl,
+          display_order: (count || 0) + 1,
+          caption: file.name,
+        });
+      } catch (tableErr) {
+        console.warn("Could not insert into gallery_images table:", tableErr);
+      }
     }
 
-    revalidatePath("/");
+    revalidatePublicPages();
     revalidatePath("/admin/media");
-    revalidatePath("/uslugi");
+    revalidatePath("/admin");
 
     return {
       success: true,
       message: "Снимката е качена успешно!",
       path: filePath,
+      url: publicUrl,
     };
   } catch (err: unknown) {
     console.error("Upload gallery photo exception:", err);
@@ -112,21 +187,22 @@ export async function uploadGalleryPhotoAction(formData: FormData) {
 }
 
 /**
- * Delete a media object by path
+ * Delete a media object by path and remove from gallery_images
  */
 export async function deleteMediaObjectAction(path: string) {
   try {
-    const { error } = await supabaseAdmin.storage
-      .from(BUCKET_NAME)
-      .remove([path]);
+    // Delete from both buckets
+    await supabaseAdmin.storage.from(MEDIA_BUCKET).remove([path]);
+    await supabaseAdmin.storage.from(FALLBACK_BUCKET).remove([path]);
 
-    if (error) {
-      console.error("Delete media error:", error.message);
-      return { success: false, message: error.message };
-    }
+    // Also delete from gallery_images table if matched
+    try {
+      await supabaseAdmin.from("gallery_images").delete().eq("bucket_path", path);
+    } catch {}
 
-    revalidatePath("/");
+    revalidatePublicPages();
     revalidatePath("/admin/media");
+    revalidatePath("/admin");
     return { success: true, message: "Снимката е изтрита успешно!" };
   } catch (err: unknown) {
     console.error("Delete media exception:", err);
@@ -143,16 +219,26 @@ export async function listMediaFolderAction(folder: string = ""): Promise<{
   message?: string;
 }> {
   try {
-    const { data, error } = await supabaseAdmin.storage
-      .from(BUCKET_NAME)
+    // Try primary bucket first
+    let { data, error } = await supabaseAdmin.storage
+      .from(MEDIA_BUCKET)
       .list(folder, {
         limit: 100,
         sortBy: { column: "created_at", order: "desc" },
       });
 
-    if (error) {
-      console.warn("List media warning (bucket may be empty or not yet created):", error.message);
-      return { success: true, items: [] };
+    let currentBucket = MEDIA_BUCKET;
+
+    if (error || !data || data.length === 0) {
+      // Fallback
+      const fb = await supabaseAdmin.storage.from(FALLBACK_BUCKET).list(folder, {
+        limit: 100,
+        sortBy: { column: "created_at", order: "desc" },
+      });
+      if (fb.data && fb.data.length > 0) {
+        data = fb.data;
+        currentBucket = FALLBACK_BUCKET;
+      }
     }
 
     const items: StorageMediaItem[] = (data || [])
@@ -160,7 +246,7 @@ export async function listMediaFolderAction(folder: string = ""): Promise<{
       .map((file) => {
         const fullPath = folder ? `${folder}/${file.name}` : file.name;
         const { data: urlData } = supabaseAdmin.storage
-          .from(BUCKET_NAME)
+          .from(currentBucket)
           .getPublicUrl(fullPath);
 
         return {
@@ -182,13 +268,24 @@ export async function listMediaFolderAction(folder: string = ""): Promise<{
  */
 export async function saveHeroVideoUrlAction(videoUrl: string, mediaType: "video" | "image" = "video") {
   try {
+    const freshUrl = videoUrl.trim();
+
+    try {
+      await supabaseAdmin.from("site_settings").upsert({
+        id: 1,
+        hero_media_type: mediaType,
+        hero_media_url: freshUrl,
+        updated_at: new Date().toISOString(),
+      });
+    } catch {}
+
     const { updateSiteSettingsAction } = await import("./admin-settings");
     await updateSiteSettingsAction({
-      heroVideoUrl: videoUrl.trim(),
+      heroVideoUrl: freshUrl,
       heroMediaType: mediaType,
     });
 
-    revalidatePath("/");
+    revalidatePublicPages();
     revalidatePath("/admin/media");
     revalidatePath("/admin");
 
@@ -203,7 +300,7 @@ export async function saveHeroVideoUrlAction(videoUrl: string, mediaType: "video
 }
 
 /**
- * Upload a review screenshot to site-assets/review-screenshot.webp
+ * Upload a review screenshot to review-screenshot.webp
  */
 export async function uploadReviewScreenshotAction(formData: FormData) {
   try {
@@ -215,30 +312,24 @@ export async function uploadReviewScreenshotAction(formData: FormData) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { error } = await supabaseAdmin.storage
-      .from(BUCKET_NAME)
-      .upload("review-screenshot.webp", buffer, {
-        contentType: file.type || "image/webp",
-        upsert: true,
+    const { publicUrl } = await safeUpload("review-screenshot.webp", buffer, file.type || "image/webp", true);
+    const fullUrl = `${publicUrl}?t=${Date.now()}`;
+
+    // Update site_settings table
+    try {
+      await supabaseAdmin.from("site_settings").upsert({
+        id: 1,
+        testimonial_image_url: fullUrl,
+        updated_at: new Date().toISOString(),
       });
-
-    if (error) {
-      console.error("Review screenshot upload error:", error.message);
-      return { success: false, message: error.message };
-    }
-
-    const { data: urlData } = supabaseAdmin.storage
-      .from(BUCKET_NAME)
-      .getPublicUrl("review-screenshot.webp");
-
-    const fullUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+    } catch {}
 
     const { updateSiteSettingsAction } = await import("./admin-settings");
     await updateSiteSettingsAction({
       reviewScreenshotUrl: fullUrl,
     });
 
-    revalidatePath("/");
+    revalidatePublicPages();
     revalidatePath("/admin/media");
     revalidatePath("/admin");
 
@@ -258,16 +349,23 @@ export async function uploadReviewScreenshotAction(formData: FormData) {
  */
 export async function deleteReviewScreenshotAction() {
   try {
-    await supabaseAdmin.storage
-      .from(BUCKET_NAME)
-      .remove(["review-screenshot.webp"]);
+    await supabaseAdmin.storage.from(MEDIA_BUCKET).remove(["review-screenshot.webp"]);
+    await supabaseAdmin.storage.from(FALLBACK_BUCKET).remove(["review-screenshot.webp"]);
+
+    try {
+      await supabaseAdmin.from("site_settings").upsert({
+        id: 1,
+        testimonial_image_url: "",
+        updated_at: new Date().toISOString(),
+      });
+    } catch {}
 
     const { updateSiteSettingsAction } = await import("./admin-settings");
     await updateSiteSettingsAction({
       reviewScreenshotUrl: "",
     });
 
-    revalidatePath("/");
+    revalidatePublicPages();
     revalidatePath("/admin/media");
     revalidatePath("/admin");
 
@@ -282,16 +380,28 @@ export async function deleteReviewScreenshotAction() {
 }
 
 /**
- * Save custom ordering for Kids Gallery slides
+ * Save custom ordering for Kids Gallery slides in gallery_images and settings
  */
 export async function saveKidsGalleryOrderAction(orderedPaths: string[]) {
   try {
+    // 1. Sync to gallery_images table
+    try {
+      for (let i = 0; i < orderedPaths.length; i++) {
+        const path = orderedPaths[i];
+        await supabaseAdmin
+          .from("gallery_images")
+          .update({ display_order: i + 1 })
+          .or(`bucket_path.eq.${path},public_url.eq.${path}`);
+      }
+    } catch {}
+
+    // 2. Sync to site settings
     const { updateSiteSettingsAction } = await import("./admin-settings");
     await updateSiteSettingsAction({
       kidsGalleryOrder: orderedPaths,
     });
 
-    revalidatePath("/");
+    revalidatePublicPages();
     revalidatePath("/admin/media");
     revalidatePath("/admin");
 
@@ -302,5 +412,117 @@ export async function saveKidsGalleryOrderAction(orderedPaths: string[]) {
   } catch (err: unknown) {
     console.error("Save gallery order exception:", err);
     return { success: false, message: "Грешка при записване на подредбата." };
+  }
+}
+
+/**
+ * 3. Upload a review screenshot for "За Нас" page into reviews_images table
+ */
+export async function uploadReviewImageAction(formData: FormData) {
+  try {
+    const file = formData.get("file") as File;
+    if (!file) {
+      return { success: false, message: "Няма избран файл." };
+    }
+
+    const sanitizedName = file.name
+      .toLowerCase()
+      .replace(/[^a-z0-9.]/g, "-")
+      .replace(/-+/g, "-");
+    const filename = `${Date.now()}-${sanitizedName}`;
+    const filePath = `reviews/${filename}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { publicUrl } = await safeUpload(filePath, buffer, file.type || "image/jpeg", false);
+
+    // Insert into reviews_images table
+    try {
+      const { count } = await supabaseAdmin
+        .from("reviews_images")
+        .select("*", { count: "exact", head: true });
+
+      await supabaseAdmin.from("reviews_images").insert({
+        public_url: publicUrl,
+        display_order: (count || 0) + 1,
+      });
+    } catch (err) {
+      console.warn("Could not insert into reviews_images table:", err);
+    }
+
+    revalidatePublicPages();
+    revalidatePath("/admin/media");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: "Отзивът е качен успешно!",
+      url: publicUrl,
+    };
+  } catch (err: unknown) {
+    console.error("Upload review image exception:", err);
+    return { success: false, message: "Грешка при качване на отзива." };
+  }
+}
+
+/**
+ * List "За Нас" review images from reviews_images table or reviews/ storage folder
+ */
+export async function listReviewsImagesAction(): Promise<{
+  success: boolean;
+  items: ReviewImageRecord[];
+}> {
+  try {
+    // 1. Try querying reviews_images table
+    const { data: dbRows } = await supabaseAdmin
+      .from("reviews_images")
+      .select("*")
+      .order("display_order", { ascending: true });
+
+    if (dbRows && dbRows.length > 0) {
+      return { success: true, items: dbRows as ReviewImageRecord[] };
+    }
+
+    // 2. Fallback to storage folder reviews/
+    const storageRes = await listMediaFolderAction("reviews");
+    const fallbackItems: ReviewImageRecord[] = (storageRes.items || []).map((item, idx) => ({
+      id: item.id || `storage-${idx}`,
+      public_url: item.publicUrl,
+      display_order: idx + 1,
+    }));
+
+    return { success: true, items: fallbackItems };
+  } catch (err) {
+    console.error("List reviews images exception:", err);
+    return { success: false, items: [] };
+  }
+}
+
+/**
+ * Delete a review image from reviews_images table
+ */
+export async function deleteReviewImageAction(id: string, publicUrl?: string) {
+  try {
+    await supabaseAdmin.from("reviews_images").delete().eq("id", id);
+
+    if (publicUrl) {
+      try {
+        const filename = publicUrl.split("/").pop();
+        if (filename) {
+          await supabaseAdmin.storage.from(MEDIA_BUCKET).remove([`reviews/${filename}`]);
+          await supabaseAdmin.storage.from(FALLBACK_BUCKET).remove([`reviews/${filename}`]);
+        }
+      } catch {}
+    }
+
+    revalidatePublicPages();
+    revalidatePath("/admin/media");
+    revalidatePath("/admin");
+
+    return { success: true, message: "Отзивът е изтрит успешно!" };
+  } catch (err) {
+    console.error("Delete review image exception:", err);
+    return { success: false, message: "Грешка при изтриване на отзива." };
   }
 }

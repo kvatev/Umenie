@@ -19,16 +19,43 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   }
 
   try {
-    const { data, error } = await supabaseAdmin.storage
-      .from(BUCKET_NAME)
-      .download(FILE_NAME);
-
-    if (error || !data) {
-      return DEFAULT_SETTINGS;
+    // 1. Try querying site_settings table (schema requirement 1)
+    let dbRow: Record<string, any> | null = null;
+    try {
+      const { data } = await supabaseAdmin
+        .from("site_settings")
+        .select("*")
+        .eq("id", 1)
+        .maybeSingle();
+      dbRow = data;
+    } catch {
+      // Table might not be migrated yet, ignore and fallback to storage
     }
 
-    const text = await data.text();
-    const json = JSON.parse(text);
+    // 2. Also try reading storage settings.json
+    let storageJson: Partial<SiteSettings> = {};
+    try {
+      const { data: storageData } = await supabaseAdmin.storage
+        .from("site-media")
+        .download(FILE_NAME);
+      if (storageData) {
+        storageJson = JSON.parse(await storageData.text());
+      } else {
+        const { data: fallbackData } = await supabaseAdmin.storage
+          .from("site-assets")
+          .download(FILE_NAME);
+        if (fallbackData) {
+          storageJson = JSON.parse(await fallbackData.text());
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    const json = {
+      ...storageJson,
+      ...(dbRow?.settings_json || {}),
+    };
 
     return {
       phoneDisplay: json.phoneDisplay?.trim() || DEFAULT_SETTINGS.phoneDisplay,
@@ -41,10 +68,10 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       tagline: json.tagline?.trim() || DEFAULT_SETTINGS.tagline,
       facebookUrl: json.facebookUrl?.trim() || DEFAULT_SETTINGS.facebookUrl,
       instagramUrl: json.instagramUrl?.trim() || DEFAULT_SETTINGS.instagramUrl,
-      heroBannerUrl: json.heroBannerUrl?.trim() || "",
-      heroVideoUrl: json.heroVideoUrl?.trim() || "",
-      heroMediaType: json.heroMediaType === "video" ? "video" : "image",
-      reviewScreenshotUrl: json.reviewScreenshotUrl?.trim() || "",
+      heroBannerUrl: (dbRow?.hero_media_type === "image" ? dbRow?.hero_media_url : null) || json.heroBannerUrl?.trim() || "",
+      heroVideoUrl: (dbRow?.hero_media_type === "video" ? dbRow?.hero_media_url : null) || json.heroVideoUrl?.trim() || "",
+      heroMediaType: dbRow?.hero_media_type || (json.heroMediaType === "video" ? "video" : "image"),
+      reviewScreenshotUrl: dbRow?.testimonial_image_url || json.reviewScreenshotUrl?.trim() || "",
       kidsGalleryOrder: Array.isArray(json.kidsGalleryOrder) ? json.kidsGalleryOrder : [],
       scheduleFileUrl: json.scheduleFileUrl?.trim() || "",
       scheduleFileName: json.scheduleFileName?.trim() || "",

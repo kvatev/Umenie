@@ -28,14 +28,15 @@ import { cn } from "@/lib/utils";
 export interface BookingRecord {
   id: string;
   schedule_id?: string | null;
+  event_id?: string | null;
   activity_name: string;
   child_name: string;
   child_age: string;
   parent_name: string;
   phone: string;
   email?: string | null;
-  consent_marketing: boolean;
-  status: "pending" | "confirmed" | "declined";
+  consent_marketing?: boolean;
+  status: "pending" | "confirmed" | "cancelled" | "declined";
   created_at: string;
 }
 
@@ -66,21 +67,25 @@ export function BookingsTable({ initialBookings }: BookingsTableProps) {
 
   // Filter and Search logic
   const filteredBookings = bookings.filter((b) => {
-    if (filterStatus !== "all" && b.status !== filterStatus) {
-      return false;
-    }
+    if (filterStatus === "pending" && b.status !== "pending") return false;
+    if (filterStatus === "confirmed" && b.status !== "confirmed") return false;
+    if (filterStatus === "cancelled" && b.status !== "cancelled" && b.status !== "declined") return false;
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchChild = b.child_name.toLowerCase().includes(q);
-      const matchParent = b.parent_name.toLowerCase().includes(q);
-      const matchPhone = b.phone.includes(q);
-      const matchActivity = b.activity_name.toLowerCase().includes(q);
+      const matchChild = (b.child_name || "").toLowerCase().includes(q);
+      const matchParent = (b.parent_name || "").toLowerCase().includes(q);
+      const matchPhone = (b.phone || "").includes(q);
+      const matchActivity = (b.activity_name || "").toLowerCase().includes(q);
       return matchChild || matchParent || matchPhone || matchActivity;
     }
     return true;
   });
 
-  const handleStatusChange = async (id: string, newStatus: "pending" | "confirmed" | "declined") => {
+  const handleStatusChange = async (
+    id: string,
+    newStatus: "pending" | "confirmed" | "cancelled" | "declined"
+  ) => {
     setActiveActionId(id);
     startTransition(async () => {
       // Optimistic update
@@ -118,7 +123,7 @@ export function BookingsTable({ initialBookings }: BookingsTableProps) {
   const countAll = bookings.length;
   const countPending = bookings.filter((b) => b.status === "pending").length;
   const countConfirmed = bookings.filter((b) => b.status === "confirmed").length;
-  const countDeclined = bookings.filter((b) => b.status === "declined").length;
+  const countCancelled = bookings.filter((b) => b.status === "cancelled" || b.status === "declined").length;
 
   const formatDate = (iso: string) => {
     try {
@@ -238,7 +243,7 @@ export function BookingsTable({ initialBookings }: BookingsTableProps) {
             { id: "all", label: "Всички", count: countAll },
             { id: "pending", label: "Чакащи", count: countPending, color: "text-amber-700 bg-amber-100" },
             { id: "confirmed", label: "Потвърдени", count: countConfirmed, color: "text-emerald-700 bg-emerald-100" },
-            { id: "declined", label: "Отказани", count: countDeclined, color: "text-red-700 bg-red-100" },
+            { id: "cancelled", label: "Отказани", count: countCancelled, color: "text-red-700 bg-red-100" },
           ].map((tab) => {
             const isSelected = filterStatus === tab.id;
             return (
@@ -312,18 +317,18 @@ export function BookingsTable({ initialBookings }: BookingsTableProps) {
                           "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold",
                           b.status === "confirmed"
                             ? "bg-emerald-100 text-emerald-800"
-                            : b.status === "declined"
+                            : b.status === "cancelled" || b.status === "declined"
                             ? "bg-red-100 text-red-800"
                             : "bg-amber-100 text-amber-800"
                         )}
                       >
                         {b.status === "confirmed" && <CheckCircle2 className="w-3.5 h-3.5" />}
-                        {b.status === "declined" && <XCircle className="w-3.5 h-3.5" />}
+                        {(b.status === "cancelled" || b.status === "declined") && <XCircle className="w-3.5 h-3.5" />}
                         {b.status === "pending" && <Clock className="w-3.5 h-3.5" />}
                         <span>
                           {b.status === "confirmed"
                             ? "Потвърдена"
-                            : b.status === "declined"
+                            : b.status === "cancelled" || b.status === "declined"
                             ? "Отказана"
                             : "Чакаща"}
                         </span>
@@ -405,19 +410,29 @@ export function BookingsTable({ initialBookings }: BookingsTableProps) {
                             <button
                               onClick={() => handleStatusChange(b.id, "confirmed")}
                               className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
-                              title="Потвърди заявката"
+                              title="Потвърди заявката (Confirmed)"
                             >
                               <Check className="w-4 h-4" />
                             </button>
                           )}
 
-                          {b.status !== "declined" && (
+                          {b.status !== "cancelled" && b.status !== "declined" && (
                             <button
-                              onClick={() => handleStatusChange(b.id, "declined")}
+                              onClick={() => handleStatusChange(b.id, "cancelled")}
                               className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
-                              title="Откажи заявката"
+                              title="Откажи / Анулирай (Cancelled)"
                             >
                               <X className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {b.status !== "pending" && (
+                            <button
+                              onClick={() => handleStatusChange(b.id, "pending")}
+                              className="p-2 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-colors cursor-pointer"
+                              title="Върни в чакащи (Pending)"
+                            >
+                              <Clock className="w-4 h-4" />
                             </button>
                           )}
 
@@ -482,18 +497,18 @@ export function BookingsTable({ initialBookings }: BookingsTableProps) {
                     "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0",
                     b.status === "confirmed"
                       ? "bg-emerald-100 text-emerald-800"
-                      : b.status === "declined"
+                      : b.status === "cancelled" || b.status === "declined"
                       ? "bg-red-100 text-red-800"
                       : "bg-amber-100 text-amber-800"
                   )}
                 >
                   {b.status === "confirmed" && <CheckCircle2 className="w-3 h-3" />}
-                  {b.status === "declined" && <XCircle className="w-3 h-3" />}
+                  {(b.status === "cancelled" || b.status === "declined") && <XCircle className="w-3 h-3" />}
                   {b.status === "pending" && <Clock className="w-3 h-3" />}
                   <span>
                     {b.status === "confirmed"
                       ? "Потвърдена"
-                      : b.status === "declined"
+                      : b.status === "cancelled" || b.status === "declined"
                       ? "Отказана"
                       : "Чакаща"}
                   </span>
@@ -530,19 +545,32 @@ export function BookingsTable({ initialBookings }: BookingsTableProps) {
                     <button
                       onClick={() => handleStatusChange(b.id, "confirmed")}
                       className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Потвърди"
                     >
                       <Check className="w-3.5 h-3.5" />
                       <span>Потвърди</span>
                     </button>
                   )}
 
-                  {b.status !== "declined" && (
+                  {b.status !== "cancelled" && b.status !== "declined" && (
                     <button
-                      onClick={() => handleStatusChange(b.id, "declined")}
+                      onClick={() => handleStatusChange(b.id, "cancelled")}
                       className="px-3 py-1.5 rounded-xl bg-red-50 text-red-700 hover:bg-red-600 hover:text-white font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Откажи"
                     >
                       <X className="w-3.5 h-3.5" />
                       <span>Откажи</span>
+                    </button>
+                  )}
+
+                  {b.status !== "pending" && (
+                    <button
+                      onClick={() => handleStatusChange(b.id, "pending")}
+                      className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Върни в чакащи"
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Чакаща</span>
                     </button>
                   )}
                 </div>

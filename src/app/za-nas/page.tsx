@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { ParentReviewsCarousel } from "@/components/about/ParentReviewsCarousel";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { getSiteSettings } from "@/lib/site-settings";
+import { listReviewsImagesAction } from "@/actions/admin-media";
 
 export const revalidate = 60; // revalidate on demand or every 60s
 
@@ -44,6 +45,7 @@ export const metadata: Metadata = {
 
 export default async function AboutPage() {
   const settings = await getSiteSettings();
+  const reviewsRes = await listReviewsImagesAction();
 
   return (
     <div className="w-full bg-[#f1f2f6] text-brand-dark overflow-x-hidden">
@@ -190,7 +192,10 @@ export default async function AboutPage() {
           </div>
 
           {/* Social Reviews & Screenshot Carousel */}
-          <ParentReviewsCarousel screenshotUrl={settings.reviewScreenshotUrl} />
+          <ParentReviewsCarousel
+            screenshotUrl={settings.reviewScreenshotUrl}
+            reviewImages={reviewsRes.items || []}
+          />
         </Container>
       </section>
 
