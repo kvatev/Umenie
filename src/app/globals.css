@@ -9,10 +9,6 @@
     --brand-purple: #887ed8;
     --brand-purple-hover: #786dc8;
     --brand-dark: #2a2b3d;
-
-    /* Font stack fallbacks (actual vars injected by next/font via layout.tsx) */
-    --font-heading: 'Comfortaa', 'Pangolin', 'Caveat', sans-serif;
-    --font-sans: 'Montserrat', 'Nunito', 'Jost', sans-serif;
   }
 
   html {
@@ -25,13 +21,17 @@
   body {
     background-color: #f1f2f6;
     color: #2a2b3d;
-    font-family: var(--font-sans), 'Montserrat', sans-serif;
+    font-family: var(--font-sans), sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-heading), cursive, sans-serif;
   }
 
   /* Optional local font override for SENSA WILD FILL when provided in public/fonts */

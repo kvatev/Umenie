@@ -196,7 +196,7 @@ export default async function HomePage() {
             <div className="pt-2">
               <Link
                 href="/uslugi"
-                className="inline-flex items-center justify-center px-8 sm:px-12 py-3.5 sm:py-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-lg tracking-wider uppercase shadow-2xl hover:bg-brand-purple-hover hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                className="bg-[#887ed8] hover:bg-[#786dc8] text-white font-heading font-bold text-base sm:text-lg tracking-wide uppercase rounded-full inline-flex items-center justify-center py-2.5 px-6 sm:py-3 sm:px-8 shadow-md active:scale-95 transition-all w-auto self-center cursor-pointer"
               >
                 НАУЧЕТЕ ПОВЕЧЕ
               </Link>

@@ -642,7 +642,7 @@ export function MediaManager({
                     УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА
                   </h1>
                   <div className="pt-2">
-                    <span className="inline-block px-7 py-3 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button">
+                    <span className="bg-[#887ed8] text-white font-heading font-bold text-xs sm:text-sm tracking-wide uppercase rounded-full inline-flex items-center justify-center py-2 px-5 sm:py-2.5 sm:px-6 shadow-md">
                       НАУЧЕТЕ ПОВЕЧЕ
                     </span>
                   </div>

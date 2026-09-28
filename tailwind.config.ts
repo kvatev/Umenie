@@ -25,10 +25,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        // Montserrat with cyrillic — injected as --font-sans via next/font
-        sans: ["var(--font-sans)", "Montserrat", "Nunito", "sans-serif"],
-        // Comfortaa with cyrillic — injected as --font-heading via next/font
-        heading: ["var(--font-heading)", "Comfortaa", "Pangolin", "sans-serif"],
+        sans: ["var(--font-sans)", "sans-serif"],
+        heading: ["var(--font-heading)", "cursive", "sans-serif"],
       },
       boxShadow: {
         card: "0 8px 30px rgba(136, 126, 216, 0.12)",

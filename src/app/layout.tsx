@@ -6,18 +6,18 @@ import { Footer } from "@/components/layout/Footer";
 import { ConditionalFooter } from "@/components/layout/ConditionalFooter";
 import { SITE_CONFIG } from "@/lib/constants";
 
-const comfortaa = Comfortaa({
+const headingFont = Comfortaa({
   subsets: ["latin", "cyrillic"],
   variable: "--font-heading",
-  display: "swap",
   weight: ["400", "600", "700"],
+  display: "swap",
 });
 
-const montserrat = Montserrat({
+const bodyFont = Montserrat({
   subsets: ["latin", "cyrillic"],
   variable: "--font-sans",
-  display: "swap",
   weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -133,14 +133,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bg" className={`${comfortaa.variable} ${montserrat.variable}`}>
+    <html lang="bg" className={`${bodyFont.variable} ${headingFont.variable}`}>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="font-sans bg-[#f1f2f6] text-brand-dark min-h-screen flex flex-col selection:bg-brand-purple selection:text-white">
+      <body className={`${bodyFont.variable} ${headingFont.variable} font-sans bg-[#f1f2f6] text-slate-800 antialiased overflow-x-hidden min-h-screen flex flex-col selection:bg-brand-purple selection:text-white`}>
         <Header />
         <main className="flex-1 w-full">{children}</main>
         <ConditionalFooter>
