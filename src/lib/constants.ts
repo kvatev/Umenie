@@ -5,7 +5,7 @@ export const SITE_CONFIG = {
   subtagline: "В образователен клуб „УМеНИе“ децата растат с едно умение повече всеки ден.",
   city: "Бургас",
   locationShort: "Бургас, Славейков, бл. 48",
-  locationFull: "ж.к. Славейков, блок 48, партер",
+  locationFull: "ж.к. Славейков, блок 48, партер, Бургас",
   googleMapsUrl: "https://maps.google.com/?q=Бургас+Славейков+блок+48",
   phoneDisplay: "0877 488 481",
   phoneFull: "+359 877 488 481",
@@ -25,7 +25,7 @@ export const NAV_LINKS = [
 ];
 
 export const FOOTER_LEGAL_LINKS = [
-  { label: "ПОЛИТИКА ЗА ПОВЕРИТЕЛНОСТ", href: "/politika-za-poveritelnost" },
-  { label: "ОБЩИ УСЛОВИЯ", href: "/obshti-usloviya" },
-  { label: "ЗА НАС", href: "/za-nas" },
+  { label: "Политика за поверителност", href: "/politika-za-poveritelnost" },
+  { label: "Общи условия", href: "/obsti-usloviya" },
+  { label: "За нас", href: "/za-nas" },
 ];

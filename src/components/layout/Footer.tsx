@@ -41,7 +41,7 @@ export async function Footer() {
                   <span className="p-2 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors mt-0.5">
                     <MapPin className="w-4 h-4 shrink-0" />
                   </span>
-                  <span className="uppercase text-xs md:text-sm font-semibold leading-relaxed">
+                  <span className="text-xs md:text-sm font-medium leading-relaxed">
                     {settings.locationFull}
                   </span>
                 </a>
@@ -54,7 +54,7 @@ export async function Footer() {
                   <span className="p-2 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors">
                     <Mail className="w-4 h-4 shrink-0" />
                   </span>
-                  <span className="uppercase text-xs md:text-sm font-semibold tracking-wide">
+                  <span className="text-xs md:text-sm font-medium">
                     {settings.email}
                   </span>
                 </a>
@@ -153,7 +153,7 @@ export async function Footer() {
             <h3 className="font-heading font-bold text-xl md:text-2xl text-brand-purple tracking-wide">
               БЪРЗИ ВРЪЗКИ
             </h3>
-            <ul className="space-y-2.5 text-xs md:text-sm font-semibold tracking-wide uppercase text-brand-dark">
+            <ul className="space-y-2.5 text-sm md:text-base font-medium text-brand-dark">
               {FOOTER_LEGAL_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link
