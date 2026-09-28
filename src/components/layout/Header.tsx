@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Phone, MapPin } from "lucide-react";
+import { Phone, MapPin, Menu, X } from "lucide-react";
 import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
@@ -136,19 +136,21 @@ export function Header({ initialSettings }: HeaderProps) {
             aria-label={isMobileMenuOpen ? "Затвори навигационното меню" : "Отвори навигационното меню"}
             aria-expanded={isMobileMenuOpen}
           >
-            <span className="w-6 h-0.5 bg-brand-purple rounded-full my-0.5" />
-            <span className="w-6 h-0.5 bg-brand-purple rounded-full my-0.5" />
-            <span className="w-6 h-0.5 bg-brand-purple rounded-full my-0.5" />
+            {isMobileMenuOpen ? (
+              <X className="w-6 h-6 text-brand-purple" />
+            ) : (
+              <Menu className="w-6 h-6 text-brand-purple" />
+            )}
           </button>
         </Container>
-
-        {/* Mobile Drawer */}
-        <MobileNav
-          isOpen={isMobileMenuOpen}
-          onClose={closeMobileMenu}
-          settings={initialSettings}
-        />
       </header>
+
+      {/* Mobile Drawer (placed outside header to prevent backdrop-filter containing block trap) */}
+      <MobileNav
+        isOpen={isMobileMenuOpen}
+        onClose={closeMobileMenu}
+        settings={initialSettings}
+      />
     </>
   );
 }

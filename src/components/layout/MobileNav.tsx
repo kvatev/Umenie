@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { X, Phone, MapPin, Mail, ArrowRight } from "lucide-react";
+import { X, Phone, MapPin, ArrowRight } from "lucide-react";
 import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { SiteSettings } from "@/lib/types/site-settings";
@@ -17,6 +18,11 @@ interface MobileNavProps {
 
 export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const phoneDisplay = settings?.phoneDisplay || SITE_CONFIG.phoneDisplay;
   const phoneRaw = settings?.phoneRaw || SITE_CONFIG.phoneRaw;
@@ -25,7 +31,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
   const facebookUrl = settings?.facebookUrl || SITE_CONFIG.social.facebook;
   const instagramUrl = settings?.instagramUrl || SITE_CONFIG.social.instagram;
 
-  const prevPathnameRef = React.useRef(pathname);
+  const prevPathnameRef = useRef(pathname);
 
   // Prevent background scrolling when menu is open
   useEffect(() => {
@@ -33,7 +39,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => {
-        document.body.style.overflow = originalOverflow || "unset";
+        document.body.style.overflow = originalOverflow || "";
       };
     }
   }, [isOpen]);
@@ -64,12 +70,14 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
     };
   }, [isOpen, onClose]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
       {/* Backdrop overlay */}
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-brand-dark/40 backdrop-blur-sm transition-opacity duration-300 md:hidden",
+          "fixed inset-0 z-[9998] bg-brand-dark/50 backdrop-blur-sm transition-opacity duration-300 md:hidden",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -79,14 +87,15 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
       {/* Drawer panel */}
       <aside
         className={cn(
-          "fixed top-0 right-0 bottom-0 z-50 w-[85%] max-w-sm h-full max-h-[100dvh] overflow-y-auto bg-[#f1f2f6] shadow-2xl flex flex-col justify-between p-6 transition-transform duration-300 ease-out md:hidden border-l border-brand-purple/20",
-          isOpen ? "translate-x-0" : "translate-x-full"
+          "fixed top-0 right-0 bottom-0 z-[9999] w-[85%] max-w-sm h-full max-h-[100dvh] overflow-y-auto bg-[#f1f2f6] shadow-2xl flex flex-col p-6 transition-transform duration-300 ease-out md:hidden border-l border-brand-purple/20",
+          isOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"
         )}
         aria-label="Мобилно меню"
+        aria-hidden={!isOpen}
       >
-        <div>
+        <div className="flex-1 flex flex-col">
           {/* Drawer Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-brand-purple/15">
+          <div className="flex items-center justify-between pb-4 border-b border-brand-purple/15 shrink-0">
             <Link href="/" onClick={onClose} className="relative block h-12 w-32 focus:outline-none">
               <Image
                 src="/images/logo.webp"
@@ -100,7 +109,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-full text-brand-dark hover:text-brand-purple hover:bg-brand-purple/10 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer"
+              className="p-2 rounded-full text-brand-dark hover:text-brand-purple hover:bg-brand-purple/10 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer active:scale-95"
               aria-label="Затвори менюто"
             >
               <X className="w-6 h-6" />
@@ -121,7 +130,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
                   href={item.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center justify-between px-4 py-3 rounded-2xl font-heading text-base font-bold transition-all",
+                    "flex items-center justify-between px-4 py-3.5 rounded-2xl font-heading text-base font-bold transition-all",
                     isActive
                       ? "bg-brand-purple text-white shadow-button"
                       : "text-brand-dark hover:bg-white/80 hover:text-brand-purple"
@@ -141,7 +150,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
         </div>
 
         {/* Drawer Footer Contact Info */}
-        <div className="pt-6 border-t border-brand-purple/15 space-y-4">
+        <div className="mt-8 pt-6 border-t border-brand-purple/15 space-y-4 shrink-0">
           {/* Quick Call Button */}
           <a
             href={`tel:${phoneRaw}`}
@@ -202,6 +211,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
           </div>
         </div>
       </aside>
-    </>
+    </>,
+    document.body
   );
 }
