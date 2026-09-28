@@ -93,9 +93,13 @@ export default async function HomePage() {
             <h1 className="font-heading font-bold text-2xl xs:text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide drop-shadow-md">
               УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА
             </h1>
-            <div className="pt-1">
+            <div className="pt-2">
               <Link href="#activities">
-                <Button size="lg" className="shadow-2xl text-base sm:text-xl font-bold tracking-wider px-8 sm:px-10 py-4">
+                <Button
+                  size="lg"
+                  isPill={false}
+                  className="shadow-2xl text-lg sm:text-2xl font-bold tracking-widest px-10 sm:px-14 py-4 sm:py-5 rounded-2xl"
+                >
                   НАУЧЕТЕ ПОВЕЧЕ
                 </Button>
               </Link>
@@ -106,40 +110,56 @@ export default async function HomePage() {
 
       {/* 2. Intro Section with Decorative Bulbs */}
       <section className="py-10 sm:py-16 md:py-24 relative overflow-hidden bg-brand-bg">
-        {/* Decorative light bulbs from assets */}
-        {/* Top-left */}
-        <div className="absolute -left-5 sm:-left-8 top-6 sm:top-8 w-20 h-20 sm:w-44 sm:h-44 opacity-60 sm:opacity-40 pointer-events-none -rotate-12">
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-        {/* Top-right */}
-        <div className="absolute -right-5 sm:-right-8 top-8 sm:top-12 w-20 h-20 sm:w-44 sm:h-44 opacity-60 sm:opacity-40 pointer-events-none rotate-12">
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-        {/* Bottom-left */}
-        <div className="absolute left-8 sm:left-20 bottom-4 sm:bottom-8 w-14 h-14 sm:w-28 sm:h-28 opacity-30 sm:opacity-25 pointer-events-none rotate-6">
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-        {/* Bottom-right */}
-        <div className="absolute right-8 sm:right-20 bottom-4 sm:bottom-8 w-14 h-14 sm:w-28 sm:h-28 opacity-30 sm:opacity-25 pointer-events-none -rotate-6">
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-        {/* Center-left */}
-        <div className="absolute left-[20%] top-1/2 -translate-y-1/2 w-10 h-10 sm:w-20 sm:h-20 opacity-20 pointer-events-none rotate-3 hidden sm:block">
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-        {/* Center-right */}
-        <div className="absolute right-[20%] top-1/2 -translate-y-1/2 w-10 h-10 sm:w-20 sm:h-20 opacity-20 pointer-events-none -rotate-3 hidden sm:block">
+        {/* Chaotic scattered bulbs with bleach/glow effect */}
+
+        {/* Big - top-left, tilted hard, partially off-screen */}
+        <div className="absolute pointer-events-none" style={{left:"-2%",top:"3%",width:"155px",height:"155px",opacity:0.55,transform:"rotate(-28deg)",filter:"brightness(1.5) saturate(0.65) blur(0.3px)"}}>
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
-        <Container size="md" className="relative z-10 text-center space-y-5 sm:space-y-8">
-          <h2 className="font-heading text-xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold">
+        {/* Small - upper-right, off-angle */}
+        <div className="absolute pointer-events-none" style={{right:"5%",top:"7%",width:"72px",height:"72px",opacity:0.38,transform:"rotate(20deg)",filter:"brightness(1.7) saturate(0.55) blur(0.2px)"}}>
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+
+        {/* Medium - far right upper-middle, desktop only */}
+        <div className="absolute pointer-events-none hidden sm:block" style={{right:"-3%",top:"26%",width:"118px",height:"118px",opacity:0.32,transform:"rotate(40deg)",filter:"brightness(1.55) saturate(0.6)"}}>
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+
+        {/* Tiny - left side, mid-low */}
+        <div className="absolute pointer-events-none" style={{left:"8%",top:"58%",width:"52px",height:"52px",opacity:0.28,transform:"rotate(-10deg)",filter:"brightness(1.8) saturate(0.5) blur(0.5px)"}}>
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+
+        {/* Large - bottom-right, strongly bleached, partially off */}
+        <div className="absolute pointer-events-none" style={{right:"-5%",bottom:"-2%",width:"175px",height:"175px",opacity:0.42,transform:"rotate(25deg)",filter:"brightness(1.6) saturate(0.58)"}}>
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+
+        {/* Extra small - top-center-right, desktop only */}
+        <div className="absolute pointer-events-none hidden sm:block" style={{left:"61%",top:"6%",width:"44px",height:"44px",opacity:0.22,transform:"rotate(-18deg)",filter:"brightness(1.9) saturate(0.45) blur(0.4px)"}}>
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+
+        {/* Medium-small - bottom-left area, tilted */}
+        <div className="absolute pointer-events-none" style={{left:"16%",bottom:"4%",width:"88px",height:"88px",opacity:0.26,transform:"rotate(14deg)",filter:"brightness(1.65) saturate(0.52) blur(0.3px)"}}>
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+
+        {/* Small - far left middle, desktop only */}
+        <div className="absolute pointer-events-none hidden md:block" style={{left:"1%",top:"44%",width:"65px",height:"65px",opacity:0.2,transform:"rotate(-35deg)",filter:"brightness(1.7) saturate(0.5)"}}>
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+
+        <Container size="lg" className="relative z-10 text-center space-y-5 sm:space-y-8">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold">
             В образователен клуб „УМеНИе“ децата{" "}
             <span className="text-brand-purple">растат с едно умение</span> повече
             всеки ден.
           </h2>
 
-          <div className="space-y-4 sm:space-y-5 text-sm sm:text-lg text-brand-dark/90 leading-relaxed font-normal max-w-2xl mx-auto">
+          <div className="space-y-4 sm:space-y-5 text-base sm:text-xl text-brand-dark/90 leading-relaxed font-normal max-w-2xl mx-auto">
             <p>
               Английски, български, математика, шах, плетиво и учебна занималня.
               Различни занимания с една обща цел – детето да вземе от всяко от тях
