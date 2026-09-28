@@ -36,9 +36,9 @@ export function ServiceSlider({
   if (!images || images.length === 0) return null;
 
   return (
-    <section className="py-12 sm:py-16 bg-[#e9e7f8]/50">
+    <section className="py-10 sm:py-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <h3 className="font-heading font-bold text-2xl sm:text-3xl text-brand-purple text-center mb-8 uppercase tracking-wide">
+        <h3 className="font-heading font-extrabold text-2xl sm:text-3xl lg:text-4xl text-brand-purple text-center mb-8 sm:mb-10 uppercase tracking-wide">
           {title}
         </h3>
 

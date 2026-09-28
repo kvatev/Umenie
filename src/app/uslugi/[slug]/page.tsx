@@ -7,16 +7,19 @@ import { Container } from "@/components/ui/Container";
 import { SERVICES_DATA, getServiceBySlug } from "@/lib/services-data";
 import { ServiceSlider } from "@/components/services/ServiceSlider";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
-import { ArrowRight, Lightbulb } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  return SERVICES_DATA.map((service) => ({
+  const params = SERVICES_DATA.map((service) => ({
     slug: service.slug,
   }));
+  // Alias for backward compatibility
+  params.push({ slug: "chitatelski-klub" });
+  return params;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -24,8 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const service = getServiceBySlug(slug);
   if (!service) return { title: "Услугата не е намерена" };
 
-  const fullTitle = `${service.title} за деца в Бургас | Клуб УМеНИе`;
-  const canonicalUrl = `https://www.umenie.net/uslugi/${slug}`;
+  const fullTitle = `${service.title} | Клуб УМеНИе Бургас`;
+  const canonicalUrl = `https://www.umenie.net/uslugi/${service.slug}`;
 
   return {
     title: fullTitle,
@@ -55,6 +58,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+function renderHighlightedText(text: string) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={index} className="font-bold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
 export default async function ServiceDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const service = getServiceBySlug(slug);
@@ -63,61 +80,75 @@ export default async function ServiceDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const titleLine1 = service.titleLines ? service.titleLines[0] : service.title;
+  const titleLine2 = service.titleLines && service.titleLines.length > 1 ? service.titleLines[1] : null;
+
   return (
-    <div className="w-full bg-brand-bg pb-16">
-      {/* Top Header */}
-      <section className="pt-12 pb-8 sm:pt-16 sm:pb-12 relative overflow-hidden">
-        {/* Decorative bulb */}
-        <div className="absolute right-6 top-8 w-24 h-24 sm:w-36 sm:h-36 opacity-30 pointer-events-none rotate-12">
-          <Image
-            src="/images/bulb.webp"
-            alt=""
-            fill
-            className="object-contain"
-          />
-        </div>
-
+    <div className="w-full bg-[#f1f2f6] min-h-screen overflow-x-hidden">
+      {/* Breadcrumbs */}
+      <div className="pt-6 sm:pt-8">
         <Container size="xl">
-          <div className="max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-brand-purple uppercase tracking-wider">
-              <Link href="/uslugi" className="hover:underline">
-                Услуги
-              </Link>
-              <span>/</span>
-              <span>{service.shortTitle}</span>
-            </div>
-
-            <h1 className="font-heading font-bold text-3xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide uppercase">
-              {service.title}
-            </h1>
-          </div>
+          <nav aria-label="Хлебни трохи" className="inline-flex items-center gap-2 text-xs font-bold text-brand-purple uppercase tracking-wider">
+            <Link href="/" className="hover:underline">
+              Начало
+            </Link>
+            <span>/</span>
+            <Link href="/uslugi" className="hover:underline">
+              Услуги
+            </Link>
+            <span>/</span>
+            <span className="text-brand-purple/70">{service.shortTitle}</span>
+          </nav>
         </Container>
-      </section>
+      </div>
 
-      {/* Main Content Split Section */}
-      <section className="pb-16">
+      {/* Main 4-Quadrant Visual Layout */}
+      <section className="pt-6 pb-12 sm:pt-8 sm:pb-16">
         <Container size="xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            {/* Left Column: Slogan, Intro, and Featured Photo */}
-            <div className="lg:col-span-6 space-y-8">
-              {/* Slogan card */}
-              <div className="bg-brand-purple text-white p-6 sm:p-8 rounded-3xl shadow-card space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+            {/* Left Column: Title, Box 1 (Slogan + Intro), Photo 1 */}
+            <div className="flex flex-col space-y-8">
+              {/* Playful Service Title with Hand-drawn Lightbulb */}
+              <div className="relative">
+                <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                  <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide uppercase leading-[1.05]">
+                    {titleLine1}
+                  </h1>
+                  <div className="relative w-12 h-12 sm:w-16 sm:h-16 shrink-0 -rotate-12 transform hover:rotate-6 transition-transform">
+                    <Image
+                      src="/images/bulb.webp"
+                      alt=""
+                      fill
+                      className="object-contain drop-shadow-md"
+                      priority
+                    />
+                  </div>
+                </div>
+                {titleLine2 && (
+                  <span className="block font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide uppercase leading-[1.05] mt-1">
+                    {titleLine2}
+                  </span>
+                )}
+              </div>
+
+              {/* Purple Box 1: Slogan & Intro */}
+              <div className="bg-[#887ed8] text-white p-7 sm:p-9 rounded-[32px] shadow-lg space-y-5">
                 <div className="space-y-1">
-                  <p className="font-heading text-lg sm:text-xl font-bold opacity-90">
+                  <p className="font-heading text-lg sm:text-xl font-bold opacity-90 leading-tight">
                     {service.sloganPart1}
                   </p>
-                  <p className="font-heading text-xl sm:text-2xl font-bold text-white leading-snug">
+                  <p className="font-heading text-xl sm:text-2xl lg:text-[26px] font-bold text-white leading-snug">
                     {service.sloganPart2}
                   </p>
                 </div>
-                <p className="text-white/90 text-sm sm:text-base leading-relaxed pt-2 border-t border-white/20">
+                <p className="text-white/95 text-sm sm:text-base leading-relaxed pt-3 border-t border-white/20 font-normal">
                   {service.intro}
                 </p>
               </div>
 
-              {/* Featured photo */}
+              {/* Photo 1 (Portrait / Primary Featured Photo) */}
               {service.pageImages && service.pageImages.length > 0 && (
-                <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+                <div className="relative w-full aspect-[4/5] sm:aspect-[3/4] rounded-[32px] overflow-hidden shadow-2xl border-4 border-white bg-white">
                   <Image
                     src={service.pageImages[0]}
                     alt={service.title}
@@ -130,11 +161,11 @@ export default async function ServiceDetailPage({ params }: PageProps) {
               )}
             </div>
 
-            {/* Right Column: Top Photo (if available) + Purple Highlights Container */}
-            <div className="lg:col-span-6 space-y-8">
-              {/* Secondary photo if available */}
+            {/* Right Column: Photo 2, Box 2 (Bullets + CTA button) */}
+            <div className="flex flex-col space-y-8 lg:pt-[130px]">
+              {/* Photo 2 (Landscape Secondary Photo) */}
               {service.pageImages && service.pageImages.length > 1 && (
-                <div className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden shadow-card border-4 border-white hidden sm:block">
+                <div className="relative w-full aspect-[4/3] sm:aspect-[16/11] rounded-[32px] overflow-hidden shadow-2xl border-4 border-white bg-white">
                   <Image
                     src={service.pageImages[1]}
                     alt={`${service.title} атмосфера`}
@@ -145,52 +176,66 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Purple Highlights Box */}
-              <div className="bg-brand-purple text-white p-6 sm:p-10 rounded-3xl shadow-card space-y-6">
-                <div className="flex items-center gap-3 border-b border-white/20 pb-4">
-                  <span className="p-2 rounded-full bg-white/15 text-white">
-                    <Lightbulb className="w-5 h-5 text-brand-yellow" />
-                  </span>
-                  <h2 className="font-heading font-bold text-xl sm:text-2xl uppercase tracking-wide">
-                    Какво получава детето?
-                  </h2>
-                </div>
-
+              {/* Purple Box 2: Feature Bullets & "ВИЖТЕ ГРАФИКА" CTA Button */}
+              <div className="bg-[#887ed8] text-white p-7 sm:p-9 rounded-[32px] shadow-lg space-y-6">
                 <ul className="space-y-4 text-sm sm:text-base leading-relaxed text-white/95">
                   {service.bulletPoints.map((bullet, idx) => (
                     <li key={idx} className="flex items-start gap-3">
-                      <span className="w-2 h-2 rounded-full bg-brand-yellow shrink-0 mt-2" />
-                      <span>{bullet}</span>
+                      <span className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 relative mt-0.5">
+                        <Image
+                          src="/images/bulb.webp"
+                          alt="💡"
+                          fill
+                          className="object-contain"
+                        />
+                      </span>
+                      <span className="text-white/95 leading-normal">
+                        {renderHighlightedText(bullet)}
+                      </span>
                     </li>
                   ))}
                 </ul>
 
-                {/* Schedule CTA Button inside purple card */}
-                <div className="pt-4 border-t border-white/20">
+                {/* White Pill CTA Button */}
+                <div className="pt-2">
                   <Link
                     href="/grafik"
-                    className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-brand-purple font-heading font-bold text-sm sm:text-base shadow-xl hover:bg-brand-purple-light transition-all active:scale-[0.98]"
+                    className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-[#887ed8] font-heading font-bold text-sm sm:text-base shadow-xl hover:bg-[#ede9fe] transition-all transform hover:scale-[1.02] active:scale-[0.98] uppercase"
                   >
                     <span>ВИЖТЕ ГРАФИКА</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
+
+              {/* Optional 3rd Photo (if provided, e.g. for Knitting) */}
+              {service.pageImages && service.pageImages.length > 2 && (
+                <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden shadow-2xl border-4 border-white bg-white">
+                  <Image
+                    src={service.pageImages[2]}
+                    alt={`${service.title} детайл`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 600px"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </Container>
       </section>
 
-      {/* Photo Slider with authentic photos */}
+      {/* Quick Contact Banner (Call Us + Location) */}
+      <QuickContactBanner />
+
+      {/* Image Slideshow / Gallery ("ВИЖТЕ ВЪОБРАЖЕНИЕТО С ПОВЕЧЕ УМЕНИЕ") */}
       {service.sliderImages && service.sliderImages.length > 0 && (
         <ServiceSlider
           images={service.sliderImages}
-          title={`НАДНИКНЕТЕ В ЗАНИМАНИЯТА ПО ${service.title}`}
+          title={service.galleryTitle}
         />
       )}
-
-      {/* Quick Contact Banner */}
-      <QuickContactBanner className="mt-12" />
     </div>
   );
 }
+
