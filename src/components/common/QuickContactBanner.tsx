@@ -81,7 +81,7 @@ export async function QuickContactBanner({ className }: QuickContactBannerProps)
                   КЪДЕ?
                 </p>
                 <p className="font-heading font-bold text-xs sm:text-base text-brand-purple uppercase leading-tight mt-0.5">
-                  СЛАВЕЙКОВ,
+                  БУРГАС, СЛАВЕЙКОВ,
                 </p>
                 <p className="font-heading font-bold text-[10px] sm:text-sm text-brand-purple/90 uppercase leading-tight">
                   БЛ. 48 ПАРТЕР

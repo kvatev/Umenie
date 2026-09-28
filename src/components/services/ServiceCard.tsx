@@ -32,8 +32,8 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
         </div>
 
         {/* Purple Pill Button with Title */}
-        <div className="w-full pt-0.5">
-          <span className="inline-flex items-center justify-center w-full min-h-[38px] sm:min-h-[44px] py-1.5 sm:py-2.5 px-2 sm:px-4 rounded-full bg-brand-purple text-white font-heading font-bold text-[11px] xs:text-xs sm:text-sm tracking-wide sm:tracking-wider uppercase shadow-button group-hover:bg-brand-purple-hover group-hover:shadow-button-hover transition-all active:scale-[0.97] text-center leading-tight">
+        <div className="w-full pt-1">
+          <span className="inline-flex items-center justify-center w-full min-h-[44px] py-2 sm:py-2.5 px-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base tracking-wide uppercase shadow-button group-hover:bg-brand-purple-hover group-hover:shadow-button-hover transition-all active:scale-[0.97] text-center leading-tight">
             {service.title}
           </span>
         </div>
