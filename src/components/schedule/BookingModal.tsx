@@ -2,29 +2,94 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { X, Calendar, Clock, User, MapPin, Send, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  X,
+  Calendar,
+  Clock,
+  User,
+  MapPin,
+  Loader2,
+  Palette,
+  MessageSquare,
+  BookOpen,
+  Calculator,
+  Sparkles,
+  ArrowLeft,
+} from "lucide-react";
 import { ScheduleItem } from "@/lib/schedule-data";
 import { createBookingAction } from "@/actions/booking";
 import { cn } from "@/lib/utils";
 
 interface BookingModalProps {
   schedule: ScheduleItem | null;
+  selectedDateStr?: string;
   onClose: () => void;
 }
 
 const AGE_OPTIONS = [
   "Избери възраст",
-  "5 г.",
-  "6 г.",
-  "7 г.",
-  "8 г.",
-  "9 г.",
-  "10 г.",
-  "11 г.",
-  "12+ г.",
+  "5 години",
+  "6 години",
+  "7 години",
+  "8 години",
+  "9 години",
+  "10 години",
+  "11 години",
+  "12 години",
+  "13+ години",
 ];
 
-export function BookingModal({ schedule, onClose }: BookingModalProps) {
+// Custom Category Icon
+function CategoryIcon({ category, className }: { category?: string; className?: string }) {
+  switch (category) {
+    case "chess":
+      return (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M19 20H5v-2a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v2z" />
+          <path d="M9 15V8a3 3 0 0 1 6 0v7" />
+          <path d="M10 4a2 2 0 1 1 4 0" />
+        </svg>
+      );
+    case "english":
+      return <MessageSquare className={className} />;
+    case "art":
+      return <Palette className={className} />;
+    case "knitting":
+      return (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <circle cx="12" cy="12" r="8" />
+          <path d="m4.93 4.93 14.14 14.14" />
+          <path d="m14.83 9.17-5.66 5.66" />
+        </svg>
+      );
+    case "math":
+      return <Calculator className={className} />;
+    case "reading":
+      return <BookOpen className={className} />;
+    case "stem":
+      return <Sparkles className={className} />;
+    default:
+      return <Sparkles className={className} />;
+  }
+}
+
+export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModalProps) {
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState("");
   const [parentName, setParentName] = useState("");
@@ -37,11 +102,10 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  // Lock scroll
+  // Lock body scroll when open
   useEffect(() => {
     if (schedule) {
       document.body.style.overflow = "hidden";
-      // Reset form state on new schedule selection
       setIsSuccess(false);
       setFieldErrors({});
       setGlobalError(null);
@@ -54,6 +118,8 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
   }, [schedule]);
 
   if (!schedule) return null;
+
+  const displayDate = selectedDateStr || `${schedule.dayName}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,7 +177,7 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
       {/* Backdrop overlay */}
       <div
         className="fixed inset-0 bg-brand-dark/50 backdrop-blur-sm transition-opacity"
@@ -120,87 +186,114 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
       />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden z-10 border border-brand-purple/20 transition-all my-8">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-brand-muted hover:text-brand-purple hover:bg-brand-purple/10 transition-colors z-20 focus:outline-none"
-          aria-label="Затвори"
-        >
-          <X className="w-5 h-5" />
-        </button>
+      <div className="relative w-full max-w-lg bg-white rounded-3xl sm:rounded-4xl shadow-2xl overflow-hidden z-10 border border-brand-purple/20 transition-all my-auto max-h-[92vh] flex flex-col">
+        {/* Top Header bar with close button & mobile back link */}
+        <div className="flex items-center justify-between px-6 pt-5 pb-2">
+          <button
+            onClick={onClose}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-purple hover:underline cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Към графика</span>
+          </button>
+
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full text-brand-muted hover:text-brand-purple hover:bg-brand-purple/10 transition-colors cursor-pointer"
+            aria-label="Затвори"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {isSuccess ? (
-          /* SUCCESS VIEW (съгласно График 2 Десктоп.png) */
-          <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-6 animate-fade-in">
-            {/* Soft circle with airplane icon */}
-            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-brand-purple/10 flex items-center justify-center relative mb-2">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 text-brand-purple transform -rotate-12 flex items-center justify-center">
-                <Send className="w-12 h-12 sm:w-16 sm:h-16 stroke-[1.5]" />
-              </div>
+          /* CONFIRMATION SCREEN (matching "График 2 Десктоп.png" & "График 3 - мобилна.png" 1:1) */
+          <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-6 animate-fade-in overflow-y-auto">
+            {/* Soft circular background with paper airplane & dashed trail */}
+            <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-[#f1effd] flex items-center justify-center relative mb-1">
+              <svg
+                viewBox="0 0 160 130"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-28 h-24 text-brand-purple"
+              >
+                {/* Curved dashed flight path */}
+                <path
+                  d="M20,105 C50,110 80,95 110,50"
+                  stroke="currentColor"
+                  strokeWidth="2.8"
+                  strokeDasharray="6 6"
+                  strokeLinecap="round"
+                />
+                {/* Hand-drawn paper airplane */}
+                <path
+                  d="M105,52 L145,20 L124,78 L114,60 L105,52 Z"
+                  stroke="currentColor"
+                  strokeWidth="2.8"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M145,20 L114,60"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
 
-            <h2 className="font-heading font-bold text-3xl sm:text-4xl text-brand-purple tracking-wide">
+            <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase">
               ЗАЯВКАТА Е ПРИЕТА
             </h2>
 
-            <p className="text-brand-dark/90 text-sm sm:text-base leading-relaxed max-w-sm">
+            <p className="text-brand-dark/90 text-sm sm:text-base leading-relaxed max-w-sm font-sans">
               Благодарим ви! Ще се свържем с Вас, на посочения телефон, за да потвърдим заявката.
             </p>
 
-            <div className="pt-4 w-full">
+            <div className="pt-4 w-full max-w-xs">
               <button
                 onClick={onClose}
-                className="w-full py-3.5 px-8 rounded-full bg-brand-purple text-white font-heading font-bold text-base shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-[0.98]"
+                className="w-full py-3.5 px-8 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base uppercase tracking-wider shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all cursor-pointer active:scale-[0.98]"
               >
                 КЪМ ГРАФИКА
               </button>
             </div>
           </div>
         ) : (
-          /* BOOKING FORM VIEW (съгласно График Десктоп.png) */
-          <div className="p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
-            {/* Top Info Block */}
-            <div className="pb-5 border-b border-brand-purple/15 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-brand-purple/15 text-brand-purple flex items-center justify-center font-heading font-bold text-xl shadow-sm">
-                  {schedule.title.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="font-heading font-bold text-2xl text-brand-purple">
-                    {schedule.title}
-                  </h3>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-brand-purple-light text-brand-purple">
-                    {schedule.ageGroup}
-                  </span>
-                </div>
+          /* BOOKING FORM VIEW (matching "График Десктоп.png" & "График 2 - мобилна.png" 1:1) */
+          <div className="px-6 pb-6 pt-2 overflow-y-auto space-y-5">
+            {/* Activity Info Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-brand-bg/80 border border-brand-purple/20 flex items-start gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-brand-purple/15 text-brand-purple flex items-center justify-center shrink-0 shadow-sm">
+                <CategoryIcon category={schedule.category} className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm text-brand-dark/90 pt-1">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-brand-purple shrink-0" />
-                  <span>{schedule.dayName}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-brand-purple shrink-0" />
-                  <span>
-                    {schedule.startTime} - {schedule.endTime}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-brand-purple shrink-0" />
-                  <span>{schedule.ageGroup}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-brand-purple shrink-0" />
-                  <span className="truncate">{schedule.location}</span>
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <h3 className="font-heading font-bold text-xl sm:text-2xl text-brand-dark leading-tight">
+                  {schedule.title}
+                </h3>
+                <div className="space-y-1 text-xs text-brand-dark/85">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-brand-purple shrink-0" />
+                    <span className="font-semibold">{displayDate}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-brand-purple shrink-0" />
+                    <span>{schedule.startTime} – {schedule.endTime}</span>
+                    <span className="mx-1">•</span>
+                    <User className="w-3.5 h-3.5 text-brand-purple shrink-0" />
+                    <span>{schedule.ageGroup}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-brand-muted">
+                    <MapPin className="w-3.5 h-3.5 text-brand-purple shrink-0" />
+                    <span className="truncate">{schedule.location}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <h4 className="font-heading font-bold text-lg text-brand-dark">
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              <h4 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
                 Запиши се за това занимание
               </h4>
 
@@ -213,7 +306,7 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
               {/* Child Name */}
               <div>
                 <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Име на детето *
+                  Име на детето
                 </label>
                 <input
                   type="text"
@@ -235,7 +328,7 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
               {/* Child Age */}
               <div>
                 <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Възраст на детето *
+                  Възраст на детето
                 </label>
                 <select
                   value={childAge}
@@ -261,7 +354,7 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
               {/* Parent Name */}
               <div>
                 <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Име на родител *
+                  Име на родител
                 </label>
                 <input
                   type="text"
@@ -305,7 +398,7 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
               {/* Email */}
               <div>
                 <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Имейл адрес <span className="text-brand-muted font-normal">(по избор)</span>
+                  Имейл адрес
                 </label>
                 <input
                   type="email"
@@ -324,14 +417,14 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
                 )}
               </div>
 
-              {/* Checkbox: Marketing Consent */}
-              <div className="flex items-start gap-2.5 pt-2">
+              {/* Newsletter Consent Checkbox */}
+              <div className="flex items-start gap-2.5 pt-1">
                 <input
                   type="checkbox"
                   id="consentMarketing"
                   checked={consentMarketing}
                   onChange={(e) => setConsentMarketing(e.target.checked)}
-                  className="w-4 h-4 mt-1 rounded border-gray-300 text-brand-purple focus:ring-brand-purple cursor-pointer shrink-0"
+                  className="w-4 h-4 mt-0.5 rounded border-gray-300 text-brand-purple focus:ring-brand-purple cursor-pointer shrink-0"
                 />
                 <label
                   htmlFor="consentMarketing"
@@ -342,8 +435,8 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
                 </label>
               </div>
 
-              {/* GDPR disclaimer text */}
-              <p className="text-[11px] text-brand-muted leading-relaxed pt-1">
+              {/* Privacy disclaimer */}
+              <p className="text-[11px] text-brand-muted leading-relaxed">
                 Предоставените данни се обработват за целите на заявката за записване съгласно{" "}
                 <Link
                   href="/politika-za-poveritelnost"
@@ -356,7 +449,7 @@ export function BookingModal({ schedule, onClose }: BookingModalProps) {
               </p>
 
               {/* Submit Button */}
-              <div className="pt-3">
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={isSubmitting}

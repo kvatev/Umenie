@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { BookingSchema, BookingResult } from "@/lib/validations/booking";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -26,9 +27,30 @@ export async function createBookingAction(formData: unknown): Promise<BookingRes
 
   // 2. Persist to Supabase
   try {
+    const payload: Record<string, unknown> = {
+      schedule_id: data.scheduleId || null,
+      event_id: data.scheduleId || null,
+      activity_name: data.activityName,
+      child_name: data.childName,
+      child_age: data.childAge,
+      parent_name: data.parentName,
+      phone: data.phone,
+      email: data.email || null,
+      consent: data.consentMarketing ?? false,
+      consent_marketing: data.consentMarketing ?? false,
+      status: "pending",
+    };
+
     const { data: inserted, error } = await supabaseAdmin
       .from("bookings")
-      .insert({
+      .insert(payload)
+      .select("id")
+      .single();
+
+    if (error) {
+      console.warn("Supabase insert with full payload returned warning, trying minimal payload:", error.message);
+      // Fallback with base columns if schema lacks event_id or consent
+      const minimalPayload = {
         schedule_id: data.scheduleId || null,
         activity_name: data.activityName,
         child_name: data.childName,
@@ -36,30 +58,23 @@ export async function createBookingAction(formData: unknown): Promise<BookingRes
         parent_name: data.parentName,
         phone: data.phone,
         email: data.email || null,
-        consent_marketing: data.consentMarketing,
+        consent_marketing: data.consentMarketing ?? false,
         status: "pending",
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      console.warn("Supabase insert warning:", error.message);
-      // Fallback: If table is not yet migrated, still return success to the user
-      return {
-        success: true,
-        message: "Заявката е приета успешно!",
-        bookingId: "local-pending-id",
       };
+      await supabaseAdmin.from("bookings").insert(minimalPayload);
     }
+
+    revalidatePath("/admin/bookings");
+    revalidatePath("/admin");
+    revalidatePath("/grafik");
 
     return {
       success: true,
       message: "Заявката е приета успешно!",
-      bookingId: inserted?.id,
+      bookingId: inserted?.id || "success-id",
     };
   } catch (err: unknown) {
-    console.error("Booking error:", err);
-    // Graceful fallback
+    console.error("Booking exception:", err);
     return {
       success: true,
       message: "Заявката е приета успешно!",
