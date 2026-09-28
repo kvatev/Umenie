@@ -293,10 +293,10 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* 3. 6 SERVICES GRID (3 columns desktop, 1 column mobile as requested) */}
+      {/* 3. 6 SERVICES GRID (3 columns desktop, 2 columns mobile) */}
       <section id="activities" className="pb-12 pt-2 sm:py-16 bg-brand-bg scroll-mt-24">
         <Container size="xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 max-w-sm sm:max-w-none mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 max-w-6xl mx-auto">
             {SERVICES_DATA.map((service) => (
               <ServiceCard
                 key={service.slug}
