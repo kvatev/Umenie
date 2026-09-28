@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const GALLERY_IMAGES = [
-  { src: "/images/gallery-painted-hands.jpg", alt: "Творчество и детски арт занимания в УМеНИе" },
+  { src: "/images/gallery-painted-hands.webp", alt: "Творчество и детски арт занимания в УМеНИе" },
   { src: "/images/banner/1.webp", alt: "Уроци и курсове по езици и математика" },
   { src: "/images/banner/2.webp", alt: "Учебна занималня и самостоятелност" },
   { src: "/images/banner/4.webp", alt: "Арт занимания и детски картини" },
