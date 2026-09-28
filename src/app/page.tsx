@@ -9,6 +9,7 @@ import { ServiceCard } from "@/components/services/ServiceCard";
 import { KidsGallery } from "@/components/home/KidsGallery";
 import { ReviewsSection } from "@/components/home/ReviewsSection";
 import { ScheduleBanner } from "@/components/home/ScheduleBanner";
+import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -74,7 +75,7 @@ export default async function HomePage() {
   return (
     <div className="w-full">
       {/* 1. Hero Section */}
-      <section className="relative w-full h-[400px] sm:h-[500px] lg:h-[580px] overflow-hidden flex items-center justify-center">
+      <section className="relative w-full h-[360px] xs:h-[400px] sm:h-[500px] lg:h-[580px] overflow-hidden flex items-center justify-center">
         {/* Background Banner Image */}
         <Image
           src={heroBannerSrc}
@@ -85,19 +86,19 @@ export default async function HomePage() {
           sizes="100vw"
         />
         {/* Soft dark overlay for crisp text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/20" />
 
         <Container size="xl" className="relative z-10">
-          <div className="max-w-xl text-white space-y-6">
-            <h1 className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide drop-shadow-md">
+          <div className="max-w-xl text-white space-y-4 sm:space-y-6">
+            <h1 className="font-heading font-bold text-2xl xs:text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide drop-shadow-md">
               УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА
             </h1>
-            <p className="text-base sm:text-lg text-white/95 font-medium drop-shadow-sm">
+            <p className="text-sm sm:text-lg text-white/95 font-medium drop-shadow-sm leading-relaxed">
               Място, където всяко дете развива увереност, самостоятелност и радост от знанието.
             </p>
-            <div>
+            <div className="pt-1">
               <Link href="#activities">
-                <Button size="lg" className="shadow-2xl text-base tracking-wider">
+                <Button size="lg" className="shadow-2xl text-sm sm:text-base tracking-wider px-6 sm:px-8 py-3">
                   НАУЧЕТЕ ПОВЕЧЕ
                 </Button>
               </Link>
@@ -106,10 +107,10 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* 2. Intro Section */}
-      <section className="py-16 md:py-24 relative overflow-hidden bg-brand-bg">
+      {/* 2. Intro Section with Decorative Bulbs */}
+      <section className="py-10 sm:py-16 md:py-24 relative overflow-hidden bg-brand-bg">
         {/* Decorative light bulbs from assets */}
-        <div className="absolute -left-8 top-8 w-28 h-28 sm:w-44 sm:h-44 opacity-35 pointer-events-none -rotate-12">
+        <div className="absolute -left-5 sm:-left-8 top-6 sm:top-8 w-20 h-20 sm:w-44 sm:h-44 opacity-60 sm:opacity-40 pointer-events-none -rotate-12">
           <Image
             src="/images/bulb.webp"
             alt=""
@@ -117,7 +118,7 @@ export default async function HomePage() {
             className="object-contain"
           />
         </div>
-        <div className="absolute -right-8 top-12 w-28 h-28 sm:w-44 sm:h-44 opacity-35 pointer-events-none rotate-12">
+        <div className="absolute -right-5 sm:-right-8 top-8 sm:top-12 w-20 h-20 sm:w-44 sm:h-44 opacity-60 sm:opacity-40 pointer-events-none rotate-12">
           <Image
             src="/images/bulb.webp"
             alt=""
@@ -126,14 +127,14 @@ export default async function HomePage() {
           />
         </div>
 
-        <Container size="md" className="relative z-10 text-center space-y-8">
-          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold">
+        <Container size="md" className="relative z-10 text-center space-y-5 sm:space-y-8">
+          <h2 className="font-heading text-xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold">
             В образователен клуб „УМеНИе“ децата{" "}
             <span className="text-brand-purple">растат с едно умение</span> повече
             всеки ден.
           </h2>
 
-          <div className="space-y-5 text-base sm:text-lg text-brand-dark/90 leading-relaxed font-normal max-w-2xl mx-auto">
+          <div className="space-y-4 sm:space-y-5 text-sm sm:text-lg text-brand-dark/90 leading-relaxed font-normal max-w-2xl mx-auto">
             <p>
               Английски, български, математика, шах, плетиво и учебна занималня.
               Различни занимания с една обща цел – детето да вземе от всяко от тях
@@ -150,10 +151,10 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* 3. 6 Main Activities Section */}
-      <section id="activities" className="py-12 sm:py-16 bg-brand-bg scroll-mt-24">
+      {/* 3. 6 Main Activities Section (2 columns on mobile matching mockup Image 1) */}
+      <section id="activities" className="pb-10 pt-2 sm:py-16 bg-brand-bg scroll-mt-24">
         <Container size="xl">
-          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+          <div className="hidden sm:block text-center max-w-2xl mx-auto mb-10 sm:mb-14">
             <h2 className="font-heading font-bold text-3xl sm:text-4xl text-brand-purple tracking-wide uppercase">
               ОСНОВНИ ЗАНИМАНИЯ
             </h2>
@@ -162,7 +163,7 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-8 lg:gap-10">
             {SERVICES_DATA.map((service) => (
               <ServiceCard
                 key={service.slug}
@@ -174,84 +175,23 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* 4. Quick Contact Banner 1 (Mid-page) with Cloud Element */}
-      <section className="relative w-full my-6 sm:my-10 px-4 sm:px-6">
-        <div className="relative max-w-6xl mx-auto py-8 sm:py-12 px-6 sm:px-12 flex items-center justify-center">
-          {/* Cloud Graphic Background */}
-          <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
-            <Image
-              src="/images/cloud.webp"
-              alt="Облак фон"
-              fill
-              priority
-              className="object-fill drop-shadow-sm"
-            />
-          </div>
+      {/* 4. Quick Contact Banner with Organic Waves (2 columns on mobile matching mockup Image 1) */}
+      <QuickContactBanner />
 
-          <div className="relative w-full flex flex-col md:flex-row items-center justify-around gap-8 text-center md:text-left z-10">
-            <a
-              href={`tel:${settings.phoneRaw}`}
-              className="flex items-center gap-4 group p-3 rounded-2xl hover:bg-white/50 transition-all"
-            >
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
-                <Image
-                  src="/images/phone.webp"
-                  alt="Телефон"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-              <div className="text-left">
-                <p className="text-xs sm:text-sm font-heading font-bold text-brand-dark tracking-wide uppercase">
-                  ИМАТЕ ВЪПРОСИ? ОБАДЕТЕ НИ СЕ!
-                </p>
-                <p className="font-heading font-bold text-2xl sm:text-3xl text-brand-purple">
-                  {settings.phoneDisplay}
-                </p>
-              </div>
-            </a>
-
-            <a
-              href={settings.googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-4 group p-3 rounded-2xl hover:bg-white/50 transition-all"
-            >
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 transform group-hover:scale-105 transition-transform">
-                <Image
-                  src="/images/location.webp"
-                  alt="Локация"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-              <div className="text-left">
-                <p className="text-xs sm:text-sm font-heading font-bold text-brand-dark tracking-wide uppercase">
-                  КЪДЕ?
-                </p>
-                <p className="font-heading font-bold text-lg sm:text-xl text-brand-purple uppercase">
-                  {settings.locationShort}
-                </p>
-              </div>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Reviews & Why Choose Us Section */}
+      {/* 5. Reviews & Why Choose Us Section (matching mockup Image 2) */}
       <ReviewsSection />
 
-      {/* 6. Schedule Banner (Solid Purple) */}
+      {/* 6. Schedule Banner (Solid Purple with Arrow & Visualized Schedule matching mockup Image 2) */}
       <ScheduleBanner />
 
-      {/* 7. Gallery: НАШИТЕ ДЕЦА С УМЕНИЯ */}
-      <section className="py-16 sm:py-24 bg-brand-bg">
+      {/* 7. Gallery: НАШИТЕ ДЕЦА С УМЕНИЯ (matching mockup Image 2) */}
+      <section className="py-12 sm:py-20 bg-brand-bg">
         <Container size="xl">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="font-heading font-bold text-3xl sm:text-4xl text-brand-purple tracking-wide uppercase">
+          <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-10">
+            <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase">
               НАШИТЕ ДЕЦА С УМЕНИЯ
             </h2>
-            <p className="text-brand-muted text-sm sm:text-base mt-2">
+            <p className="text-brand-muted text-xs sm:text-base mt-1.5 sm:mt-2">
               Моменти от ежедневието, творчеството и постиженията в клуба.
             </p>
           </div>

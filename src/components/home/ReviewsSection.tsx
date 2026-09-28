@@ -121,19 +121,20 @@ export function ReviewsSection() {
           </div>
 
           {/* Right Callout: ЗАЩО ДА ИЗБЕРЕТЕ КЛУБ 'УМЕНИЕ'? */}
-          <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
-            <h2 className="font-heading font-bold text-3xl sm:text-4xl text-brand-purple leading-tight">
+          <div className="lg:col-span-6 space-y-4 sm:space-y-6 text-center lg:text-left">
+            <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple leading-tight tracking-wide">
               ЗАЩО ДА ИЗБЕРЕТЕ КЛУБ „УМЕНИЕ“?
             </h2>
-            <p className="text-brand-dark/90 text-base sm:text-lg leading-relaxed max-w-xl">
+            <p className="text-brand-dark/90 text-base sm:text-lg leading-relaxed max-w-xl hidden sm:block">
               В малки групи всяко дете получава лично внимание и подкрепа. Ние учим
               децата чрез практика, без екрани и в среда, близка до домашния уют.
             </p>
-            <div>
-              <Link href="/za-nas">
-                <Button size="lg" className="shadow-lg">
-                  НАУЧЕТЕ ПОВЕЧЕ
-                </Button>
+            <div className="pt-1 sm:pt-2 flex justify-center lg:justify-start">
+              <Link
+                href="/za-nas"
+                className="inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base tracking-wider uppercase shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-95"
+              >
+                НАУЧЕТЕ ПОВЕЧЕ
               </Link>
             </div>
           </div>

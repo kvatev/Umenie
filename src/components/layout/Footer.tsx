@@ -11,9 +11,9 @@ export async function Footer() {
   const settings = await getSiteSettings();
 
   return (
-    <footer className="w-full bg-[#f1f2f6] border-t border-brand-purple/20 pt-12 pb-8 mt-auto">
+    <footer className="w-full bg-[#f1f2f6] border-t border-brand-purple/20 pt-10 sm:pt-14 pb-8 mt-auto">
       <Container size="xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-start pb-10 border-b border-brand-purple/15">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 items-start pb-8 sm:pb-10 border-b border-brand-purple/15">
           {/* Column 1: Contacts */}
           <div className="space-y-4">
             <h3 className="font-heading font-bold text-xl md:text-2xl text-brand-purple tracking-wide">
@@ -60,10 +60,46 @@ export async function Footer() {
                 </a>
               </li>
             </ul>
+
+            {/* Mobile Social Icons - placed directly under Contacts matching mockup */}
+            <div className="flex md:hidden items-center gap-4 pt-3">
+              <a
+                href={settings.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook страница на УМеНИе"
+                className="relative w-11 h-11 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm active:scale-95"
+              >
+                <div className="relative w-full h-full">
+                  <Image
+                    src="/images/fb.webp"
+                    alt="Facebook"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </a>
+              <a
+                href={settings.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram профил на УМеНИе"
+                className="relative w-11 h-11 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm active:scale-95"
+              >
+                <div className="relative w-full h-full">
+                  <Image
+                    src="/images/ig.webp"
+                    alt="Instagram"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </a>
+            </div>
           </div>
 
-          {/* Column 2: Socials & Brand Identity */}
-          <div className="flex flex-col items-center justify-center text-center space-y-4 md:py-2">
+          {/* Column 2: Socials & Brand Identity (Visible on Desktop) */}
+          <div className="hidden md:flex flex-col items-center justify-center text-center space-y-4 py-2">
             <Link href="/" className="relative block h-16 w-44">
               <Image
                 src="/images/logo.webp"
@@ -113,7 +149,7 @@ export async function Footer() {
           </div>
 
           {/* Column 3: Quick / Legal Links */}
-          <div className="space-y-4 md:text-right">
+          <div className="space-y-4 md:text-right pt-2 md:pt-0">
             <h3 className="font-heading font-bold text-xl md:text-2xl text-brand-purple tracking-wide">
               БЪРЗИ ВРЪЗКИ
             </h3>
