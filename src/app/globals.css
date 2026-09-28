@@ -4,22 +4,28 @@
 
 @layer base {
   :root {
+    /* Brand colors */
     --brand-bg: #f1f2f6;
     --brand-purple: #887ed8;
     --brand-purple-hover: #786dc8;
     --brand-dark: #2a2b3d;
+
+    /* Font stack fallbacks (actual vars injected by next/font via layout.tsx) */
+    --font-heading: 'Comfortaa', 'Pangolin', 'Caveat', sans-serif;
+    --font-sans: 'Montserrat', 'Nunito', 'Jost', sans-serif;
   }
 
   html {
     scroll-behavior: smooth;
     background-color: #f1f2f6;
     color: #2a2b3d;
+    overflow-x: hidden; /* Prevent horizontal shift on mobile */
   }
 
   body {
     background-color: #f1f2f6;
     color: #2a2b3d;
-    font-family: var(--font-body), 'Montserrat', sans-serif;
+    font-family: var(--font-sans), 'Montserrat', sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;

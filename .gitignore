@@ -142,10 +142,25 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
-# Local design/asset reference folder
+# Local design/asset reference folders (NEVER commit these)
 Ymenie/
+design-assets/
+design_assets/
+*-assets/
+*_mockups/
+*_design/
+
+# Temporary files
+*temp*
+*tmp*
+*.tmp
 
 # Heavy/non-web file types
 *.docx
 *.pdf
 *.zip
+*.psd
+*.ai
+*.xd
+*.fig
+*.sketch
