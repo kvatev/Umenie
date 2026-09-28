@@ -93,12 +93,9 @@ export default async function HomePage() {
             <h1 className="font-heading font-bold text-2xl xs:text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide drop-shadow-md">
               УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА
             </h1>
-            <p className="text-sm sm:text-lg text-white/95 font-medium drop-shadow-sm leading-relaxed">
-              Място, където всяко дете развива увереност, самостоятелност и радост от знанието.
-            </p>
             <div className="pt-1">
               <Link href="#activities">
-                <Button size="lg" className="shadow-2xl text-sm sm:text-base tracking-wider px-6 sm:px-8 py-3">
+                <Button size="lg" className="shadow-2xl text-base sm:text-xl font-bold tracking-wider px-8 sm:px-10 py-4">
                   НАУЧЕТЕ ПОВЕЧЕ
                 </Button>
               </Link>
@@ -110,21 +107,29 @@ export default async function HomePage() {
       {/* 2. Intro Section with Decorative Bulbs */}
       <section className="py-10 sm:py-16 md:py-24 relative overflow-hidden bg-brand-bg">
         {/* Decorative light bulbs from assets */}
+        {/* Top-left */}
         <div className="absolute -left-5 sm:-left-8 top-6 sm:top-8 w-20 h-20 sm:w-44 sm:h-44 opacity-60 sm:opacity-40 pointer-events-none -rotate-12">
-          <Image
-            src="/images/bulb.webp"
-            alt=""
-            fill
-            className="object-contain"
-          />
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
+        {/* Top-right */}
         <div className="absolute -right-5 sm:-right-8 top-8 sm:top-12 w-20 h-20 sm:w-44 sm:h-44 opacity-60 sm:opacity-40 pointer-events-none rotate-12">
-          <Image
-            src="/images/bulb.webp"
-            alt=""
-            fill
-            className="object-contain"
-          />
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+        {/* Bottom-left */}
+        <div className="absolute left-8 sm:left-20 bottom-4 sm:bottom-8 w-14 h-14 sm:w-28 sm:h-28 opacity-30 sm:opacity-25 pointer-events-none rotate-6">
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+        {/* Bottom-right */}
+        <div className="absolute right-8 sm:right-20 bottom-4 sm:bottom-8 w-14 h-14 sm:w-28 sm:h-28 opacity-30 sm:opacity-25 pointer-events-none -rotate-6">
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+        {/* Center-left */}
+        <div className="absolute left-[20%] top-1/2 -translate-y-1/2 w-10 h-10 sm:w-20 sm:h-20 opacity-20 pointer-events-none rotate-3 hidden sm:block">
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+        </div>
+        {/* Center-right */}
+        <div className="absolute right-[20%] top-1/2 -translate-y-1/2 w-10 h-10 sm:w-20 sm:h-20 opacity-20 pointer-events-none -rotate-3 hidden sm:block">
+          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
         <Container size="md" className="relative z-10 text-center space-y-5 sm:space-y-8">
