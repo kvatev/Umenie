@@ -5,6 +5,8 @@ import { ScheduleCalendar } from "@/components/schedule/ScheduleCalendar";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { supabase } from "@/lib/supabase/client";
 import { DEFAULT_SCHEDULES, ScheduleItem, mapRowToScheduleItem } from "@/lib/schedule-data";
+import { getSiteSettings } from "@/lib/site-settings";
+import { FileText, Download } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Седмичен график и записване | Образователен клуб УМеНИе",
@@ -64,7 +66,10 @@ async function getSchedules(): Promise<ScheduleItem[]> {
 }
 
 export default async function SchedulePage() {
-  const schedules = await getSchedules();
+  const [schedules, settings] = await Promise.all([
+    getSchedules(),
+    getSiteSettings(),
+  ]);
 
   return (
     <div className="py-10 sm:py-16 md:py-20 space-y-12 sm:space-y-16">
@@ -77,6 +82,22 @@ export default async function SchedulePage() {
           <p className="text-brand-dark/85 text-base sm:text-lg md:text-xl font-sans max-w-2xl mx-auto">
             Разгледайте предстоящите занимания и изберете какви умения ще развие вашето дете.
           </p>
+
+          {/* Download Official Schedule File Banner if uploaded */}
+          {settings.scheduleFileUrl && (
+            <div className="pt-4 max-w-xl mx-auto">
+              <a
+                href={settings.scheduleFileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm uppercase tracking-wider shadow-button hover:bg-brand-purple-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                <FileText className="w-4 h-4 shrink-0" />
+                <span>Свали актуалния график (PDF / Снимка)</span>
+                <Download className="w-4 h-4 shrink-0 ml-1" />
+              </a>
+            </div>
+          )}
         </div>
       </Container>
 

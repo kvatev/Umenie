@@ -11,6 +11,17 @@ export interface SiteSettings {
   tagline: string;
   facebookUrl: string;
   instagramUrl: string;
+  // Hero Banner settings
+  heroBannerUrl?: string;
+  heroVideoUrl?: string;
+  heroMediaType?: "image" | "video";
+  // Review Screenshot setting
+  reviewScreenshotUrl?: string;
+  // Kids Gallery slide order
+  kidsGalleryOrder?: string[];
+  // Weekly Schedule File (PDF/Image)
+  scheduleFileUrl?: string;
+  scheduleFileName?: string;
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -24,6 +35,13 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   tagline: SITE_CONFIG.tagline,
   facebookUrl: SITE_CONFIG.social.facebook,
   instagramUrl: SITE_CONFIG.social.instagram,
+  heroBannerUrl: "",
+  heroVideoUrl: "",
+  heroMediaType: "image",
+  reviewScreenshotUrl: "",
+  kidsGalleryOrder: [],
+  scheduleFileUrl: "",
+  scheduleFileName: "",
 };
 
 /**

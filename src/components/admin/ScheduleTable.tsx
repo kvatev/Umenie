@@ -16,18 +16,41 @@ import {
   CalendarDays,
   Table as TableIcon,
   Sparkles,
+  FileText,
+  Download,
+  FileUp,
+  Upload,
 } from "lucide-react";
 import { DAYS_OF_WEEK, CATEGORY_STYLES } from "@/lib/schedule-data";
-import { toggleScheduleActiveAction, deleteScheduleAction } from "@/actions/admin-schedules";
+
+function getDayName(dayNumber: number): string {
+  return DAYS_OF_WEEK.find((d) => d.dayNumber === dayNumber)?.name || `Ден ${dayNumber}`;
+}
+import {
+  toggleScheduleActiveAction,
+  deleteScheduleAction,
+  uploadScheduleFileAction,
+  deleteScheduleFileAction,
+} from "@/actions/admin-schedules";
 import { ScheduleModal, ScheduleRecord } from "./ScheduleModal";
 import { cn } from "@/lib/utils";
 
 interface ScheduleTableProps {
   initialSchedules: ScheduleRecord[];
+  initialScheduleFileUrl?: string;
+  initialScheduleFileName?: string;
 }
 
-export function ScheduleTable({ initialSchedules }: ScheduleTableProps) {
+export function ScheduleTable({
+  initialSchedules,
+  initialScheduleFileUrl = "",
+  initialScheduleFileName = "",
+}: ScheduleTableProps) {
   const [schedules, setSchedules] = useState<ScheduleRecord[]>(initialSchedules);
+  const [scheduleFileUrl, setScheduleFileUrl] = useState<string>(initialScheduleFileUrl);
+  const [scheduleFileName, setScheduleFileName] = useState<string>(initialScheduleFileName);
+  const [selectedScheduleFile, setSelectedScheduleFile] = useState<File | null>(null);
+  const [scheduleFileMessage, setScheduleFileMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [activeDayFilter, setActiveDayFilter] = useState<number>(0); // 0 = All
   const [viewMode, setViewMode] = useState<"snippet" | "table">("snippet"); // default to live snippet
   const [modalOpen, setModalOpen] = useState(false);
@@ -92,12 +115,164 @@ export function ScheduleTable({ initialSchedules }: ScheduleTableProps) {
     setModalOpen(true);
   };
 
-  const getDayName = (dayNumber: number) => {
-    return DAYS_OF_WEEK.find((d) => d.dayNumber === dayNumber)?.name || "Понеделник";
+  const handleScheduleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedScheduleFile(e.target.files[0]);
+      setScheduleFileMessage(null);
+    }
+  };
+
+  const handleUploadScheduleFile = () => {
+    if (!selectedScheduleFile) return;
+
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append("file", selectedScheduleFile);
+
+      const res = await uploadScheduleFileAction(formData);
+      if (res.success && res.url) {
+        setScheduleFileUrl(res.url);
+        setScheduleFileName(res.fileName || selectedScheduleFile.name);
+        setSelectedScheduleFile(null);
+        setScheduleFileMessage({ type: "success", text: res.message });
+      } else {
+        setScheduleFileMessage({ type: "error", text: res.message || "Грешка при качване на файла." });
+      }
+    });
+  };
+
+  const handleDeleteScheduleFile = () => {
+    if (!window.confirm("Сигурни ли сте, че искате да премахнете качения файл на седмичния график?")) return;
+
+    startTransition(async () => {
+      const res = await deleteScheduleFileAction();
+      if (res.success) {
+        setScheduleFileUrl("");
+        setScheduleFileName("");
+        setScheduleFileMessage({ type: "success", text: res.message });
+      } else {
+        setScheduleFileMessage({ type: "error", text: res.message || "Грешка при премахване." });
+      }
+    });
   };
 
   return (
     <div className="space-y-6">
+      {/* 1. WEEKLY SCHEDULE FILE UPLOAD / REPLACEMENT (PDF / Image) */}
+      <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-card border border-brand-purple/15 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-brand-purple/10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-brand-purple/10 text-brand-purple flex items-center justify-center shrink-0">
+              <FileUp className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
+                Качване на актуален файл / снимка на графика
+              </h3>
+              <p className="text-xs text-brand-muted">
+                Качете PDF или изображение (WebP, PNG, JPG). Родителите ще могат да го изтеглят или прегледат от сайта.
+              </p>
+            </div>
+          </div>
+
+          <span
+            className={cn(
+              "px-3 py-1 rounded-full text-xs font-bold shrink-0 self-start sm:self-auto",
+              scheduleFileUrl
+                ? "bg-emerald-100 text-emerald-800"
+                : "bg-gray-100 text-brand-muted"
+            )}
+          >
+            {scheduleFileUrl ? "Активен качен файл" : "Няма качен файл"}
+          </span>
+        </div>
+
+        {/* Feedback message */}
+        {scheduleFileMessage && (
+          <div
+            className={cn(
+              "p-3.5 rounded-2xl text-xs sm:text-sm font-medium border flex items-center gap-2",
+              scheduleFileMessage.type === "success"
+                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                : "bg-red-50 text-red-800 border-red-200"
+            )}
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{scheduleFileMessage.text}</span>
+          </div>
+        )}
+
+        {/* Current File Banner if exists */}
+        {scheduleFileUrl && (
+          <div className="bg-brand-purple/5 p-4 rounded-2xl border border-brand-purple/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <FileText className="w-5 h-5 text-brand-purple shrink-0" />
+              <div className="min-w-0">
+                <p className="font-heading font-bold text-xs sm:text-sm text-brand-dark truncate">
+                  {scheduleFileName || "Седмичен график (актуален)"}
+                </p>
+                <p className="text-[11px] text-brand-muted">
+                  Визуализира се като линк за изтегляне в страница /grafik
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={scheduleFileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-purple text-white text-xs font-bold shadow-sm hover:bg-brand-purple-hover transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Преглед / Сваляне</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={handleDeleteScheduleFile}
+                disabled={isPending}
+                className="p-2 rounded-full text-red-600 hover:bg-red-50 transition-colors"
+                title="Премахни файла"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Upload form */}
+        <div className="bg-brand-bg/60 p-4 rounded-2xl border border-brand-purple/10 flex flex-col sm:flex-row items-center gap-3">
+          <input
+            type="file"
+            accept=".pdf, image/png, image/jpeg, image/webp"
+            onChange={handleScheduleFileChange}
+            className="block w-full text-xs text-brand-muted file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-heading file:font-bold file:bg-brand-purple/10 file:text-brand-purple hover:file:bg-brand-purple/20 cursor-pointer"
+          />
+
+          {selectedScheduleFile && (
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedScheduleFile(null)}
+                className="px-3.5 py-2 rounded-full bg-white text-xs text-brand-dark font-bold hover:bg-gray-100 transition-colors border border-brand-purple/20"
+              >
+                Отказ
+              </button>
+              <button
+                type="button"
+                onClick={handleUploadScheduleFile}
+                disabled={isPending}
+                className="px-5 py-2 rounded-full bg-brand-purple text-white font-heading font-bold text-xs shadow-button hover:bg-brand-purple-hover transition-all flex items-center gap-1.5 disabled:opacity-70"
+              >
+                {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                <span>{scheduleFileUrl ? "Замени файла" : "Качи файла"}</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* View Mode Switcher + Add Button */}
       <div className="bg-white p-4 sm:p-5 rounded-3xl shadow-card border border-brand-purple/15 flex flex-col md:flex-row items-center justify-between gap-4">
         {/* View Toggle */}

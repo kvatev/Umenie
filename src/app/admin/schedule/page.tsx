@@ -4,6 +4,7 @@ import { ScheduleTable } from "@/components/admin/ScheduleTable";
 import { ScheduleRecord } from "@/components/admin/ScheduleModal";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { DEFAULT_SCHEDULES } from "@/lib/schedule-data";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const metadata: Metadata = {
   title: "Управление на график | Административен панел",
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminSchedulePage() {
+  const settings = await getSiteSettings();
   let schedules: ScheduleRecord[] = [];
 
   try {
@@ -52,12 +54,16 @@ export default async function AdminSchedulePage() {
           Управление на седмичния график
         </h1>
         <p className="text-brand-muted text-xs sm:text-sm font-sans mt-0.5">
-          Добавяйте, редактирайте или временно скривайте часове от публичния календар на уебсайта.
+          Качвайте актуален графичен файл (PDF/снимка) или управлявайте часовете ред по ред в таблицата.
         </p>
       </div>
 
-      {/* Schedule Table Component */}
-      <ScheduleTable initialSchedules={schedules} />
+      {/* Schedule Table Component with File Upload */}
+      <ScheduleTable
+        initialSchedules={schedules}
+        initialScheduleFileUrl={settings.scheduleFileUrl || ""}
+        initialScheduleFileName={settings.scheduleFileName || ""}
+      />
     </div>
   );
 }

@@ -111,3 +111,102 @@ export async function deleteScheduleAction(id: string) {
     return { success: false, message: "Грешка при изтриване." };
   }
 }
+
+/**
+ * Upload schedule file/image (PDF, PNG, JPG, WebP)
+ */
+export async function uploadScheduleFileAction(formData: FormData) {
+  try {
+    const file = formData.get("file") as File;
+    if (!file) {
+      return { success: false, message: "Няма избран файл." };
+    }
+
+    const extension = file.name.split(".").pop()?.toLowerCase() || "pdf";
+    const storagePath = `schedule-file.${extension}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error } = await supabaseAdmin.storage
+      .from("site-assets")
+      .upload(storagePath, buffer, {
+        contentType: file.type || "application/pdf",
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Upload schedule file error:", error.message);
+      return { success: false, message: error.message };
+    }
+
+    const { data: urlData } = supabaseAdmin.storage
+      .from("site-assets")
+      .getPublicUrl(storagePath);
+
+    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+    const { updateSiteSettingsAction } = await import("./admin-settings");
+    await updateSiteSettingsAction({
+      scheduleFileUrl: publicUrl,
+      scheduleFileName: file.name,
+    });
+
+    revalidatePath("/grafik");
+    revalidatePath("/");
+    revalidatePath("/admin/schedule");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: "Файлът за графика е качен успешно!",
+      url: publicUrl,
+      fileName: file.name,
+    };
+  } catch (err: unknown) {
+    console.error("Upload schedule file exception:", err);
+    return { success: false, message: "Грешка при качване на файла за графика." };
+  }
+}
+
+/**
+ * Delete schedule file/image
+ */
+export async function deleteScheduleFileAction() {
+  try {
+    const { getSiteSettings } = await import("@/lib/site-settings");
+    const settings = await getSiteSettings();
+
+    if (settings.scheduleFileUrl) {
+      // Find possible extensions
+      await supabaseAdmin.storage
+        .from("site-assets")
+        .remove([
+          "schedule-file.pdf",
+          "schedule-file.jpg",
+          "schedule-file.jpeg",
+          "schedule-file.png",
+          "schedule-file.webp",
+        ]);
+    }
+
+    const { updateSiteSettingsAction } = await import("./admin-settings");
+    await updateSiteSettingsAction({
+      scheduleFileUrl: "",
+      scheduleFileName: "",
+    });
+
+    revalidatePath("/grafik");
+    revalidatePath("/");
+    revalidatePath("/admin/schedule");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: "Файлът за графика е премахнат успешно!",
+    };
+  } catch (err: unknown) {
+    console.error("Delete schedule file exception:", err);
+    return { success: false, message: "Грешка при изтриване на файла." };
+  }
+}

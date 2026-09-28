@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { MediaManager } from "@/components/admin/MediaManager";
 import { listMediaFolderAction } from "@/actions/admin-media";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const metadata: Metadata = {
   title: "Банери и Снимки | Административен панел",
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminMediaPage() {
+  const settings = await getSiteSettings();
   let heroUrl: string | null = null;
 
   try {
@@ -43,10 +45,10 @@ export default async function AdminMediaPage() {
           Мултимедия
         </span>
         <h1 className="font-heading font-bold text-2xl sm:text-3xl text-brand-dark mt-1">
-          Банери и Снимки
+          Банери, Снимки и Видеа
         </h1>
         <p className="text-brand-muted text-xs sm:text-sm font-sans mt-0.5">
-          Качвайте, преглеждайте и подменяйте заглавния банер и ротационните фото слайдери на уебсайта.
+          Качвайте заглавен банер/видео, отзиви, подреждайте снимките на децата и слайдерите на дейностите.
         </p>
       </div>
 
@@ -55,6 +57,10 @@ export default async function AdminMediaPage() {
         initialHeroUrl={heroUrl}
         initialKidsGallery={kidsRes.items || []}
         initialServiceMedia={servicesRes.items || []}
+        initialHeroVideoUrl={settings.heroVideoUrl || ""}
+        initialHeroMediaType={settings.heroMediaType || "image"}
+        initialReviewScreenshotUrl={settings.reviewScreenshotUrl || ""}
+        initialKidsGalleryOrder={settings.kidsGalleryOrder || []}
       />
     </div>
   );

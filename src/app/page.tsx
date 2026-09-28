@@ -12,6 +12,8 @@ import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
+import { getSiteSettings } from "@/lib/site-settings";
+
 export const revalidate = 60; // revalidate on demand or every 60s
 
 export const metadata: Metadata = {
@@ -49,9 +51,23 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
+  const settings = await getSiteSettings();
+
   let heroMediaSrc = "/images/opening-photo.webp";
   let isHeroVideo = false;
-  let reviewScreenshotUrl: string | null = null;
+
+  // 1. Resolve Hero media: Video or Image from settings or storage
+  if (settings.heroMediaType === "video" && settings.heroVideoUrl) {
+    heroMediaSrc = settings.heroVideoUrl;
+    isHeroVideo = true;
+  } else if (settings.heroBannerUrl) {
+    heroMediaSrc = settings.heroBannerUrl;
+  }
+
+  // 2. Resolve Review Screenshot
+  let reviewScreenshotUrl: string | null = settings.reviewScreenshotUrl || null;
+
+  // 3. Resolve Gallery
   let dynamicGalleryImages: { src: string; alt: string }[] | undefined = undefined;
 
   try {
@@ -60,51 +76,55 @@ export default async function HomePage() {
       .list("", { limit: 100 });
 
     if (files && files.length > 0) {
-      // 1. Check for Hero Video or Image
-      const videoFile = files.find(
-        (f) =>
-          f.name.startsWith("hero-video") ||
-          f.name.endsWith(".mp4") ||
-          f.name.endsWith(".webm")
-      );
+      // If hero not set in settings, fallback to storage files
+      if (!settings.heroVideoUrl && !settings.heroBannerUrl) {
+        const videoFile = files.find(
+          (f) =>
+            f.name.startsWith("hero-video") ||
+            f.name.endsWith(".mp4") ||
+            f.name.endsWith(".webm")
+        );
 
-      if (videoFile) {
-        const { data: vData } = supabaseAdmin.storage
-          .from("site-assets")
-          .getPublicUrl(videoFile.name);
-        if (vData?.publicUrl) {
-          heroMediaSrc = vData.publicUrl;
-          isHeroVideo = true;
-        }
-      } else {
-        const bannerFile = files.find((f) => f.name.startsWith("hero-banner"));
-        if (bannerFile) {
-          const { data: urlData } = supabaseAdmin.storage
+        if (videoFile) {
+          const { data: vData } = supabaseAdmin.storage
             .from("site-assets")
-            .getPublicUrl(bannerFile.name);
-          if (urlData?.publicUrl) {
-            heroMediaSrc = urlData.publicUrl;
+            .getPublicUrl(videoFile.name);
+          if (vData?.publicUrl) {
+            heroMediaSrc = vData.publicUrl;
+            isHeroVideo = true;
+          }
+        } else {
+          const bannerFile = files.find((f) => f.name.startsWith("hero-banner"));
+          if (bannerFile) {
+            const { data: urlData } = supabaseAdmin.storage
+              .from("site-assets")
+              .getPublicUrl(bannerFile.name);
+            if (urlData?.publicUrl) {
+              heroMediaSrc = urlData.publicUrl;
+            }
           }
         }
       }
 
-      // 2. Check for Review Screenshot
-      const reviewFile = files.find(
-        (f) =>
-          f.name.startsWith("review-") ||
-          f.name.startsWith("otziv-") ||
-          f.name.includes("screenshot")
-      );
-      if (reviewFile) {
-        const { data: rData } = supabaseAdmin.storage
-          .from("site-assets")
-          .getPublicUrl(reviewFile.name);
-        if (rData?.publicUrl) {
-          reviewScreenshotUrl = rData.publicUrl;
+      // If review screenshot not set in settings, fallback to storage files
+      if (!reviewScreenshotUrl) {
+        const reviewFile = files.find(
+          (f) =>
+            f.name.startsWith("review-") ||
+            f.name.startsWith("otziv-") ||
+            f.name.includes("screenshot")
+        );
+        if (reviewFile) {
+          const { data: rData } = supabaseAdmin.storage
+            .from("site-assets")
+            .getPublicUrl(reviewFile.name);
+          if (rData?.publicUrl) {
+            reviewScreenshotUrl = rData.publicUrl;
+          }
         }
       }
 
-      // 3. Check for Kids Gallery dynamic photos
+      // Check for Kids Gallery dynamic photos
       const galleryFiles = files.filter(
         (f) => f.name.startsWith("kids-") || f.name.startsWith("gallery-")
       );
@@ -295,7 +315,10 @@ export default async function HomePage() {
       <ReviewsSection screenshotUrl={reviewScreenshotUrl} />
 
       {/* 6. WEEKLY SCHEDULE BANNER (matching mockups 1:1) */}
-      <ScheduleBanner />
+      <ScheduleBanner
+        scheduleFileUrl={settings.scheduleFileUrl}
+        scheduleFileName={settings.scheduleFileName}
+      />
 
       {/* 7. GALLERY / AUTOPLAY SLIDER: НАШИТЕ ДЕЦА С УМЕНИЯ */}
       <section className="py-12 sm:py-20 bg-brand-bg">
@@ -309,7 +332,10 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <KidsGallery images={dynamicGalleryImages} />
+          <KidsGallery
+            images={dynamicGalleryImages}
+            order={settings.kidsGalleryOrder}
+          />
         </Container>
       </section>
     </div>

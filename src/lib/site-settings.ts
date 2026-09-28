@@ -41,6 +41,13 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       tagline: json.tagline?.trim() || DEFAULT_SETTINGS.tagline,
       facebookUrl: json.facebookUrl?.trim() || DEFAULT_SETTINGS.facebookUrl,
       instagramUrl: json.instagramUrl?.trim() || DEFAULT_SETTINGS.instagramUrl,
+      heroBannerUrl: json.heroBannerUrl?.trim() || "",
+      heroVideoUrl: json.heroVideoUrl?.trim() || "",
+      heroMediaType: json.heroMediaType === "video" ? "video" : "image",
+      reviewScreenshotUrl: json.reviewScreenshotUrl?.trim() || "",
+      kidsGalleryOrder: Array.isArray(json.kidsGalleryOrder) ? json.kidsGalleryOrder : [],
+      scheduleFileUrl: json.scheduleFileUrl?.trim() || "",
+      scheduleFileName: json.scheduleFileName?.trim() || "",
     };
   } catch (err) {
     console.warn("Failed to load site settings from Supabase, using defaults:", err);

@@ -20,10 +20,22 @@ const DEFAULT_GALLERY_IMAGES: GalleryImage[] = [
 
 interface KidsGalleryProps {
   images?: GalleryImage[];
+  order?: string[];
 }
 
-export function KidsGallery({ images }: KidsGalleryProps) {
-  const galleryImages = images && images.length > 0 ? images : DEFAULT_GALLERY_IMAGES;
+export function KidsGallery({ images, order }: KidsGalleryProps) {
+  let galleryImages = images && images.length > 0 ? images : DEFAULT_GALLERY_IMAGES;
+
+  if (order && order.length > 0) {
+    galleryImages = [...galleryImages].sort((a, b) => {
+      const idxA = order.indexOf(a.src);
+      const idxB = order.indexOf(b.src);
+      if (idxA === -1 && idxB === -1) return 0;
+      if (idxA === -1) return 1;
+      if (idxB === -1) return -1;
+      return idxA - idxB;
+    });
+  }
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);

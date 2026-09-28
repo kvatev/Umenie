@@ -176,3 +176,131 @@ export async function listMediaFolderAction(folder: string = ""): Promise<{
     return { success: false, items: [], message: "Грешка при извличане на медиите." };
   }
 }
+
+/**
+ * Save external/direct video link for Hero Banner
+ */
+export async function saveHeroVideoUrlAction(videoUrl: string, mediaType: "video" | "image" = "video") {
+  try {
+    const { updateSiteSettingsAction } = await import("./admin-settings");
+    await updateSiteSettingsAction({
+      heroVideoUrl: videoUrl.trim(),
+      heroMediaType: mediaType,
+    });
+
+    revalidatePath("/");
+    revalidatePath("/admin/media");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: mediaType === "video" ? "Видеото за заглавния банер е запазено успешно!" : "Заглавният банер е настроен на изображение!",
+    };
+  } catch (err: unknown) {
+    console.error("Save hero video url exception:", err);
+    return { success: false, message: "Грешка при запазване на видеото." };
+  }
+}
+
+/**
+ * Upload a review screenshot to site-assets/review-screenshot.webp
+ */
+export async function uploadReviewScreenshotAction(formData: FormData) {
+  try {
+    const file = formData.get("file") as File;
+    if (!file) {
+      return { success: false, message: "Няма избран файл за отзив." };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error } = await supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .upload("review-screenshot.webp", buffer, {
+        contentType: file.type || "image/webp",
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Review screenshot upload error:", error.message);
+      return { success: false, message: error.message };
+    }
+
+    const { data: urlData } = supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl("review-screenshot.webp");
+
+    const fullUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+    const { updateSiteSettingsAction } = await import("./admin-settings");
+    await updateSiteSettingsAction({
+      reviewScreenshotUrl: fullUrl,
+    });
+
+    revalidatePath("/");
+    revalidatePath("/admin/media");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: "Снимката/скрийншотът на отзива е обновен успешно!",
+      url: fullUrl,
+    };
+  } catch (err: unknown) {
+    console.error("Upload review screenshot exception:", err);
+    return { success: false, message: "Грешка при качване на отзива." };
+  }
+}
+
+/**
+ * Delete custom review screenshot (resets to default)
+ */
+export async function deleteReviewScreenshotAction() {
+  try {
+    await supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .remove(["review-screenshot.webp"]);
+
+    const { updateSiteSettingsAction } = await import("./admin-settings");
+    await updateSiteSettingsAction({
+      reviewScreenshotUrl: "",
+    });
+
+    revalidatePath("/");
+    revalidatePath("/admin/media");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: "Скрийншотът е премахнат! Уебсайтът ще показва стандартния отзив.",
+    };
+  } catch (err: unknown) {
+    console.error("Delete review screenshot exception:", err);
+    return { success: false, message: "Грешка при премахване." };
+  }
+}
+
+/**
+ * Save custom ordering for Kids Gallery slides
+ */
+export async function saveKidsGalleryOrderAction(orderedPaths: string[]) {
+  try {
+    const { updateSiteSettingsAction } = await import("./admin-settings");
+    await updateSiteSettingsAction({
+      kidsGalleryOrder: orderedPaths,
+    });
+
+    revalidatePath("/");
+    revalidatePath("/admin/media");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: "Подредбата на снимките в слайдъра е запазена успешно!",
+    };
+  } catch (err: unknown) {
+    console.error("Save gallery order exception:", err);
+    return { success: false, message: "Грешка при записване на подредбата." };
+  }
+}

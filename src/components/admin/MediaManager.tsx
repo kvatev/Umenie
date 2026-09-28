@@ -18,11 +18,22 @@ import {
   X,
   Eye,
   Info,
+  Video,
+  MessageSquareQuote,
+  ArrowUp,
+  ArrowDown,
+  Link as LinkIcon,
+  RefreshCw,
+  FileCheck,
 } from "lucide-react";
 import {
   uploadHeroBannerAction,
   uploadGalleryPhotoAction,
   deleteMediaObjectAction,
+  saveHeroVideoUrlAction,
+  uploadReviewScreenshotAction,
+  deleteReviewScreenshotAction,
+  saveKidsGalleryOrderAction,
   StorageMediaItem,
 } from "@/actions/admin-media";
 import { SERVICES_DATA, getServiceBySlug } from "@/lib/services-data";
@@ -32,9 +43,14 @@ interface MediaManagerProps {
   initialHeroUrl: string | null;
   initialKidsGallery: StorageMediaItem[];
   initialServiceMedia: StorageMediaItem[];
+  initialHeroVideoUrl?: string;
+  initialHeroMediaType?: "image" | "video";
+  initialReviewScreenshotUrl?: string;
+  initialKidsGalleryOrder?: string[];
 }
 
 const DEFAULT_KIDS_PHOTOS = [
+  { src: "/images/gallery-painted-hands.webp", title: "Творчество и детски арт занимания", tag: "Вградена в сайта" },
   { src: "/images/banner/1.webp", title: "Занятие и творчество в малка група", tag: "Вградена в сайта" },
   { src: "/images/banner/2.webp", title: "Детски шах и концентрация", tag: "Вградена в сайта" },
   { src: "/images/banner/3.webp", title: "Учебна занималня и подготовка", tag: "Вградена в сайта" },
@@ -47,30 +63,81 @@ export function MediaManager({
   initialHeroUrl,
   initialKidsGallery,
   initialServiceMedia,
+  initialHeroVideoUrl = "",
+  initialHeroMediaType = "image",
+  initialReviewScreenshotUrl = "",
+  initialKidsGalleryOrder = [],
 }: MediaManagerProps) {
-  const [activeTab, setActiveTab] = useState<"hero" | "kids" | "services">("hero");
+  const [activeTab, setActiveTab] = useState<"hero" | "reviews" | "kids" | "services">("hero");
 
   // 1. Hero banner state
-  const [heroUrl, setHeroUrl] = useState<string>(
-    initialHeroUrl || "/images/opening-photo.webp"
-  );
+  const [heroMediaType, setHeroMediaType] = useState<"image" | "video">(initialHeroMediaType);
+  const [heroUrl, setHeroUrl] = useState<string>(initialHeroUrl || "/images/opening-photo.webp");
+  const [heroVideoUrl, setHeroVideoUrl] = useState<string>(initialHeroVideoUrl);
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [heroMessage, setHeroMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
-    if (initialHeroUrl) {
-      setHeroUrl(initialHeroUrl);
-    }
-  }, [initialHeroUrl]);
+    if (initialHeroUrl) setHeroUrl(initialHeroUrl);
+    if (initialHeroVideoUrl) setHeroVideoUrl(initialHeroVideoUrl);
+    if (initialHeroMediaType) setHeroMediaType(initialHeroMediaType);
+  }, [initialHeroUrl, initialHeroVideoUrl, initialHeroMediaType]);
 
-  // 2. Kids gallery state
+  // 2. Reviews state
+  const [reviewScreenshotUrl, setReviewScreenshotUrl] = useState<string>(initialReviewScreenshotUrl);
+  const [reviewFile, setReviewFile] = useState<File | null>(null);
+  const [reviewPreview, setReviewPreview] = useState<string | null>(null);
+  const [reviewMessage, setReviewMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    if (initialReviewScreenshotUrl) setReviewScreenshotUrl(initialReviewScreenshotUrl);
+  }, [initialReviewScreenshotUrl]);
+
+  // 3. Kids gallery state
   const [kidsItems, setKidsItems] = useState<StorageMediaItem[]>(initialKidsGallery);
   const [kidsFile, setKidsFile] = useState<File | null>(null);
   const [kidsMessage, setKidsMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [kidsSliderIndex, setKidsSliderIndex] = useState(0);
 
-  // 3. Services state
+  // Combine and sort kids photos
+  const rawKidsPhotos = [
+    ...kidsItems.map((item) => ({
+      src: item.publicUrl,
+      title: item.name,
+      tag: "Качена от вас (Storage)",
+      isUploaded: true,
+      path: item.path,
+    })),
+    ...DEFAULT_KIDS_PHOTOS.map((item) => ({
+      src: item.src,
+      title: item.title,
+      tag: "Вградена в сайта",
+      isUploaded: false,
+      path: item.src,
+    })),
+  ];
+
+  // Apply custom order if saved
+  const [orderedKidsPhotos, setOrderedKidsPhotos] = useState(rawKidsPhotos);
+
+  useEffect(() => {
+    if (initialKidsGalleryOrder && initialKidsGalleryOrder.length > 0) {
+      const sorted = [...rawKidsPhotos].sort((a, b) => {
+        const idxA = initialKidsGalleryOrder.indexOf(a.path);
+        const idxB = initialKidsGalleryOrder.indexOf(b.path);
+        if (idxA === -1 && idxB === -1) return 0;
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      });
+      setOrderedKidsPhotos(sorted);
+    } else {
+      setOrderedKidsPhotos(rawKidsPhotos);
+    }
+  }, [kidsItems, initialKidsGalleryOrder]);
+
+  // 4. Services state
   const [selectedService, setSelectedService] = useState<string>("pletivo");
   const [serviceItems, setServiceItems] = useState<StorageMediaItem[]>(initialServiceMedia);
   const [serviceFile, setServiceFile] = useState<File | null>(null);
@@ -84,24 +151,6 @@ export function MediaManager({
 
   // Active service object from metadata
   const currentServiceData = getServiceBySlug(selectedService) || SERVICES_DATA[0];
-
-  // Combined kids photos (built-in + uploaded)
-  const allKidsPhotos = [
-    ...kidsItems.map((item) => ({
-      src: item.publicUrl,
-      title: item.name,
-      tag: "Качена в Supabase Storage",
-      isUploaded: true,
-      path: item.path,
-    })),
-    ...DEFAULT_KIDS_PHOTOS.map((item) => ({
-      src: item.src,
-      title: item.title,
-      tag: "Вградена в сайта",
-      isUploaded: false,
-      path: item.src,
-    })),
-  ];
 
   // Filter service items by selected category
   const uploadedForService = serviceItems
@@ -135,12 +184,12 @@ export function MediaManager({
 
   // Auto rotate kids slider mockup
   useEffect(() => {
-    if (activeTab !== "kids" || allKidsPhotos.length === 0) return;
+    if (activeTab !== "kids" || orderedKidsPhotos.length === 0) return;
     const interval = setInterval(() => {
-      setKidsSliderIndex((prev) => (prev + 1) % allKidsPhotos.length);
+      setKidsSliderIndex((prev) => (prev + 1) % orderedKidsPhotos.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [activeTab, allKidsPhotos.length]);
+  }, [activeTab, orderedKidsPhotos.length]);
 
   // Reset service slider index when switching services
   useEffect(() => {
@@ -169,6 +218,7 @@ export function MediaManager({
         setHeroUrl(res.url);
         setHeroPreview(null);
         setHeroFile(null);
+        setHeroMediaType("image");
         setHeroMessage({ type: "success", text: res.message || "Банерът е обновен успешно!" });
       } else {
         setHeroMessage({ type: "error", text: res.message || "Грешка при качване." });
@@ -176,7 +226,64 @@ export function MediaManager({
     });
   };
 
-  // KIDS GALLERY UPLOAD HANDLER
+  const handleSaveHeroVideo = (videoUrlToSave: string, mode: "video" | "image") => {
+    startTransition(async () => {
+      const res = await saveHeroVideoUrlAction(videoUrlToSave, mode);
+      if (res.success) {
+        setHeroMessage({ type: "success", text: res.message });
+      } else {
+        setHeroMessage({ type: "error", text: res.message || "Грешка при запазване." });
+      }
+    });
+  };
+
+  // REVIEWS UPLOAD HANDLER
+  const handleReviewFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setReviewFile(file);
+      setReviewPreview(URL.createObjectURL(file));
+      setReviewMessage(null);
+    }
+  };
+
+  const handleUploadReview = () => {
+    if (!reviewFile) return;
+
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append("file", reviewFile);
+
+      const res = await uploadReviewScreenshotAction(formData);
+      if (res.success && res.url) {
+        setReviewScreenshotUrl(res.url);
+        setReviewPreview(null);
+        setReviewFile(null);
+        setReviewMessage({ type: "success", text: res.message });
+      } else {
+        setReviewMessage({ type: "error", text: res.message || "Грешка при качване на отзива." });
+      }
+    });
+  };
+
+  const handleDeleteReview = () => {
+    if (!window.confirm("Сигурни ли сте, че искате да премахнете качения скрийншот и да върнете стандартния отзив?")) {
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await deleteReviewScreenshotAction();
+      if (res.success) {
+        setReviewScreenshotUrl("");
+        setReviewPreview(null);
+        setReviewMessage({ type: "success", text: res.message });
+      } else {
+        setReviewMessage({ type: "error", text: res.message || "Грешка при премахване." });
+      }
+    });
+  };
+
+  // KIDS GALLERY HANDLERS
   const handleKidsFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setKidsFile(e.target.files[0]);
@@ -213,6 +320,28 @@ export function MediaManager({
       const res = await deleteMediaObjectAction(path);
       if (!res.success) {
         alert(res.message || "Грешка при изтриване.");
+      }
+    });
+  };
+
+  // REORDER KIDS PHOTOS
+  const handleMoveKidsPhoto = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= orderedKidsPhotos.length) return;
+
+    const newOrder = [...orderedKidsPhotos];
+    const [moved] = newOrder.splice(index, 1);
+    newOrder.splice(targetIndex, 0, moved);
+
+    setOrderedKidsPhotos(newOrder);
+
+    startTransition(async () => {
+      const paths = newOrder.map((p) => p.path);
+      const res = await saveKidsGalleryOrderAction(paths);
+      if (res.success) {
+        setKidsMessage({ type: "success", text: res.message });
+      } else {
+        setKidsMessage({ type: "error", text: "Грешка при запазване на подредбата." });
       }
     });
   };
@@ -306,7 +435,20 @@ export function MediaManager({
           )}
         >
           <Sparkles className="w-4 h-4" />
-          <span>Главен банер (Начална страница)</span>
+          <span>Главен банер / Видео</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("reviews")}
+          className={cn(
+            "px-5 py-2.5 rounded-2xl font-heading text-xs sm:text-sm font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer",
+            activeTab === "reviews"
+              ? "bg-brand-purple text-white shadow-button"
+              : "bg-brand-bg text-brand-dark hover:bg-brand-purple/10"
+          )}
+        >
+          <MessageSquareQuote className="w-4 h-4" />
+          <span>Снимка Отзив</span>
         </button>
 
         <button
@@ -319,7 +461,7 @@ export function MediaManager({
           )}
         >
           <ImageIcon className="w-4 h-4" />
-          <span>Слайдер „Нашите деца с умения“ ({allKidsPhotos.length})</span>
+          <span>Деца с умения (Подредба) ({orderedKidsPhotos.length})</span>
         </button>
 
         <button
@@ -337,17 +479,16 @@ export function MediaManager({
       </div>
 
       {/* ======================================================== */}
-      {/* TAB 1: HERO BANNER */}
+      {/* TAB 1: HERO BANNER & VIDEO */}
       {/* ======================================================== */}
       {activeTab === "hero" && (
         <div className="space-y-6 animate-fade-in">
-          {/* LIVE SNIPPET PREVIEW: Как изглежда началният банер на сайта в момента */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-brand-purple/10">
               <div className="flex items-center gap-2.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <h3 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
-                  Отрязък на живо: Как изглежда заглавният екран на сайта
+                  Главен банер: Снимка или Видео
                 </h3>
               </div>
               <a
@@ -360,29 +501,46 @@ export function MediaManager({
               </a>
             </div>
 
-            {/* Context Information Badge */}
-            <div className="bg-brand-purple/5 border border-brand-purple/15 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-purple/10 text-brand-purple flex items-center justify-center shrink-0">
-                  <ImageIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-bold text-brand-dark">
-                    Главен заглавен екран на сайта
-                  </p>
-                  <p className="text-brand-muted mt-0.5">
-                    Фоновата снимка на началния екран зад заглавието „УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА“.
-                  </p>
-                </div>
-              </div>
-              <span className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-brand-dark border border-brand-purple/20 shrink-0">
-                {heroUrl.includes("supabase.co") ? "Качен файл в Supabase Storage" : "Вградена снимка (/images/opening-photo.webp)"}
-              </span>
+            {/* Media Mode Selector */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-brand-dark">Избор на тип банер:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setHeroMediaType("image");
+                  handleSaveHeroVideo(heroVideoUrl, "image");
+                }}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-heading font-bold transition-all flex items-center gap-1.5",
+                  heroMediaType === "image"
+                    ? "bg-brand-purple text-white shadow-sm"
+                    : "bg-brand-bg text-brand-dark hover:bg-brand-purple/10"
+                )}
+              >
+                <ImageIcon className="w-4 h-4" />
+                <span>Изображение / Снимка</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setHeroMediaType("video");
+                  handleSaveHeroVideo(heroVideoUrl, "video");
+                }}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-heading font-bold transition-all flex items-center gap-1.5",
+                  heroMediaType === "video"
+                    ? "bg-brand-purple text-white shadow-sm"
+                    : "bg-brand-bg text-brand-dark hover:bg-brand-purple/10"
+                )}
+              >
+                <Video className="w-4 h-4" />
+                <span>Видео банер</span>
+              </button>
             </div>
 
-            {/* Browser Mockup Window */}
+            {/* Mockup Preview */}
             <div className="rounded-2xl border border-brand-purple/20 overflow-hidden bg-brand-bg shadow-lg">
-              {/* Fake Browser Toolbar */}
               <div className="bg-[#e4e7eb] px-4 py-2 flex items-center gap-2 border-b border-brand-purple/15 text-xs text-brand-muted font-mono">
                 <div className="flex items-center gap-1.5">
                   <span className="w-3 h-3 rounded-full bg-red-400 inline-block" />
@@ -394,32 +552,32 @@ export function MediaManager({
                 </div>
               </div>
 
-              {/* Realistic Hero Mockup matching homepage 1:1 */}
-              <div className="relative w-full h-[320px] sm:h-[400px] md:h-[450px] bg-brand-bg overflow-hidden flex flex-col justify-center p-6 sm:p-12">
-                <Image
-                  src={heroPreview || heroUrl || "/images/opening-photo.webp"}
-                  alt="Главен банер на сайта"
-                  fill
-                  priority
-                  className="object-cover object-center transition-all duration-500"
-                  onError={() => {
-                    if (heroUrl !== "/images/opening-photo.webp") {
-                      setHeroUrl("/images/opening-photo.webp");
-                    }
-                  }}
-                />
-                {/* Soft dark overlay matching src/app/page.tsx */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/40 to-transparent" />
+              <div className="relative w-full h-[320px] sm:h-[400px] md:h-[450px] bg-black/90 overflow-hidden flex flex-col justify-center p-6 sm:p-12">
+                {heroMediaType === "video" && heroVideoUrl ? (
+                  <video
+                    src={heroVideoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                  />
+                ) : (
+                  <Image
+                    src={heroPreview || heroUrl || "/images/opening-photo.webp"}
+                    alt="Главен банер"
+                    fill
+                    priority
+                    className="object-cover object-center transition-all duration-500"
+                  />
+                )}
 
-                {/* Live Exact Homepage Hero Content */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-transparent" />
+
                 <div className="relative z-10 space-y-4 max-w-xl text-white">
                   <h1 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-white drop-shadow-md leading-tight">
                     УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА
                   </h1>
-                  <p className="text-white/95 text-xs sm:text-sm md:text-base font-medium drop-shadow-sm leading-relaxed max-w-lg">
-                    Място, където всяко дете развива увереност, самостоятелност и радост от знанието.
-                  </p>
-
                   <div className="pt-2">
                     <span className="inline-block px-7 py-3 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button">
                       НАУЧЕТЕ ПОВЕЧЕ
@@ -427,18 +585,10 @@ export function MediaManager({
                   </div>
                 </div>
 
-                {/* State Tag top right */}
                 <div className="absolute top-4 right-4 z-10">
-                  <span
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md shadow-md flex items-center gap-1.5",
-                      heroPreview
-                        ? "bg-amber-500 text-white"
-                        : "bg-emerald-600 text-white"
-                    )}
-                  >
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-600 text-white backdrop-blur-md shadow-md flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    {heroPreview ? "Предварителен преглед на новия файл" : "Текущо активно на сайта"}
+                    {heroMediaType === "video" ? "Активно видео" : "Активна снимка"}
                   </span>
                 </div>
               </div>
@@ -459,166 +609,234 @@ export function MediaManager({
               </div>
             )}
 
-            {/* Upload form */}
-            <div className="bg-brand-bg/70 p-5 rounded-3xl border border-brand-purple/15 space-y-3 mt-4">
-              <div className="flex items-center justify-between">
+            {/* Config Panels */}
+            {heroMediaType === "video" ? (
+              /* Video Link Config */
+              <div className="bg-brand-bg/70 p-5 rounded-3xl border border-brand-purple/15 space-y-4">
+                <div>
+                  <h4 className="font-heading font-bold text-sm text-brand-dark">
+                    Линк към видео за заглавния банер
+                  </h4>
+                  <p className="text-xs text-brand-muted mt-0.5">
+                    Поставете директен линк към видео файл (MP4 / WebM) или видео хостинг.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="relative flex-1 w-full">
+                    <Video className="w-4 h-4 text-brand-purple absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="url"
+                      value={heroVideoUrl}
+                      onChange={(e) => setHeroVideoUrl(e.target.value)}
+                      placeholder="https://example.com/video.mp4"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-brand-purple/20 bg-white text-xs sm:text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-purple"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSaveHeroVideo(heroVideoUrl, "video")}
+                    disabled={isPending}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button hover:bg-brand-purple-hover transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                  >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    <span>Запази видео линка</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Image Upload Config */
+              <div className="bg-brand-bg/70 p-5 rounded-3xl border border-brand-purple/15 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-heading font-bold text-sm text-brand-dark">
+                    Качване на ново фоново изображение
+                  </h4>
+                  <span className="text-[11px] text-brand-muted">
+                    Препоръчително: WebP, JPG или PNG (1920x1080px)
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/webp"
+                    onChange={handleHeroFileChange}
+                    className="block w-full text-xs text-brand-muted file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-heading file:font-bold file:bg-brand-purple/10 file:text-brand-purple hover:file:bg-brand-purple/20 cursor-pointer"
+                  />
+
+                  {heroFile && (
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                      <button
+                        onClick={() => {
+                          setHeroFile(null);
+                          setHeroPreview(null);
+                        }}
+                        className="px-4 py-2.5 rounded-full bg-white text-brand-dark text-xs font-bold hover:bg-gray-100 transition-colors border border-brand-purple/20 cursor-pointer"
+                      >
+                        Отказ
+                      </button>
+                      <button
+                        onClick={handleUploadHero}
+                        disabled={isPending}
+                        className="px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button hover:bg-brand-purple-hover transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                      >
+                        {isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Качване...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            <span>Запази банера</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 2: REVIEWS SCREENSHOT */}
+      {/* ======================================================== */}
+      {activeTab === "reviews" && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-brand-purple/10">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h3 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
+                  Снимка Отзив (Скрийншот в секцията за отзиви)
+                </h3>
+              </div>
+              <span className="text-xs text-brand-muted">
+                Статус: <strong className="text-brand-purple">{reviewScreenshotUrl ? "Качен потребителски скрийншот" : "Стандартен отзив"}</strong>
+              </span>
+            </div>
+
+            {/* Current Active Preview */}
+            <div className="rounded-3xl border border-brand-purple/20 overflow-hidden bg-brand-bg p-6 max-w-lg mx-auto">
+              <p className="text-xs font-bold text-brand-purple uppercase tracking-wider mb-3 text-center">
+                Преглед на живо на отзива в началната страница
+              </p>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-brand-purple/10">
+                {reviewPreview || reviewScreenshotUrl ? (
+                  <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden">
+                    <Image
+                      src={reviewPreview || reviewScreenshotUrl}
+                      alt="Скрийншот на отзив"
+                      fill
+                      className="object-cover object-top"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-3 p-2 text-center text-xs text-brand-muted">
+                    <p className="font-semibold text-brand-dark">
+                      В момента се визуализира вграденият форматиран отзив на Нели Иванова.
+                    </p>
+                    <p>Качете истински скрийншот от Facebook / Google Reviews чрез полето по-долу, за да се показва снимката.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Notification messages */}
+            {reviewMessage && (
+              <div
+                className={cn(
+                  "p-4 rounded-2xl text-xs sm:text-sm font-medium border flex items-center gap-2",
+                  reviewMessage.type === "success"
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    : "bg-red-50 text-red-800 border-red-200"
+                )}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{reviewMessage.text}</span>
+              </div>
+            )}
+
+            {/* Upload review file */}
+            <div className="bg-brand-bg/70 p-5 rounded-3xl border border-brand-purple/15 space-y-4">
+              <div>
                 <h4 className="font-heading font-bold text-sm text-brand-dark">
-                  Смяна на банера с ново изображение
+                  Качване на нов скрийншот на отзив
                 </h4>
-                <span className="text-[11px] text-brand-muted">
-                  Препоръчително: WebP, JPG или PNG (1920x1080px)
-                </span>
+                <p className="text-xs text-brand-muted mt-0.5">
+                  Формати: WebP, PNG, JPG. Скрийншотът мигновено се визуализира на началната страница.
+                </p>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <input
                   type="file"
                   accept="image/png, image/jpeg, image/webp"
-                  onChange={handleHeroFileChange}
+                  onChange={handleReviewFileChange}
                   className="block w-full text-xs text-brand-muted file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-heading file:font-bold file:bg-brand-purple/10 file:text-brand-purple hover:file:bg-brand-purple/20 cursor-pointer"
                 />
 
-                {heroFile && (
+                {reviewFile && (
                   <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
                     <button
                       onClick={() => {
-                        setHeroFile(null);
-                        setHeroPreview(null);
+                        setReviewFile(null);
+                        setReviewPreview(null);
                       }}
                       className="px-4 py-2.5 rounded-full bg-white text-brand-dark text-xs font-bold hover:bg-gray-100 transition-colors border border-brand-purple/20 cursor-pointer"
                     >
                       Отказ
                     </button>
                     <button
-                      onClick={handleUploadHero}
+                      onClick={handleUploadReview}
                       disabled={isPending}
                       className="px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button hover:bg-brand-purple-hover transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                     >
-                      {isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Качване...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-4 h-4" />
-                          <span>Запази и обнови банера</span>
-                        </>
-                      )}
+                      {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      <span>Качи отзива</span>
                     </button>
                   </div>
                 )}
               </div>
+
+              {reviewScreenshotUrl && (
+                <div className="pt-2 border-t border-brand-purple/10 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleDeleteReview}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Възстанови стандартния отзив</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* TAB 2: KIDS GALLERY SLIDER */}
+      {/* TAB 3: KIDS GALLERY SLIDER & REORDERING */}
       {/* ======================================================== */}
       {activeTab === "kids" && (
         <div className="space-y-6 animate-fade-in">
-          {/* LIVE SNIPPET PREVIEW: Как изглежда ротационният слайдер на началната страница */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-5">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-brand-purple/10">
               <div className="flex items-center gap-2.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <h3 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
-                  Отрязък на живо: Слайдер „Нашите деца с умения“ на началната страница
+                  Слайдер „Нашите деца с умения“ (Добавяне, изтриване и подредба)
                 </h3>
               </div>
               <span className="text-xs text-brand-muted">
-                Активни кадри в ротация: <strong className="text-brand-purple">{allKidsPhotos.length}</strong>
+                Снимки в слайдъра: <strong className="text-brand-purple">{orderedKidsPhotos.length}</strong>
               </span>
-            </div>
-
-            {/* Interactive Website Slider Mockup */}
-            <div className="rounded-3xl border border-brand-purple/20 overflow-hidden bg-brand-bg p-4 sm:p-6 shadow-inner relative">
-              <div className="text-center mb-4">
-                <span className="text-[11px] font-bold text-brand-purple uppercase tracking-wider bg-brand-purple/10 px-3 py-1 rounded-full">
-                  Фотогалерия от уебсайта
-                </span>
-                <h4 className="font-heading font-black text-xl sm:text-2xl text-brand-dark mt-2">
-                  НАШИТЕ ДЕЦА С <span className="text-brand-purple">УМЕНИЯ</span>
-                </h4>
-              </div>
-
-              {/* Slider Viewport */}
-              <div className="relative w-full h-64 sm:h-80 md:h-96 rounded-2xl overflow-hidden bg-black/5 shadow-md">
-                {allKidsPhotos.length > 0 && (
-                  <>
-                    <Image
-                      src={allKidsPhotos[kidsSliderIndex].src}
-                      alt={allKidsPhotos[kidsSliderIndex].title}
-                      fill
-                      className="object-cover object-center transition-all duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                    {/* Slide caption */}
-                    <div className="absolute bottom-4 left-4 right-4 z-10 text-white flex items-end justify-between">
-                      <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-purple/90 px-2 py-0.5 rounded">
-                          {allKidsPhotos[kidsSliderIndex].tag}
-                        </span>
-                        <p className="font-heading font-bold text-sm sm:text-base mt-1 drop-shadow">
-                          {allKidsPhotos[kidsSliderIndex].title}
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() =>
-                          setLightboxImage({
-                            src: allKidsPhotos[kidsSliderIndex].src,
-                            title: allKidsPhotos[kidsSliderIndex].title,
-                          })
-                        }
-                        className="p-2 rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-sm transition-colors cursor-pointer"
-                        title="Увеличи снимката"
-                      >
-                        <Maximize2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Navigation Arrows */}
-                    <button
-                      onClick={() =>
-                        setKidsSliderIndex(
-                          (prev) => (prev - 1 + allKidsPhotos.length) % allKidsPhotos.length
-                        )
-                      }
-                      className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 text-brand-dark shadow-md flex items-center justify-center hover:bg-brand-purple hover:text-white transition-colors cursor-pointer"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setKidsSliderIndex((prev) => (prev + 1) % allKidsPhotos.length)
-                      }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 text-brand-dark shadow-md flex items-center justify-center hover:bg-brand-purple hover:text-white transition-colors cursor-pointer"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* Slider Dots */}
-              <div className="flex items-center justify-center gap-1.5 mt-3">
-                {allKidsPhotos.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setKidsSliderIndex(idx)}
-                    className={cn(
-                      "h-2 rounded-full transition-all cursor-pointer",
-                      kidsSliderIndex === idx
-                        ? "w-6 bg-brand-purple"
-                        : "w-2 bg-brand-purple/20 hover:bg-brand-purple/40"
-                    )}
-                  />
-                ))}
-              </div>
             </div>
 
             {/* Notification messages */}
@@ -660,35 +878,181 @@ export function MediaManager({
                     disabled={isPending}
                     className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button hover:bg-brand-purple-hover transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 disabled:opacity-70"
                   >
-                    {isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Качване...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4" />
-                        <span>Качи снимка в слайдера</span>
-                      </>
-                    )}
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    <span>Качи в слайдера</span>
                   </button>
                 )}
               </div>
             </div>
 
-            {/* ALL ACTIVE PHOTOS CATALOG (Visualizer) */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold text-brand-purple uppercase tracking-wider">
-                  Пълен визуален каталог на снимките в слайдера ({allKidsPhotos.length})
-                </label>
-                <span className="text-xs text-brand-muted">
-                  Кликнете на снимка за голям предварителен преглед
-                </span>
+            {/* REORDERING & CATALOG */}
+            <div className="space-y-4 pt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 className="font-heading font-bold text-sm sm:text-base text-brand-dark">
+                    Подредба на кадрите в слайдъра (Използвайте стрелките за пренареждане)
+                  </h4>
+                  <p className="text-xs text-brand-muted">
+                    Снимките се въртят в авто-слайдъра в реда, показан от 1 нататък.
+                  </p>
+                </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {orderedKidsPhotos.map((photo, index) => (
+                  <div
+                    key={`${photo.path}-${index}`}
+                    className="relative rounded-2xl overflow-hidden bg-white border border-brand-purple/20 shadow-sm p-3 space-y-3"
+                  >
+                    {/* Position badge */}
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-purple text-white font-heading font-bold text-xs">
+                        #{index + 1}
+                      </span>
+                      <span className="text-[10px] font-semibold text-brand-muted truncate max-w-[120px]">
+                        {photo.tag}
+                      </span>
+                    </div>
+
+                    {/* Image Thumbnail */}
+                    <div
+                      className="relative w-full aspect-[4/3] rounded-xl overflow-hidden cursor-pointer"
+                      onClick={() => setLightboxImage({ src: photo.src, title: photo.title })}
+                    >
+                      <Image
+                        src={photo.src}
+                        alt={photo.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+
+                    {/* Reordering and Actions Toolbar */}
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveKidsPhoto(index, "up")}
+                          disabled={index === 0 || isPending}
+                          className="p-1.5 rounded-lg border border-brand-purple/20 hover:bg-brand-purple hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                          title="Премести по-напред"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveKidsPhoto(index, "down")}
+                          disabled={index === orderedKidsPhotos.length - 1 || isPending}
+                          className="p-1.5 rounded-lg border border-brand-purple/20 hover:bg-brand-purple hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                          title="Премести по-назад"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {photo.isUploaded && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteKidsPhoto(photo.path)}
+                          disabled={isPending}
+                          className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                          title="Изтрий снимката"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 4: SERVICES SLIDERS & PHOTOS */}
+      {/* ======================================================== */}
+      {activeTab === "services" && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-brand-purple/10">
+              <div>
+                <span className="text-xs font-bold text-brand-purple uppercase tracking-wider">
+                  Избор на направление
+                </span>
+                <h3 className="font-heading font-bold text-lg sm:text-xl text-brand-dark mt-0.5">
+                  Слайдери и снимки за: {currentServiceData.title}
+                </h3>
+              </div>
+
+              <select
+                value={selectedService}
+                onChange={(e) => setSelectedService(e.target.value)}
+                className="px-4 py-2.5 rounded-2xl border border-brand-purple/20 font-heading text-xs sm:text-sm font-bold text-brand-purple bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer"
+              >
+                {SERVICES_DATA.map((srv) => (
+                  <option key={srv.slug} value={srv.slug}>
+                    {srv.shortTitle}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Notification messages */}
+            {serviceMessage && (
+              <div
+                className={cn(
+                  "p-4 rounded-2xl text-xs sm:text-sm font-medium border flex items-center gap-2",
+                  serviceMessage.type === "success"
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    : "bg-red-50 text-red-800 border-red-200"
+                )}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{serviceMessage.text}</span>
+              </div>
+            )}
+
+            {/* Upload New Photo for Service */}
+            <div className="bg-brand-bg/70 p-5 rounded-3xl border border-brand-purple/15 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-heading font-bold text-sm text-brand-dark">
+                  Качване на нова снимка към „{currentServiceData.shortTitle}“
+                </h4>
+                <span className="text-[11px] text-brand-muted">
+                  Снимката ще влезе в страницата /uslugi/{selectedService}
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleServiceFileChange}
+                  className="block w-full text-xs text-brand-muted file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-heading file:font-bold file:bg-brand-purple/10 file:text-brand-purple hover:file:bg-brand-purple/20 cursor-pointer"
+                />
+
+                {serviceFile && (
+                  <button
+                    onClick={handleUploadServicePhoto}
+                    disabled={isPending}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button hover:bg-brand-purple-hover transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 disabled:opacity-70"
+                  >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    <span>Качи към услугата</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Photos catalog for selected service */}
+            <div className="space-y-3 pt-2">
+              <label className="block text-xs font-bold text-brand-purple uppercase tracking-wider">
+                Всички налични снимки за {currentServiceData.shortTitle} ({allServicePhotos.length})
+              </label>
+
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-                {allKidsPhotos.map((photo, index) => (
+                {allServicePhotos.map((photo, index) => (
                   <div
                     key={`${photo.src}-${index}`}
                     onClick={() => setLightboxImage({ src: photo.src, title: photo.title })}
@@ -701,7 +1065,6 @@ export function MediaManager({
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
 
-                    {/* Tag badge top */}
                     <div className="absolute top-1.5 left-1.5 right-1.5 z-10 pointer-events-none">
                       <span
                         className={cn(
@@ -715,7 +1078,6 @@ export function MediaManager({
                       </span>
                     </div>
 
-                    {/* Hover Overlay */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
                       <button
                         onClick={(e) => {
@@ -732,7 +1094,7 @@ export function MediaManager({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteKidsPhoto(photo.path);
+                            handleDeleteServicePhoto(photo.path);
                           }}
                           className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors shadow"
                           title="Изтрий от Storage"
@@ -743,284 +1105,6 @@ export function MediaManager({
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 3: SERVICES SLIDERS & PHOTOS */}
-      {/* ======================================================== */}
-      {activeTab === "services" && (
-        <div className="space-y-6 animate-fade-in">
-          {/* Service Selector Header */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-brand-purple/10">
-              <div>
-                <span className="text-xs font-bold text-brand-purple uppercase tracking-wider">
-                  Дейност за преглед и редакция
-                </span>
-                <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-dark mt-0.5">
-                  Слайдери и снимки за: <span className="text-brand-purple">{currentServiceData.title}</span>
-                </h2>
-              </div>
-
-              {/* Service selector tabs / dropdown */}
-              <div className="w-full md:w-72">
-                <select
-                  value={selectedService}
-                  onChange={(e) => setSelectedService(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-brand-bg text-sm font-bold text-brand-purple border border-brand-purple/30 focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer shadow-sm"
-                >
-                  {SERVICES_DATA.map((srv) => (
-                    <option key={srv.slug} value={srv.slug}>
-                      {srv.shortTitle}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* LIVE SNIPPET PREVIEW: Как изглежда страницата на избраната услуга на живо */}
-            <div className="rounded-3xl border border-brand-purple/20 overflow-hidden bg-brand-bg p-5 sm:p-8 shadow-inner space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-brand-purple/15">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="font-heading font-bold text-sm sm:text-base text-brand-dark">
-                    Отрязък от страницата „/uslugi/{currentServiceData.slug}“ на живо
-                  </span>
-                </div>
-                <Link
-                  href={`/uslugi/${currentServiceData.slug}`}
-                  target="_blank"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-purple hover:underline"
-                >
-                  <span>Виж страницата в сайта</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-
-              {/* Mockup Card of Service Page Header & Live Slider */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-white p-6 sm:p-8 rounded-3xl border border-brand-purple/15 shadow-card">
-                {/* Left: Slogan & Details */}
-                <div className="lg:col-span-6 space-y-4">
-                  <div className="inline-block px-3 py-1 rounded-full bg-brand-purple/10 text-brand-purple text-xs font-bold uppercase tracking-wider">
-                    {currentServiceData.title}
-                  </div>
-                  <h3 className="font-heading font-black text-2xl sm:text-3xl text-brand-dark leading-tight">
-                    {currentServiceData.sloganPart1}{" "}
-                    <span className="text-brand-purple block">{currentServiceData.sloganPart2}</span>
-                  </h3>
-                  <p className="text-brand-muted text-xs sm:text-sm font-sans line-clamp-3">
-                    {currentServiceData.intro}
-                  </p>
-
-                  <div className="pt-2 flex items-center gap-3">
-                    <span className="px-5 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs shadow-button inline-flex items-center gap-1.5">
-                      <span>Запиши се за {currentServiceData.shortTitle}</span>
-                    </span>
-                    <span className="text-xs font-semibold text-brand-muted">
-                      Общо {allServicePhotos.length} снимки за услугата
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right: Live Interactive Slider Preview */}
-                <div className="lg:col-span-6">
-                  <div className="relative w-full h-56 sm:h-72 rounded-2xl overflow-hidden bg-brand-bg border border-brand-purple/20 shadow-md">
-                    {allServicePhotos.length > 0 ? (
-                      <>
-                        <Image
-                          src={allServicePhotos[serviceSliderIndex].src}
-                          alt={allServicePhotos[serviceSliderIndex].title}
-                          fill
-                          className="object-cover object-center transition-all duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                        {/* Slide Tag & Title */}
-                        <div className="absolute bottom-3 left-3 right-3 text-white flex items-end justify-between z-10">
-                          <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-purple/90 px-2 py-0.5 rounded">
-                              {allServicePhotos[serviceSliderIndex].tag}
-                            </span>
-                            <p className="text-xs font-bold drop-shadow mt-1 truncate max-w-[200px] sm:max-w-xs">
-                              {allServicePhotos[serviceSliderIndex].title}
-                            </p>
-                          </div>
-
-                          <button
-                            onClick={() =>
-                              setLightboxImage({
-                                src: allServicePhotos[serviceSliderIndex].src,
-                                title: allServicePhotos[serviceSliderIndex].title,
-                              })
-                            }
-                            className="p-1.5 rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-sm transition-colors cursor-pointer"
-                          >
-                            <Maximize2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-
-                        {/* Slider Controls */}
-                        <button
-                          onClick={() =>
-                            setServiceSliderIndex(
-                              (prev) => (prev - 1 + allServicePhotos.length) % allServicePhotos.length
-                            )
-                          }
-                          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-brand-dark shadow flex items-center justify-center hover:bg-brand-purple hover:text-white transition-colors cursor-pointer"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() =>
-                            setServiceSliderIndex((prev) => (prev + 1) % allServicePhotos.length)
-                          }
-                          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-brand-dark shadow flex items-center justify-center hover:bg-brand-purple hover:text-white transition-colors cursor-pointer"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-xs text-brand-muted">
-                        Няма снимки за показване
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-brand-muted mt-2 px-1">
-                    <span>Слайд {serviceSliderIndex + 1} от {allServicePhotos.length}</span>
-                    <span>Така изглежда слайдерът в страницата</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Notification messages */}
-              {serviceMessage && (
-                <div
-                  className={cn(
-                    "p-4 rounded-2xl text-xs sm:text-sm font-medium border flex items-center gap-2",
-                    serviceMessage.type === "success"
-                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                      : "bg-red-50 text-red-800 border-red-200"
-                  )}
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{serviceMessage.text}</span>
-                </div>
-              )}
-
-              {/* Upload New Photo for Service */}
-              <div className="bg-white p-5 rounded-3xl border border-brand-purple/15 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-heading font-bold text-sm text-brand-dark">
-                    Добавяне на нова снимка към слайдера на „{currentServiceData.shortTitle}“
-                  </h4>
-                  <span className="text-[11px] text-brand-muted">
-                    Качва се директно в Supabase Storage
-                  </span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <input
-                    type="file"
-                    accept="image/png, image/jpeg, image/webp"
-                    onChange={handleServiceFileChange}
-                    className="block w-full text-xs text-brand-muted file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-heading file:font-bold file:bg-brand-purple/10 file:text-brand-purple hover:file:bg-brand-purple/20 cursor-pointer"
-                  />
-
-                  {serviceFile && (
-                    <button
-                      onClick={handleUploadServicePhoto}
-                      disabled={isPending}
-                      className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm shadow-button hover:bg-brand-purple-hover transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 disabled:opacity-70"
-                    >
-                      {isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Качване...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-4 h-4" />
-                          <span>Качи снимка за {currentServiceData.shortTitle}</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* FULL VISUAL CATALOG OF ACTIVE IMAGES FOR THIS SERVICE */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-brand-purple uppercase tracking-wider">
-                    Всички активни снимки за „{currentServiceData.shortTitle}“ ({allServicePhotos.length})
-                  </label>
-                  <span className="text-xs text-brand-muted">
-                    Кликнете на снимка за голям преглед
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-                  {allServicePhotos.map((photo, idx) => (
-                    <div
-                      key={`${photo.src}-${idx}`}
-                      onClick={() => setLightboxImage({ src: photo.src, title: photo.title })}
-                      className="relative group rounded-2xl overflow-hidden bg-white border border-brand-purple/20 shadow-sm aspect-square cursor-pointer hover:shadow-md transition-all hover:scale-[1.02]"
-                    >
-                      <Image
-                        src={photo.src}
-                        alt={photo.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-
-                      {/* Tag Badge */}
-                      <div className="absolute top-1.5 left-1.5 right-1.5 z-10 pointer-events-none">
-                        <span
-                          className={cn(
-                            "text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm block truncate text-center",
-                            photo.isUploaded
-                              ? "bg-purple-600 text-white"
-                              : "bg-black/60 text-white backdrop-blur-sm"
-                          )}
-                        >
-                          {photo.tag}
-                        </span>
-                      </div>
-
-                      {/* Overlay */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setLightboxImage({ src: photo.src, title: photo.title });
-                          }}
-                          className="p-2 rounded-full bg-white/90 text-brand-dark hover:bg-white transition-colors shadow"
-                          title="Преглед"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-
-                        {photo.isUploaded && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteServicePhoto(photo.path);
-                            }}
-                            className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors shadow"
-                            title="Изтрий от Storage"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </div>

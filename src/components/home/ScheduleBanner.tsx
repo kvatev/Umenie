@@ -1,9 +1,14 @@
 import React from "react";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
-import { Clock, Calendar, ArrowRight } from "lucide-react";
+import { Clock, Calendar, ArrowRight, FileText, Download } from "lucide-react";
 
-export function ScheduleBanner() {
+interface ScheduleBannerProps {
+  scheduleFileUrl?: string | null;
+  scheduleFileName?: string | null;
+}
+
+export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBannerProps = {}) {
   const schedulePreview = [
     { day: "Пон - Пет", activity: "Учебна занималня", time: "12:30 - 17:30", badge: "Всеки ден" },
     { day: "Вторник", activity: "БЕЛ и Математика (курсове)", time: "14:00 - 18:30", badge: "Интензивно" },
@@ -122,10 +127,22 @@ export function ScheduleBanner() {
               </div>
 
               {/* Bottom Quick Link inside the Card */}
-              <div className="pt-3 border-t border-brand-purple/10 flex items-center justify-between">
-                <p className="text-xs text-brand-muted">
-                  Индивидуални часове според смяната на детето
-                </p>
+              <div className="pt-3 border-t border-brand-purple/10 flex flex-col sm:flex-row items-center justify-between gap-2">
+                {scheduleFileUrl ? (
+                  <a
+                    href={scheduleFileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-purple hover:underline"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Свали графика ({scheduleFileName || "PDF / Файл"})</span>
+                  </a>
+                ) : (
+                  <p className="text-xs text-brand-muted">
+                    Индивидуални часове според смяната на детето
+                  </p>
+                )}
                 <Link
                   href="/grafik"
                   className="inline-flex items-center gap-1.5 text-brand-purple font-heading font-bold text-xs sm:text-sm hover:underline"
