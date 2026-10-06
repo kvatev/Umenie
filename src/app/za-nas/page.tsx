@@ -193,7 +193,7 @@ export default async function AboutPage() {
 
           {/* Social Reviews & Screenshot Carousel */}
           <ParentReviewsCarousel
-            screenshotUrl={settings.reviewScreenshotUrl}
+            screenshotUrl={settings.reviewScreenshotUrl || "/images/review-screenshot.webp"}
             reviewImages={reviewsRes.items || []}
           />
         </Container>

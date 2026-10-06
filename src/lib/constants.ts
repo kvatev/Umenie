@@ -4,7 +4,7 @@ export const SITE_CONFIG = {
   tagline: "Уроци, курсове и занимания за успешни деца",
   subtagline: "В образователен клуб „УМеНИе“ децата растат с едно умение повече всеки ден.",
   city: "Бургас",
-  locationShort: "Бургас, Славейков, бл. 48",
+  locationShort: "Бургас, Славейков, бл. 48 партер",
   locationFull: "ж.к. Славейков, блок 48, партер, Бургас",
   googleMapsUrl: "https://maps.google.com/?q=Бургас+Славейков+блок+48",
   phoneDisplay: "0877 488 481",

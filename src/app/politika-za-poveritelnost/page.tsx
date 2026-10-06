@@ -58,7 +58,10 @@ export default function PrivacyPolicyPage() {
                 <strong>Седалище и адрес на управление:</strong> гр. Бургас, ж.к. Славейков, бл. 39,
                 вх. 7, ет. 4
                 <br />
-                <strong>Телефон за контакт:</strong> 0877 488 481
+                <strong>Телефон за контакт:</strong>{" "}
+                <a href="tel:0877488481" className="hover:underline text-brand-purple font-semibold">
+                  0877 488 481
+                </a>
                 <br />
                 <strong>Електронна поща:</strong> umenie48@gmail.com
               </p>
@@ -220,7 +223,12 @@ export default function PrivacyPolicyPage() {
 
             <div className="bg-brand-bg p-4 rounded-2xl border border-brand-purple/20 space-y-1">
               <p className="font-bold text-brand-dark">За контакт и упражняване на вашите права:</p>
-              <p className="text-sm">Телефон: 0877 488 481</p>
+              <p className="text-sm">
+                Телефон:{" "}
+                <a href="tel:0877488481" className="hover:underline text-brand-purple font-semibold">
+                  0877 488 481
+                </a>
+              </p>
               <p className="text-sm">
                 Имейл:{" "}
                 <a href="mailto:umenie48@gmail.com" className="text-brand-purple underline">

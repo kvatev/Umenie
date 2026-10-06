@@ -45,7 +45,7 @@ export const metadata: Metadata = {
 
 export default function ServicesPage() {
   return (
-    <div className="w-full bg-brand-bg py-12 sm:py-16">
+    <div className="w-full bg-brand-bg pt-28 sm:pt-32 pb-12 sm:pb-16">
       <Container size="xl">
         {/* Page Header */}
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-12 sm:mb-16 relative">

@@ -84,9 +84,9 @@ export default async function ServiceDetailPage({ params }: PageProps) {
   const titleLine2 = service.titleLines && service.titleLines.length > 1 ? service.titleLines[1] : null;
 
   return (
-    <div className="w-full bg-[#f1f2f6] min-h-screen overflow-x-hidden">
+    <div className="w-full bg-[#f1f2f6] min-h-screen overflow-x-hidden pt-28 sm:pt-32 pb-12 sm:pb-16">
       {/* Breadcrumbs */}
-      <div className="pt-6 sm:pt-8">
+      <div className="pt-2 sm:pt-4">
         <Container size="xl">
           <nav aria-label="Хлебни трохи" className="inline-flex items-center gap-2 text-xs font-bold text-brand-purple uppercase tracking-wider">
             <Link href="/" className="hover:underline">

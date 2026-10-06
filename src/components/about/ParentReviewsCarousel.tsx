@@ -93,36 +93,39 @@ interface ParentReviewsCarouselProps {
 export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentReviewsCarouselProps) {
   const reviews = useMemo(() => {
     const list: SocialReview[] = [];
+    const effectiveScreenshot = screenshotUrl || "/images/review-screenshot.webp";
 
-    // 1. If uploaded review screenshots exist from reviews_images
-    if (reviewImages && reviewImages.length > 0) {
-      reviewImages.forEach((img, idx) => {
-        list.push({
-          id: img.id || `uploaded-review-${idx}`,
-          name: `Родител в УМеНИе #${idx + 1}`,
-          date: "Актуален отзив",
-          avatarBg: "bg-purple-200 text-purple-800",
-          avatarText: "УМ",
-          image: img.public_url,
-          text: "Оригинален отзив от доволен родител в клуб УМеНИе.",
-          likesCount: 30 + ((idx * 7) % 25),
-          commentsCount: 2 + ((idx * 2) % 6),
-        });
-      });
-    }
-
-    // 2. If homepage review screenshot exists and not already included
-    if (screenshotUrl && !list.some((r) => r.image === screenshotUrl)) {
+    // 1. Ensure main review screenshot is present front-and-center (with fallback to /images/review-screenshot.webp)
+    if (effectiveScreenshot) {
       list.push({
         id: "review-screenshot",
         name: "Родител в УМеНИе",
         date: "Актуален отзив",
         avatarBg: "bg-purple-200 text-purple-800",
         avatarText: "УМ",
-        image: screenshotUrl,
+        image: effectiveScreenshot,
         text: "Оригинален отзив от родител в клуб УМеНИе.",
         likesCount: 48,
         commentsCount: 7,
+      });
+    }
+
+    // 2. If uploaded review screenshots exist from reviews_images
+    if (reviewImages && reviewImages.length > 0) {
+      reviewImages.forEach((img, idx) => {
+        if (img.public_url !== effectiveScreenshot) {
+          list.push({
+            id: img.id || `uploaded-review-${idx}`,
+            name: `Родител в УМеНИе #${idx + 1}`,
+            date: "Актуален отзив",
+            avatarBg: "bg-purple-200 text-purple-800",
+            avatarText: "УМ",
+            image: img.public_url,
+            text: "Оригинален отзив от доволен родител в клуб УМеНИе.",
+            likesCount: 30 + ((idx * 7) % 25),
+            commentsCount: 2 + ((idx * 2) % 6),
+          });
+        }
       });
     }
 
@@ -132,7 +135,7 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
     return list;
   }, [screenshotUrl, reviewImages]);
 
-  const [currentIndex, setCurrentIndex] = useState(1);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 

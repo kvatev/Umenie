@@ -117,6 +117,19 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
     };
   }, [schedule]);
 
+  const handleCloseAndReset = () => {
+    setChildName("");
+    setChildAge("");
+    setParentName("");
+    setPhone("");
+    setEmail("");
+    setConsentMarketing(false);
+    setIsSuccess(false);
+    setFieldErrors({});
+    setGlobalError(null);
+    onClose();
+  };
+
   if (!schedule) return null;
 
   const displayDate = selectedDateStr || `${schedule.dayName}`;
@@ -137,10 +150,14 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
     if (!parentName.trim() || parentName.trim().length < 2) {
       errors.parentName = "Моля, въведете име на родител (поне 2 букви)";
     }
-    const cleanPhone = phone.replace(/[\s\-()]/g, "");
-    const bgRegex = /^(\+359|0)[0-9]{9}$/;
-    if (!bgRegex.test(cleanPhone)) {
-      errors.phone = "Невалиден български телефон (напр. 0881234567 или +359881234567)";
+    if (!phone.trim()) {
+      errors.phone = "Моля, въведете телефонен номер (задължително)";
+    } else {
+      const cleanPhone = phone.replace(/[\s\-()]/g, "");
+      const bgRegex = /^(\+359|0)[0-9]{9}$/;
+      if (!bgRegex.test(cleanPhone)) {
+        errors.phone = "Невалиден български телефон (напр. 0881234567 или +359881234567)";
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -181,7 +198,7 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
       {/* Backdrop overlay */}
       <div
         className="fixed inset-0 bg-brand-dark/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        onClick={handleCloseAndReset}
         aria-hidden="true"
       />
 
@@ -190,7 +207,7 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
         {/* Top Header bar with close button & mobile back link */}
         <div className="flex items-center justify-between px-6 pt-5 pb-2">
           <button
-            onClick={onClose}
+            onClick={handleCloseAndReset}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-purple hover:underline cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -198,7 +215,7 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
           </button>
 
           <button
-            onClick={onClose}
+            onClick={handleCloseAndReset}
             className="p-1.5 rounded-full text-brand-muted hover:text-brand-purple hover:bg-brand-purple/10 transition-colors cursor-pointer"
             aria-label="Затвори"
           >
@@ -252,7 +269,7 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
 
             <div className="pt-4 w-full max-w-xs">
               <button
-                onClick={onClose}
+                onClick={handleCloseAndReset}
                 className="w-full py-3.5 px-8 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base uppercase tracking-wider shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all cursor-pointer active:scale-[0.98]"
               >
                 КЪМ ГРАФИКА
@@ -293,8 +310,8 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3.5">
-              <h4 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
-                Запиши се за това занимание
+              <h4 className="font-heading font-bold text-base sm:text-lg text-brand-dark uppercase tracking-wide">
+                ЗАПИШИ СЕ ЗА ТОВА ЗАНИМАНИЕ
               </h4>
 
               {globalError && (
@@ -380,6 +397,7 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
                 </label>
                 <input
                   type="tel"
+                  required
                   placeholder="Напр. 088 123 45 67"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
