@@ -4,7 +4,6 @@ export interface ServiceData {
   titleLines?: string[];
   shortTitle: string;
   cardImage: string;
-  featuredImage: string;
   shortDescription: string;
   sloganPart1: string;
   sloganPart2: string;
@@ -23,7 +22,6 @@ export const SERVICES_DATA: ServiceData[] = [
     titleLines: ["УРОЦИ И", "КУРСОВЕ"],
     shortTitle: "Уроци и курсове",
     cardImage: "/images/banner/1.webp",
-    featuredImage: "/images/services/urotsi-i-kursove/page/page-1.webp",
     shortDescription:
       "Истинският напредък започва там, където е детето. Английски, български и математика в малки групи, с лично внимание и практика, която превръща знанията в увереност.",
     sloganPart1: "Днес е урок.",
@@ -58,7 +56,6 @@ export const SERVICES_DATA: ServiceData[] = [
     titleLines: ["УЧЕБНА", "ЗАНИМАЛНЯ"],
     shortTitle: "Учебна занималня",
     cardImage: "/images/banner/2.webp",
-    featuredImage: "/images/services/uchebna-zanimalnya/page/page-1.webp",
     shortDescription:
       "Домашните не трябва да са предизвикателство. В спокойна среда и с нужната подкрепа децата се учат да работят самостоятелно и с гордост от резултатите си.",
     sloganPart1: "Днес е домашно.",
@@ -92,7 +89,6 @@ export const SERVICES_DATA: ServiceData[] = [
     titleLines: ["ПЛЕТИВО"],
     shortTitle: "Плетиво",
     cardImage: "/images/banner/3.webp",
-    featuredImage: "/images/services/pletivo/page/page-1.webp",
     shortDescription:
       "Бримките се редят, разговорите вървят, а идеите стават плетива. Децата развиват сръчност и търпение, следват идеите си докрай и виждат резултата от усилията си – с приятели и подкрепа по пътя.",
     sloganPart1: "Днес е плетиво.",
@@ -132,7 +128,6 @@ export const SERVICES_DATA: ServiceData[] = [
     titleLines: ["АРТ", "ЗАНИМАНИЯ"],
     shortTitle: "Арт занимания",
     cardImage: "/images/banner/4.webp",
-    featuredImage: "/images/services/art-zanimaniya/page/page-1.webp",
     shortDescription:
       "Децата рисуват, създават и експериментират с различни техники и материали, докато дават свобода на въображението си и превръщат идеите в нещо свое.",
     sloganPart1: "Днес е идея.",
@@ -171,7 +166,6 @@ export const SERVICES_DATA: ServiceData[] = [
     titleLines: ["ЧИТАТЕЛСКИ", "КЛУБ"],
     shortTitle: "Читателски клуб",
     cardImage: "/images/banner/5.webp",
-    featuredImage: "/images/services/chitatelski-klub/page/page-1.webp",
     shortDescription:
       "Колко рядко си подарявате време за себе си? Четенето се допълва с вино, разговори и нови приятелства. Време за възрастните да се откъснат от ежедневието и да се потопят във вдъхновяваща атмосфера.",
     sloganPart1: "Днес е книга.",
@@ -210,7 +204,6 @@ export const SERVICES_DATA: ServiceData[] = [
     titleLines: ["ШАХ"],
     shortTitle: "Шах",
     cardImage: "/images/banner/6.webp",
-    featuredImage: "/images/services/shah/page/page-1.webp",
     shortDescription:
       "Няколко хода напред – в играта и в живота. Шахът развива логика, памет и концентрация. Всяка победа дава увереност, всяка загуба – урок, а играта създава приятелства.",
     sloganPart1: "Днес е шах.",

@@ -15,6 +15,9 @@ export function ServiceSlider({
 }: ServiceSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [mounted, setMounted] = useState<Set<number>>(() => new Set());
+  const sectionRef = useRef<HTMLElement | null>(null);
   const touchStartX = useRef<number | null>(null);
 
   const nextSlide = useCallback(() => {
@@ -27,16 +30,44 @@ export function ServiceSlider({
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   }, [images.length]);
 
+  // Only start fetching once the slider is near the viewport, so it never
+  // competes for bandwidth with the above-the-fold hero photos.
   useEffect(() => {
-    if (isPaused || images.length <= 1) return;
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { rootMargin: "200px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Mount only the current + next slide (previously shown slides stay mounted).
+  // Stacked slides are all "in view" geometrically, so native lazy-loading alone
+  // would fetch every slide at once.
+  useEffect(() => {
+    if (!inView || images.length === 0) return;
+    const n = images.length;
+    const wanted = [currentIndex, (currentIndex + 1) % n];
+    setMounted((prev) => {
+      if (wanted.every((i) => prev.has(i))) return prev;
+      const next = new Set(prev);
+      wanted.forEach((i) => next.add(i));
+      return next;
+    });
+  }, [inView, currentIndex, images.length]);
+
+  useEffect(() => {
+    if (isPaused || !inView || images.length <= 1) return;
     const timer = setInterval(nextSlide, 3500);
     return () => clearInterval(timer);
-  }, [isPaused, images.length, nextSlide]);
+  }, [isPaused, inView, images.length, nextSlide]);
 
   if (!images || images.length === 0) return null;
 
   return (
-    <section className="py-10 sm:py-16">
+    <section ref={sectionRef} className="py-10 sm:py-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <h3 className="font-heading font-extrabold text-2xl sm:text-3xl lg:text-4xl text-brand-purple text-center mb-8 sm:mb-10 uppercase tracking-wide">
           {title}
@@ -68,16 +99,18 @@ export function ServiceSlider({
                     : "opacity-0 scale-95 z-0 pointer-events-none"
                 }`}
               >
-                <div className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
-                  <Image
-                    src={imgSrc}
-                    alt={`${title} - снимка ${idx + 1}`}
-                    fill
-                    quality={85}
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 850px"
-                    priority={idx === 0}
-                  />
+                <div className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-slate-100">
+                  {mounted.has(idx) && (
+                    <Image
+                      src={imgSrc}
+                      alt={`${title} - снимка ${idx + 1}`}
+                      fill
+                      quality={75}
+                      loading="lazy"
+                      className="object-cover"
+                      sizes="(max-width: 896px) 100vw, 896px"
+                    />
+                  )}
                 </div>
               </div>
             );
