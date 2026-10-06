@@ -119,8 +119,8 @@ export const SERVICES_DATA: ServiceData[] = [
     ],
     pageImages: [
       "/images/services/pletivo/page/page-1.webp",
-      "/images/services/pletivo/page/page-3.webp",
       "/images/services/pletivo/page/page-2.webp",
+      "/images/services/pletivo/page/page-3.webp",
     ],
     galleryTitle: "ВИЖТЕ УМЕНИЕТО В РЪЦЕТЕ ИМ.",
     seoDescription:
@@ -232,8 +232,8 @@ export const SERVICES_DATA: ServiceData[] = [
       "/images/services/shah/slider/slide-5.webp",
     ],
     pageImages: [
-      "/images/services/shah/page/page-2.webp",
       "/images/services/shah/page/page-1.webp",
+      "/images/services/shah/page/page-2.webp",
     ],
     galleryTitle: "ВИЖТЕ УМЕНИЕТО В ИГРА",
     seoDescription:

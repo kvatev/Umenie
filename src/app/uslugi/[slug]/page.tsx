@@ -84,7 +84,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
   const titleLine2 = service.titleLines && service.titleLines.length > 1 ? service.titleLines[1] : null;
 
   return (
-    <div className="w-full bg-[#f1f2f6] min-h-screen overflow-x-hidden pt-28 sm:pt-32 pb-12 sm:pb-16">
+    <div className="w-full bg-[#f1f2f6] min-h-screen overflow-x-hidden pt-28 sm:pt-32 pb-16">
       {/* Service Header: Breadcrumbs & Title */}
       <div className="pt-2 sm:pt-4 mb-6 sm:mb-8">
         <Container size="xl">
@@ -118,86 +118,96 @@ export default async function ServiceDetailPage({ params }: PageProps) {
         </Container>
       </div>
 
-      {/* 2-Column Balanced Service Hero Layout */}
+      {/* 4-Block Hero Grid (2x2 on desktop, narrative stack on mobile) */}
       <section className="pb-12 sm:pb-16">
-        <Container size="xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch max-w-6xl mx-auto">
-            {/* Left Column: Featured Image */}
-            <div className="relative w-full aspect-[4/3] sm:aspect-[4/5] lg:aspect-[3/4] max-h-[580px] rounded-3xl overflow-hidden shadow-lg bg-slate-100">
-              <Image
-                src={service.featuredImage || service.pageImages[0]}
-                alt={service.title}
-                fill
-                priority
-                quality={90}
-                className="object-cover object-center"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
+        <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch">
+          {/* BLOCK 1 (Top Left): Purple Intro Card */}
+          <div className="order-1 bg-[#887ed8] text-white p-6 sm:p-8 rounded-3xl shadow-md flex flex-col justify-center space-y-4">
+            <span className="inline-flex self-start items-center px-3 py-1 rounded-full bg-white/20 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
+              {service.shortTitle}
+            </span>
+            <div className="space-y-1">
+              <p className="font-heading text-base sm:text-lg font-bold opacity-90 leading-tight">
+                {service.sloganPart1}
+              </p>
+              <p className="font-heading text-xl sm:text-2xl lg:text-[26px] font-bold text-white leading-snug">
+                {service.sloganPart2}
+              </p>
             </div>
+            <p className="text-white/95 text-sm sm:text-base leading-relaxed pt-3 border-t border-white/20 font-normal">
+              {service.intro}
+            </p>
+          </div>
 
-            {/* Right Column: Purple Features Card */}
-            <div className="bg-[#887ed8] text-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-lg flex flex-col justify-between h-full space-y-6">
-              <div className="space-y-4 sm:space-y-5">
-                {/* Slogan */}
-                <div className="space-y-1">
-                  <p className="font-heading text-base sm:text-lg font-bold opacity-90 leading-tight">
-                    {service.sloganPart1}
-                  </p>
-                  <p className="font-heading text-xl sm:text-2xl lg:text-[26px] font-bold text-white leading-snug">
-                    {service.sloganPart2}
-                  </p>
-                </div>
+          {/* BLOCK 2 (Top Right): Secondary landscape image (page-2) */}
+          <div className="order-2 relative w-full aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:min-h-[280px] rounded-3xl overflow-hidden shadow-md bg-slate-100">
+            <Image
+              src={service.pageImages[1] || service.pageImages[0]}
+              alt={service.title}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover object-center"
+              quality={90}
+              priority
+            />
+          </div>
 
-                {/* Intro */}
-                <p className="text-white/95 text-xs sm:text-sm leading-relaxed pt-3 border-t border-white/20 font-normal">
-                  {service.intro}
-                </p>
+          {/* BLOCK 3 (Bottom Left): Primary portrait image (page-1) */}
+          <div className="order-4 lg:order-3 relative w-full aspect-[4/5] sm:aspect-[3/4] lg:aspect-auto lg:min-h-[420px] rounded-3xl overflow-hidden shadow-md bg-slate-100">
+            <Image
+              src={service.pageImages[0]}
+              alt={service.title}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover object-center"
+              quality={90}
+            />
+          </div>
 
-                {/* List items with lightbulb icons */}
-                <ul className="space-y-3 pt-1 text-xs sm:text-sm leading-relaxed text-white/95">
-                  {service.bulletPoints.map((bullet, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5">
-                      <span className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 relative mt-0.5">
-                        <Image
-                          src="/images/bulb.webp"
-                          alt="💡"
-                          fill
-                          className="object-contain"
-                        />
-                      </span>
-                      <span className="text-white/95 leading-snug">
-                        {renderHighlightedText(bullet)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          {/* BLOCK 4 (Bottom Right): Purple Features & Booking Card */}
+          <div className="order-3 lg:order-4 bg-[#887ed8] text-white p-6 sm:p-8 rounded-3xl shadow-md flex flex-col justify-between gap-6">
+            <ul className="space-y-3 sm:space-y-4 text-sm sm:text-base leading-relaxed text-white/95">
+              {service.bulletPoints.map((bullet, idx) => (
+                <li key={idx} className="flex items-start gap-3">
+                  <span className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 relative mt-0.5">
+                    <Image
+                      src="/images/bulb.webp"
+                      alt=""
+                      fill
+                      sizes="24px"
+                      className="object-contain"
+                    />
+                  </span>
+                  <span className="text-white/95 leading-snug">
+                    {renderHighlightedText(bullet)}
+                  </span>
+                </li>
+              ))}
+            </ul>
 
-              {/* White Pill "ВИЖТЕ ГРАФИКА" button */}
-              <div className="pt-4 sm:pt-6">
-                <Link
-                  href="/grafik"
-                  className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-[#887ed8] font-heading font-bold text-sm sm:text-base shadow-xl hover:bg-[#ede9fe] transition-all transform hover:scale-[1.02] active:scale-[0.98] uppercase"
-                >
-                  <span>ВИЖТЕ ГРАФИКА</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
+            <div>
+              <Link
+                href="/grafik"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-[#887ed8] font-heading font-bold text-sm sm:text-base shadow-xl hover:bg-[#ede9fe] transition-all transform hover:scale-[1.02] active:scale-[0.98] uppercase"
+              >
+                <span>ВИЖТЕ ГРАФИКА</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
-        </Container>
+        </div>
       </section>
 
-      {/* Quick Contact Banner (Call Us + Location) */}
-      <QuickContactBanner />
-
-      {/* Image Slideshow / Gallery ("ВИЖТЕ ВЪОБРАЖЕНИЕТО С ПОВЕЧЕ УМЕНИЕ") */}
+      {/* Image Slideshow / Gallery */}
       {service.sliderImages && service.sliderImages.length > 0 && (
         <ServiceSlider
           images={service.sliderImages}
           title={service.galleryTitle}
         />
       )}
+
+      {/* Quick Contact Banner (Call Us + Location) */}
+      <QuickContactBanner />
     </div>
   );
 }
