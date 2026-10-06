@@ -52,12 +52,14 @@ async function getSchedules(): Promise<ScheduleItem[]> {
     const { data: eventData, error: eventErr } = await supabase
       .from("schedule_events")
       .select("*")
-      .eq("is_active", true)
       .order("day_of_week", { ascending: true })
       .order("start_time", { ascending: true });
 
     if (!eventErr && eventData && eventData.length > 0) {
-      return eventData.map((row) => mapRowToScheduleItem(row));
+      const activeEvents = eventData.filter((row) => row.is_active !== false);
+      if (activeEvents.length > 0) {
+        return activeEvents.map((row) => mapRowToScheduleItem(row));
+      }
     }
 
     // 2. Try schedules table

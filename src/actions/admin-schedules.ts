@@ -27,25 +27,33 @@ export interface ScheduleFormData {
 
 export async function createScheduleAction(data: ScheduleFormData) {
   try {
-    // 1. Insert into schedule_events table (schema requirement 4)
+    let createdId: string | undefined = undefined;
+
+    // 1. Insert into schedule_events table (schema requirement)
     try {
-      await supabaseAdmin.from("schedule_events").insert({
-        title: data.title,
-        day_of_week: data.day_of_week,
-        start_time: data.start_time,
-        end_time: data.end_time,
-        age_group: data.age_group,
-        location: data.location || "Славейков, блок 48, партер",
-        capacity: data.capacity || 10,
-      });
+      const { data: eventData } = await supabaseAdmin
+        .from("schedule_events")
+        .insert({
+          title: data.title,
+          day_of_week: data.day_of_week,
+          start_time: data.start_time,
+          end_time: data.end_time,
+          age_group: data.age_group,
+          location: data.location || "Славейков, блок 48, партер",
+          capacity: data.capacity || 10,
+        })
+        .select("id")
+        .single();
+      if (eventData?.id) createdId = eventData.id;
     } catch (e) {
-      console.warn("Could not insert into schedule_events (table may need migration):", e);
+      console.warn("Could not insert into schedule_events:", e);
     }
 
     // 2. Insert into schedules table
     const { error, data: inserted } = await supabaseAdmin
       .from("schedules")
       .insert({
+        ...(createdId ? { id: createdId } : {}),
         title: data.title,
         category: data.category,
         day_of_week: data.day_of_week,
@@ -58,7 +66,7 @@ export async function createScheduleAction(data: ScheduleFormData) {
       .select("id")
       .single();
 
-    if (error) {
+    if (error && !createdId) {
       console.error("Error creating schedule in schedules table:", error.message);
       return { success: false, message: error.message };
     }
@@ -66,7 +74,7 @@ export async function createScheduleAction(data: ScheduleFormData) {
     revalidatePublicPages();
     revalidatePath("/admin/schedule");
     revalidatePath("/admin");
-    return { success: true, message: "Занятието е добавено успешно!", id: inserted?.id };
+    return { success: true, message: "Занятието е добавено успешно!", id: createdId || inserted?.id };
   } catch (err: unknown) {
     console.error("Create schedule exception:", err);
     return { success: false, message: "Грешка при създаване на занятие." };
@@ -75,13 +83,7 @@ export async function createScheduleAction(data: ScheduleFormData) {
 
 export async function updateScheduleAction(id: string, data: Partial<ScheduleFormData>) {
   try {
-    // 1. Update in schedules table
-    const { error } = await supabaseAdmin
-      .from("schedules")
-      .update(data)
-      .eq("id", id);
-
-    // 2. Also attempt update in schedule_events
+    // 1. Update in schedule_events
     try {
       await supabaseAdmin
         .from("schedule_events")
@@ -97,10 +99,11 @@ export async function updateScheduleAction(id: string, data: Partial<ScheduleFor
         .eq("id", id);
     } catch {}
 
-    if (error) {
-      console.error("Error updating schedule:", error.message);
-      return { success: false, message: error.message };
-    }
+    // 2. Update in schedules table
+    await supabaseAdmin
+      .from("schedules")
+      .update(data)
+      .eq("id", id);
 
     revalidatePublicPages();
     revalidatePath("/admin/schedule");
@@ -114,15 +117,17 @@ export async function updateScheduleAction(id: string, data: Partial<ScheduleFor
 
 export async function toggleScheduleActiveAction(id: string, currentStatus: boolean) {
   try {
-    const { error } = await supabaseAdmin
+    try {
+      await supabaseAdmin
+        .from("schedule_events")
+        .update({ is_active: !currentStatus })
+        .eq("id", id);
+    } catch {}
+
+    await supabaseAdmin
       .from("schedules")
       .update({ is_active: !currentStatus })
       .eq("id", id);
-
-    if (error) {
-      console.error("Error toggling schedule active:", error.message);
-      return { success: false, message: error.message };
-    }
 
     revalidatePublicPages();
     revalidatePath("/admin/schedule");
@@ -136,13 +141,7 @@ export async function toggleScheduleActiveAction(id: string, currentStatus: bool
 
 export async function deleteScheduleAction(id: string) {
   try {
-    // 1. Delete from schedules
-    const { error } = await supabaseAdmin
-      .from("schedules")
-      .delete()
-      .eq("id", id);
-
-    // 2. Delete from schedule_events
+    // 1. Delete from schedule_events
     try {
       await supabaseAdmin
         .from("schedule_events")
@@ -150,10 +149,11 @@ export async function deleteScheduleAction(id: string) {
         .eq("id", id);
     } catch {}
 
-    if (error) {
-      console.error("Error deleting schedule:", error.message);
-      return { success: false, message: error.message };
-    }
+    // 2. Delete from schedules
+    await supabaseAdmin
+      .from("schedules")
+      .delete()
+      .eq("id", id);
 
     revalidatePublicPages();
     revalidatePath("/admin/schedule");

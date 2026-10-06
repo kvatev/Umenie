@@ -32,6 +32,9 @@ function revalidatePublicPages() {
   revalidatePath("/za-nas");
   revalidatePath("/grafik");
   revalidatePath("/uslugi");
+  revalidatePath("/admin");
+  revalidatePath("/admin/media");
+  revalidatePath("/admin/settings");
 }
 
 /**

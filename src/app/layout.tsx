@@ -9,7 +9,7 @@ import { SITE_CONFIG } from "@/lib/constants";
 const headingFont = Comfortaa({
   subsets: ["latin", "cyrillic"],
   variable: "--font-heading",
-  weight: ["400", "600", "700"],
+  weight: ["600", "700"],
   display: "swap",
 });
 

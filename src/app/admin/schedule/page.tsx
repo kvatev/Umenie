@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { ScheduleTable } from "@/components/admin/ScheduleTable";
 import { ScheduleRecord } from "@/components/admin/ScheduleModal";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { DEFAULT_SCHEDULES } from "@/lib/schedule-data";
+import { DEFAULT_SCHEDULES, deduceCategory } from "@/lib/schedule-data";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export const metadata: Metadata = {
@@ -17,27 +17,49 @@ export default async function AdminSchedulePage() {
   let schedules: ScheduleRecord[] = [];
 
   try {
-    const { data, error } = await supabaseAdmin
-      .from("schedules")
+    // 1. Try schedule_events first (schema requirement)
+    const { data: eventData, error: eventErr } = await supabaseAdmin
+      .from("schedule_events")
       .select("*")
       .order("day_of_week", { ascending: true })
       .order("start_time", { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      // Fallback for initial demo setup
-      schedules = DEFAULT_SCHEDULES.map((s) => ({
-        id: s.id,
-        title: s.title,
-        category: s.category,
-        day_of_week: s.dayOfWeek,
-        start_time: s.startTime,
-        end_time: s.endTime,
-        age_group: s.ageGroup,
-        location: s.location,
-        is_active: true,
+    if (!eventErr && eventData && eventData.length > 0) {
+      schedules = eventData.map((row) => ({
+        id: row.id,
+        title: row.title,
+        category: row.category || deduceCategory(row.title),
+        day_of_week: row.day_of_week,
+        start_time: row.start_time,
+        end_time: row.end_time,
+        age_group: row.age_group || "",
+        location: row.location || "Славейков, блок 48, партер",
+        capacity: row.capacity || 10,
+        is_active: row.is_active ?? true,
       }));
     } else {
-      schedules = data as ScheduleRecord[];
+      // 2. Fallback to schedules table
+      const { data, error } = await supabaseAdmin
+        .from("schedules")
+        .select("*")
+        .order("day_of_week", { ascending: true })
+        .order("start_time", { ascending: true });
+
+      if (error || !data || data.length === 0) {
+        schedules = DEFAULT_SCHEDULES.map((s) => ({
+          id: s.id,
+          title: s.title,
+          category: s.category,
+          day_of_week: s.dayOfWeek,
+          start_time: s.startTime,
+          end_time: s.endTime,
+          age_group: s.ageGroup,
+          location: s.location,
+          is_active: true,
+        }));
+      } else {
+        schedules = data as ScheduleRecord[];
+      }
     }
   } catch (err) {
     console.error("Schedule page fetch error:", err);

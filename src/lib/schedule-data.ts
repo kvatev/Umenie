@@ -372,18 +372,30 @@ export const CATEGORY_STYLES: Record<string, { bg: string; text: string; border:
   study_hall: { bg: "bg-teal-100", text: "text-teal-800", border: "border-teal-300" },
 };
 
+export function deduceCategory(title: string): ScheduleItem["category"] {
+  const norm = (title || "").toLowerCase();
+  if (norm.includes("шах")) return "chess";
+  if (norm.includes("плет")) return "knitting";
+  if (norm.includes("мат")) return "math";
+  if (norm.includes("англ")) return "english";
+  if (norm.includes("занимал")) return "study_hall";
+  if (norm.includes("stem") || norm.includes("стем")) return "stem";
+  if (norm.includes("чит") || norm.includes("лигериа") || norm.includes("книг")) return "reading";
+  return "art";
+}
+
 export function mapRowToScheduleItem(row: {
   id: string;
   title: string;
-  category: string;
+  category?: string;
   day_of_week: number;
   start_time: string;
   end_time: string;
-  age_group: string;
+  age_group?: string;
   location?: string;
 }): ScheduleItem {
   const dayName = DAYS_OF_WEEK.find((d) => d.dayNumber === row.day_of_week)?.name || "Понеделник";
-  const cat = (row.category || "art") as ScheduleItem["category"];
+  const cat = (row.category || deduceCategory(row.title)) as ScheduleItem["category"];
   const styles = CATEGORY_STYLES[cat] || { bg: "bg-brand-purple/10", text: "text-brand-purple", border: "border-brand-purple/20" };
 
   // Format time if it has seconds (e.g., '16:00:00' -> '16:00')
@@ -398,7 +410,7 @@ export function mapRowToScheduleItem(row: {
     dayName,
     startTime,
     endTime,
-    ageGroup: row.age_group,
+    ageGroup: row.age_group || "Всички възрасти",
     location: row.location || "Славейков, блок 48, партер",
     badgeBg: styles.bg,
     badgeText: styles.text,

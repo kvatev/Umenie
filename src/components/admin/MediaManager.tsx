@@ -25,7 +25,9 @@ import {
   Link as LinkIcon,
   RefreshCw,
   FileCheck,
+  KeyRound,
 } from "lucide-react";
+import { AdminSecuritySettings } from "./AdminSecuritySettings";
 import {
   uploadHeroBannerAction,
   uploadGalleryPhotoAction,
@@ -51,6 +53,9 @@ interface MediaManagerProps {
   initialReviewScreenshotUrl?: string;
   initialReviewsImages?: ReviewImageRecord[];
   initialKidsGalleryOrder?: string[];
+  initialTab?: "hero" | "reviews" | "kids" | "services" | "security";
+  showSecurityTab?: boolean;
+  currentEmail?: string;
 }
 
 const DEFAULT_KIDS_PHOTOS = [
@@ -72,8 +77,11 @@ export function MediaManager({
   initialReviewScreenshotUrl = "",
   initialReviewsImages = [],
   initialKidsGalleryOrder = [],
+  initialTab = "hero",
+  showSecurityTab = false,
+  currentEmail = "admin@umenie.net",
 }: MediaManagerProps) {
-  const [activeTab, setActiveTab] = useState<"hero" | "reviews" | "kids" | "services">("hero");
+  const [activeTab, setActiveTab] = useState<"hero" | "reviews" | "kids" | "services" | "security">(initialTab);
 
   // 1. Hero banner state
   const [heroMediaType, setHeroMediaType] = useState<"image" | "video">(initialHeroMediaType);
@@ -539,6 +547,21 @@ export function MediaManager({
           <Layers className="w-4 h-4" />
           <span>Слайдери за дейностите ({SERVICES_DATA.length})</span>
         </button>
+
+        {showSecurityTab && (
+          <button
+            onClick={() => setActiveTab("security")}
+            className={cn(
+              "px-5 py-2.5 rounded-2xl font-heading text-xs sm:text-sm font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer",
+              activeTab === "security"
+                ? "bg-brand-purple text-white shadow-button"
+                : "bg-brand-bg text-brand-dark hover:bg-brand-purple/10"
+            )}
+          >
+            <KeyRound className="w-4 h-4" />
+            <span>Сигурност и парола</span>
+          </button>
+        )}
       </div>
 
       {/* ======================================================== */}
@@ -1329,6 +1352,14 @@ export function MediaManager({
               </div>
             </div>
           </div>
+        </div>
+      )}
+      {/* ======================================================== */}
+      {/* TAB 5: SECURITY & PASSWORD (Optional) */}
+      {/* ======================================================== */}
+      {showSecurityTab && activeTab === "security" && (
+        <div className="space-y-6 animate-fade-in">
+          <AdminSecuritySettings currentEmail={currentEmail} />
         </div>
       )}
     </div>

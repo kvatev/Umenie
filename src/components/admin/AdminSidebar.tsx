@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Image as ImageIcon,
   KeyRound,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -46,9 +47,9 @@ const NAV_ITEMS = [
     icon: PhoneCall,
   },
   {
-    label: "Сигурност и парола",
+    label: "Настройки на сайта",
     href: "/admin/settings",
-    icon: KeyRound,
+    icon: Settings,
   },
 ];
 

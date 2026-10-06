@@ -65,7 +65,7 @@ export default async function HomePage() {
   }
 
   // 2. Resolve Review Screenshot
-  let reviewScreenshotUrl: string | null = settings.reviewScreenshotUrl || null;
+  let reviewScreenshotUrl: string | null = settings.reviewScreenshotUrl || "/images/review-screenshot.webp";
 
   // 3. Resolve Gallery from gallery_images table or storage
   let dynamicGalleryImages: { src: string; alt: string }[] | undefined = undefined;
@@ -190,13 +190,13 @@ export default async function HomePage() {
 
         <Container size="xl" className="relative z-10">
           <div className="max-w-xl text-white space-y-4 sm:space-y-6">
-            <h1 className="font-heading font-bold text-2xl xs:text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide drop-shadow-md">
+            <h1 className="font-heading font-bold text-2xl xs:text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide drop-shadow-md text-white">
               УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА
             </h1>
             <div className="pt-2">
               <Link
                 href="/uslugi"
-                className="bg-[#887ed8] hover:bg-[#786dc8] text-white font-heading font-bold text-base sm:text-lg tracking-wide uppercase rounded-full inline-flex items-center justify-center py-2.5 px-6 sm:py-3 sm:px-8 shadow-md active:scale-95 transition-all w-auto self-center cursor-pointer"
+                className="font-heading font-bold text-base sm:text-lg uppercase tracking-wide text-white bg-[#887ed8] hover:bg-[#776dc7] rounded-full px-7 py-3 inline-flex items-center justify-center shadow-lg transition-transform active:scale-95 w-auto self-center"
               >
                 НАУЧЕТЕ ПОВЕЧЕ
               </Link>
@@ -312,7 +312,7 @@ export default async function HomePage() {
       {/* 3. 6 SERVICES GRID (3 columns desktop, 2 columns mobile) */}
       <section id="activities" className="pb-12 pt-2 sm:py-16 bg-brand-bg scroll-mt-24">
         <Container size="xl">
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 max-w-6xl mx-auto px-4">
             {SERVICES_DATA.map((service) => (
               <ServiceCard
                 key={service.slug}
