@@ -68,11 +68,12 @@ export function ServiceSlider({
                     : "opacity-0 scale-95 z-0 pointer-events-none"
                 }`}
               >
-                <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+                <div className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
                   <Image
                     src={imgSrc}
                     alt={`${title} - снимка ${idx + 1}`}
                     fill
+                    quality={85}
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 850px"
                     priority={idx === 0}
