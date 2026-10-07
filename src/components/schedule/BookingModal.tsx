@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   X,
@@ -9,15 +10,11 @@ import {
   User,
   MapPin,
   Loader2,
-  Palette,
-  MessageSquare,
-  BookOpen,
-  Calculator,
-  Sparkles,
   ArrowLeft,
 } from "lucide-react";
 import { ScheduleItem } from "@/lib/schedule-data";
 import { createBookingAction } from "@/actions/booking";
+import { getActivityIcon } from "@/lib/schedule-icons";
 import { cn } from "@/lib/utils";
 
 interface BookingModalProps {
@@ -39,55 +36,6 @@ const AGE_OPTIONS = [
   "13+ години",
 ];
 
-// Custom Category Icon
-function CategoryIcon({ category, className }: { category?: string; className?: string }) {
-  switch (category) {
-    case "chess":
-      return (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={className}
-        >
-          <path d="M19 20H5v-2a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v2z" />
-          <path d="M9 15V8a3 3 0 0 1 6 0v7" />
-          <path d="M10 4a2 2 0 1 1 4 0" />
-        </svg>
-      );
-    case "english":
-      return <MessageSquare className={className} />;
-    case "art":
-      return <Palette className={className} />;
-    case "knitting":
-      return (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={className}
-        >
-          <circle cx="12" cy="12" r="8" />
-          <path d="m4.93 4.93 14.14 14.14" />
-          <path d="m14.83 9.17-5.66 5.66" />
-        </svg>
-      );
-    case "math":
-      return <Calculator className={className} />;
-    case "reading":
-      return <BookOpen className={className} />;
-    case "stem":
-      return <Sparkles className={className} />;
-    default:
-      return <Sparkles className={className} />;
-  }
-}
 
 export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModalProps) {
   const [childName, setChildName] = useState("");
@@ -225,49 +173,28 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
 
         {isSuccess ? (
           /* CONFIRMATION SCREEN (matching "График 2 Десктоп.png" & "График 3 - мобилна.png" 1:1) */
-          <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-6 animate-fade-in overflow-y-auto">
-            {/* Soft circular background with paper airplane & dashed trail */}
-            <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-[#f1effd] flex items-center justify-center relative mb-1">
-              <svg
-                viewBox="0 0 160 130"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-28 h-24 text-brand-purple"
-              >
-                {/* Curved dashed flight path */}
-                <path
-                  d="M20,105 C50,110 80,95 110,50"
-                  stroke="currentColor"
-                  strokeWidth="2.8"
-                  strokeDasharray="6 6"
-                  strokeLinecap="round"
-                />
-                {/* Hand-drawn paper airplane */}
-                <path
-                  d="M105,52 L145,20 L124,78 L114,60 L105,52 Z"
-                  stroke="currentColor"
-                  strokeWidth="2.8"
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M145,20 L114,60"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                />
-              </svg>
+          <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center animate-fade-in overflow-y-auto">
+            {/* Center container for success / sent confirmation icon */}
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-6 flex items-center justify-center">
+              <Image
+                src="/images/icons/izprateno.png"
+                alt="Заявката е приета"
+                width={160}
+                height={160}
+                priority
+                className="object-contain"
+              />
             </div>
 
             <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase">
               ЗАЯВКАТА Е ПРИЕТА
             </h2>
 
-            <p className="text-brand-dark/90 text-sm sm:text-base leading-relaxed max-w-sm font-sans">
+            <p className="text-brand-dark/90 text-sm sm:text-base leading-relaxed max-w-sm font-sans mt-3">
               Благодарим ви! Ще се свържем с Вас, на посочения телефон, за да потвърдим заявката.
             </p>
 
-            <div className="pt-4 w-full max-w-xs">
+            <div className="pt-6 w-full max-w-xs">
               <button
                 onClick={handleCloseAndReset}
                 className="w-full py-3.5 px-8 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base uppercase tracking-wider shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all cursor-pointer active:scale-[0.98]"
@@ -280,9 +207,16 @@ export function BookingModal({ schedule, selectedDateStr, onClose }: BookingModa
           /* BOOKING FORM VIEW (matching "График Десктоп.png" & "График 2 - мобилна.png" 1:1) */
           <div className="px-6 pb-6 pt-2 overflow-y-auto space-y-5">
             {/* Activity Info Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-brand-bg/80 border border-brand-purple/20 flex items-start gap-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-brand-purple/15 text-brand-purple flex items-center justify-center shrink-0 shadow-sm">
-                <CategoryIcon category={schedule.category} className="w-6 h-6 sm:w-7 sm:h-7" />
+            <div className="p-4 sm:p-5 rounded-2xl bg-brand-bg/80 border border-brand-purple/20 flex items-center gap-4">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shrink-0 shadow-sm border border-brand-purple/20 bg-white flex items-center justify-center">
+                <Image
+                  src={getActivityIcon(schedule.title, schedule.category)}
+                  alt={schedule.title}
+                  width={64}
+                  height={64}
+                  priority
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div className="space-y-1.5 flex-1 min-w-0">
                 <h3 className="font-heading font-bold text-xl sm:text-2xl text-brand-dark leading-tight">

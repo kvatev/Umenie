@@ -1,20 +1,17 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
   Clock,
   User,
-  Palette,
-  MessageSquare,
-  BookOpen,
-  Calculator,
-  Sparkles,
   ChevronRight as ArrowRightIcon,
 } from "lucide-react";
 import { ScheduleItem, DEFAULT_SCHEDULES } from "@/lib/schedule-data";
 import { BookingModal } from "./BookingModal";
+import { getActivityIcon } from "@/lib/schedule-icons";
 import { cn } from "@/lib/utils";
 
 interface ScheduleCalendarProps {
@@ -48,55 +45,6 @@ const WEEKDAY_NAMES_BG = [
 
 const WEEKDAY_SHORTS_BG = ["Пон", "Вто", "Сря", "Чет", "Пет", "Съб", "Нед"];
 
-// Category icon helper
-function CategoryIcon({ category, className }: { category?: string; className?: string }) {
-  switch (category) {
-    case "chess":
-      return (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={className}
-        >
-          <path d="M19 20H5v-2a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v2z" />
-          <path d="M9 15V8a3 3 0 0 1 6 0v7" />
-          <path d="M10 4a2 2 0 1 1 4 0" />
-        </svg>
-      );
-    case "english":
-      return <MessageSquare className={className} />;
-    case "art":
-      return <Palette className={className} />;
-    case "knitting":
-      return (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={className}
-        >
-          <circle cx="12" cy="12" r="8" />
-          <path d="m4.93 4.93 14.14 14.14" />
-          <path d="m14.83 9.17-5.66 5.66" />
-        </svg>
-      );
-    case "math":
-      return <Calculator className={className} />;
-    case "reading":
-      return <BookOpen className={className} />;
-    case "stem":
-      return <Sparkles className={className} />;
-    default:
-      return <Sparkles className={className} />;
-  }
-}
 
 // Category dot color for mobile calendar
 function getCategoryDotColor(category: string): string {
@@ -302,13 +250,22 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
                           key={act.id}
                           onClick={() => openBooking(act, cell.dayNumber, cell.dayOfWeek)}
                           className={cn(
-                            "px-2 py-1 rounded-lg border text-[11px] leading-tight font-medium cursor-pointer transition-all duration-150 shadow-xs hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] flex items-center justify-between gap-1 group",
+                            "px-2 py-1 rounded-lg border text-[11px] leading-tight font-medium cursor-pointer transition-all duration-150 shadow-xs hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] flex items-center justify-between gap-1.5 group",
                             act.badgeBg,
                             act.badgeBorder,
                             act.badgeText
                           )}
                           title={`${act.startTime} ${act.title} (${act.ageGroup})`}
                         >
+                          <div className="relative w-4 h-4 rounded-full overflow-hidden shrink-0 bg-white border border-brand-purple/20 shadow-xs flex items-center justify-center">
+                            <Image
+                              src={getActivityIcon(act.title, act.category)}
+                              alt=""
+                              width={16}
+                              height={16}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
                           <span className="font-bold text-[10px] shrink-0 opacity-90">
                             {act.startTime}
                           </span>
@@ -400,8 +357,14 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
                     className="p-3.5 sm:p-4 rounded-2xl bg-white border border-brand-purple/20 shadow-sm hover:border-brand-purple hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 group active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-brand-purple/15 text-brand-purple flex items-center justify-center shrink-0">
-                        <CategoryIcon category={item.category} className="w-5 h-5" />
+                      <div className="relative w-12 h-12 rounded-full overflow-hidden bg-white border border-brand-purple/20 flex items-center justify-center shrink-0 shadow-xs">
+                        <Image
+                          src={getActivityIcon(item.title, item.category)}
+                          alt={item.title}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                       <div className="space-y-0.5">
                         <h4 className="font-heading font-bold text-base text-brand-dark group-hover:text-brand-purple transition-colors">
