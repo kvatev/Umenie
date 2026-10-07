@@ -130,17 +130,9 @@ export default async function AboutPage() {
       </section>
 
       {/* 2. SECTION: ЕТО КАКВО КАЗВАТ РОДИТЕЛИТЕ (Solid Purple Section matching mockup 1:1) */}
-      <section className="w-full bg-[#887ed8] py-14 sm:py-20 text-white relative overflow-hidden">
-        {/* Soft decorative cloud accents in background */}
-        <div className="absolute top-3 left-8 w-28 h-16 opacity-15 pointer-events-none">
-          <Image src="/images/cloud.webp" alt="" fill className="object-contain" />
-        </div>
-        <div className="absolute bottom-4 right-10 w-36 h-20 opacity-15 pointer-events-none">
-          <Image src="/images/cloud.webp" alt="" fill className="object-contain" />
-        </div>
-
-        <Container size="xl" className="relative z-10 space-y-6 sm:space-y-10">
-          <div className="text-center max-w-3xl mx-auto">
+      <section className="w-full bg-[#887ed8] py-8 sm:py-12 md:py-14 text-white relative overflow-hidden">
+        <Container size="xl" className="relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-4 sm:mb-6">
             <h2 className="font-heading font-bold text-2xl sm:text-4xl lg:text-5xl text-white tracking-wide uppercase">
               ЕТО КАКВО КАЗВАТ РОДИТЕЛИТЕ
             </h2>

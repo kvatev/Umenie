@@ -414,7 +414,7 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
       </div>
 
       {/* Pagination Dots */}
-      <div className="flex items-center justify-center gap-2 pt-2 sm:pt-4">
+      <div className="flex items-center justify-center gap-2 mt-4 sm:mt-6">
         {reviews.map((_, idx) => (
           <button
             key={idx}
