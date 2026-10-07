@@ -311,8 +311,8 @@ export default async function HomePage() {
 
       {/* 3. 6 SERVICES GRID (3 columns desktop, 2 columns mobile) */}
       <section id="activities" className="pb-12 pt-2 sm:py-16 bg-brand-bg scroll-mt-24">
-        <Container size="xl">
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 max-w-6xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 items-stretch">
             {SERVICES_DATA.map((service) => (
               <ServiceCard
                 key={service.slug}
@@ -321,7 +321,7 @@ export default async function HomePage() {
               />
             ))}
           </div>
-        </Container>
+        </div>
       </section>
 
       {/* 4. QUICK CONTACT BANNER (matching mockups 1:1) */}

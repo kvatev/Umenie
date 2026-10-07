@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 export default function ServicesPage() {
   return (
     <div className="w-full bg-brand-bg pt-28 sm:pt-32 pb-12 sm:pb-16">
-      <Container size="xl">
+      <Container size="xl" className="px-0 sm:px-4 lg:px-8">
         {/* Page Header */}
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-12 sm:mb-16 relative">
           <div className="flex items-center justify-center gap-3">
@@ -68,7 +68,7 @@ export default function ServicesPage() {
         </div>
 
         {/* Interactive 6-Card Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 max-w-6xl mx-auto px-3 sm:px-4 lg:px-8 items-stretch">
           {SERVICES_DATA.map((service) => (
             <ServiceCard
               key={service.slug}
