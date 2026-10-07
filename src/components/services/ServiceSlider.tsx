@@ -107,8 +107,8 @@ export function ServiceSlider({
                       fill
                       quality={85}
                       loading="lazy"
-                      className="object-cover object-center"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
+                      sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 400px"
+                      className="object-cover object-center w-full h-full rounded-2xl sm:rounded-3xl shadow-sm"
                     />
                   )}
                 </div>

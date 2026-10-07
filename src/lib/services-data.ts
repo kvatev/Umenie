@@ -9,6 +9,7 @@ export interface ServiceData {
   sloganPart2: string;
   intro: string;
   bulletPoints: string[];
+  hasSlider: boolean;
   sliderImages: string[];
   pageImages: string[];
   galleryTitle: string;
@@ -35,13 +36,8 @@ export const SERVICES_DATA: ServiceData[] = [
       "Знанията влизат в употреба – с **практически задачи и упражнения**, които помагат наученото да остане.",
       "**Регулярна обратна връзка** към родителите – за напредъка, силните страни и следващите стъпки.",
     ],
-    sliderImages: [
-      "/images/services/urotsi-i-kursove/page/page-1.webp",
-      "/images/services/urotsi-i-kursove/page/page-2.webp",
-      "/images/banner/1.webp",
-      "/images/banner/2.webp",
-      "/images/banner/3.webp",
-    ],
+    hasSlider: false,
+    sliderImages: [],
     pageImages: [
       "/images/services/urotsi-i-kursove/page/page-1.webp",
       "/images/services/urotsi-i-kursove/page/page-2.webp",
@@ -68,13 +64,8 @@ export const SERVICES_DATA: ServiceData[] = [
       "Помагаме, без да вършим вместо тях – целта е с времето детето да има все по-малко нужда от помощ.",
       "Редът в задачите носи **ред и в ученето** – децата постепенно изграждат свой начин за работа.",
     ],
-    sliderImages: [
-      "/images/services/uchebna-zanimalnya/page/page-1.webp",
-      "/images/services/uchebna-zanimalnya/page/page-2.webp",
-      "/images/banner/4.webp",
-      "/images/banner/5.webp",
-      "/images/banner/6.webp",
-    ],
+    hasSlider: false,
+    sliderImages: [],
     pageImages: [
       "/images/services/uchebna-zanimalnya/page/page-1.webp",
       "/images/services/uchebna-zanimalnya/page/page-2.webp",
@@ -101,6 +92,7 @@ export const SERVICES_DATA: ServiceData[] = [
       "Преждата, инструментите и **всичко необходимо ги очакват при нас** – остава само да започнат.",
       "Докато ръцете са заети с плетиво, има време за **разговори, смях и нови приятелства**.",
     ],
+    hasSlider: true,
     sliderImages: [
       "/images/services/pletivo/slider/slide-1.webp",
       "/images/services/pletivo/slider/slide-2.webp",
@@ -112,6 +104,11 @@ export const SERVICES_DATA: ServiceData[] = [
       "/images/services/pletivo/slider/slide-8.webp",
       "/images/services/pletivo/slider/slide-9.webp",
       "/images/services/pletivo/slider/slide-10.webp",
+      "/images/services/pletivo/slider/slide-11.webp",
+      "/images/services/pletivo/slider/slide-12.webp",
+      "/images/services/pletivo/slider/slide-13.webp",
+      "/images/services/pletivo/slider/slide-14.webp",
+      "/images/services/pletivo/slider/slide-15.webp",
     ],
     pageImages: [
       "/images/services/pletivo/page/page-1.webp",
@@ -140,6 +137,7 @@ export const SERVICES_DATA: ServiceData[] = [
       "Сръчни ръце, по-смели идеи – рисуването, моделирането и работата с материали развиват **фината моторика и координацията**.",
       "Творчеството е още по-хубаво в компания, материалите се споделят, идеите се обсъждат, а разговорите вървят покрай тях.",
     ],
+    hasSlider: true,
     sliderImages: [
       "/images/services/art-zanimaniya/slider/slide-1.webp",
       "/images/services/art-zanimaniya/slider/slide-2.webp",
@@ -151,6 +149,11 @@ export const SERVICES_DATA: ServiceData[] = [
       "/images/services/art-zanimaniya/slider/slide-8.webp",
       "/images/services/art-zanimaniya/slider/slide-9.webp",
       "/images/services/art-zanimaniya/slider/slide-10.webp",
+      "/images/services/art-zanimaniya/slider/slide-11.webp",
+      "/images/services/art-zanimaniya/slider/slide-12.webp",
+      "/images/services/art-zanimaniya/slider/slide-13.webp",
+      "/images/services/art-zanimaniya/slider/slide-14.webp",
+      "/images/services/art-zanimaniya/slider/slide-15.webp",
     ],
     pageImages: [
       "/images/services/art-zanimaniya/page/page-1.webp",
@@ -178,21 +181,26 @@ export const SERVICES_DATA: ServiceData[] = [
       "Понякога обръщаме страницата **заедно с автора** – с гостувания, въпроси и истории от първо лице.",
       "Малък спомен от всяка история – към всяка среща сме подготвили **ръчно изработен подарък**, вдъхновен от книгата.",
     ],
+    hasSlider: true,
     sliderImages: [
-      "/images/services/chitatelski-klub/slider/slide-1.webp",
-      "/images/services/chitatelski-klub/slider/slide-2.webp",
-      "/images/services/chitatelski-klub/slider/slide-3.webp",
-      "/images/services/chitatelski-klub/slider/slide-4.webp",
-      "/images/services/chitatelski-klub/slider/slide-5.webp",
-      "/images/services/chitatelski-klub/slider/slide-6.webp",
-      "/images/services/chitatelski-klub/slider/slide-7.webp",
-      "/images/services/chitatelski-klub/slider/slide-8.webp",
-      "/images/services/chitatelski-klub/slider/slide-9.webp",
-      "/images/services/chitatelski-klub/slider/slide-10.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-1.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-2.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-3.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-4.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-5.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-6.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-7.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-8.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-9.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-10.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-11.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-12.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-13.webp",
+      "/images/services/chitatelski-klub-ligeria/slider/slide-14.webp",
     ],
     pageImages: [
-      "/images/services/chitatelski-klub/page/page-1.webp",
-      "/images/services/chitatelski-klub/page/page-2.webp",
+      "/images/services/chitatelski-klub-ligeria/page/page-1.webp",
+      "/images/services/chitatelski-klub-ligeria/page/page-2.webp",
     ],
     galleryTitle: "НАДНИКНЕТЕ В СРЕЩИТЕ С КНИГИ И УМЕНИЕ.",
     seoDescription:
@@ -217,6 +225,7 @@ export const SERVICES_DATA: ServiceData[] = [
       "Първият ход е наш – ще покажем **всичко от самото начало**.",
       "Шахматът е за двама, но компанията е много повече. **Игра, разговори и приятелства** около дъската.",
     ],
+    hasSlider: true,
     sliderImages: [
       "/images/services/shah/slider/slide-1.webp",
       "/images/services/shah/slider/slide-2.webp",

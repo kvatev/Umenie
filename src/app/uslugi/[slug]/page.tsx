@@ -198,8 +198,8 @@ export default async function ServiceDetailPage({ params }: PageProps) {
         </div>
       </section>
 
-      {/* Image Slideshow / Gallery */}
-      {service.sliderImages && service.sliderImages.length > 0 && (
+      {/* Image Slideshow / Gallery (Rendered only on services with dedicated galleries) */}
+      {service.hasSlider && service.sliderImages && service.sliderImages.length > 0 && (
         <ServiceSlider
           images={service.sliderImages}
           title={service.galleryTitle}
