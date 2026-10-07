@@ -15,6 +15,7 @@ export interface ServiceOverride {
   pageImages?: string[];
   sliderImages?: string[];
   galleryTitle?: string;
+  hasSlider?: boolean;
 }
 
 export interface SiteSettings {

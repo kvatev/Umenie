@@ -161,6 +161,7 @@ export async function uploadServiceImageAction(formData: FormData) {
 
     revalidatePath("/uslugi");
     revalidatePath(`/uslugi/${slug}`);
+    revalidatePath("/");
     revalidatePath("/admin/pages/services");
 
     return {
@@ -208,6 +209,7 @@ export async function deleteServiceSliderImageAction(slug: string, imageUrlOrPat
 
     revalidatePath("/uslugi");
     revalidatePath(`/uslugi/${slug}`);
+    revalidatePath("/");
     revalidatePath("/admin/pages/services");
 
     return {

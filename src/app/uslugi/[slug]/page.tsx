@@ -102,6 +102,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
     ],
     sliderImages: override.sliderImages && override.sliderImages.length > 0 ? override.sliderImages : baseService.sliderImages,
     galleryTitle: override.galleryTitle || baseService.galleryTitle,
+    hasSlider: override.hasSlider !== undefined ? override.hasSlider : baseService.hasSlider,
   };
 
   const titleLine1 = service.titleLines ? service.titleLines[0] : service.title;

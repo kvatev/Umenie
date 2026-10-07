@@ -35,6 +35,10 @@ function revalidatePublicPages() {
   revalidatePath("/admin");
   revalidatePath("/admin/media");
   revalidatePath("/admin/settings");
+  revalidatePath("/admin/pages/home");
+  revalidatePath("/admin/pages/services");
+  revalidatePath("/admin/pages/about");
+  revalidatePath("/admin/pages/schedule");
 }
 
 /**

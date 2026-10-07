@@ -160,6 +160,24 @@ export default async function HomePage() {
     console.warn("Storage assets check warning:", err);
   }
 
+  // Resolve Kids Gallery photos with priority to custom kidsGalleryOrder
+  let resolvedKidsGallery: { src: string; alt: string }[] | undefined = undefined;
+  if (settings.kidsGalleryOrder && settings.kidsGalleryOrder.length > 0) {
+    resolvedKidsGallery = settings.kidsGalleryOrder.map((path, idx) => {
+      let src = path;
+      if (!path.startsWith("http") && !path.startsWith("/")) {
+        const { data } = supabaseAdmin.storage.from("site-media").getPublicUrl(path);
+        src = data.publicUrl;
+      }
+      return {
+        src,
+        alt: `Деца с умения в образователен клуб УМеНИе - кадър ${idx + 1}`,
+      };
+    });
+  } else {
+    resolvedKidsGallery = dynamicGalleryImages;
+  }
+
   return (
     <div className="w-full">
       {/* 1. HERO SECTION (matching mockups 1:1) */}
@@ -345,8 +363,7 @@ export default async function HomePage() {
           </div>
 
           <KidsGallery
-            images={dynamicGalleryImages}
-            order={settings.kidsGalleryOrder}
+            images={resolvedKidsGallery}
           />
         </Container>
       </section>

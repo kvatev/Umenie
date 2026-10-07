@@ -28,17 +28,26 @@ interface KidsGalleryProps {
 }
 
 export function KidsGallery({ images, order }: KidsGalleryProps) {
-  let galleryImages = images && images.length > 0 ? images : DEFAULT_GALLERY_IMAGES;
+  let galleryImages: GalleryImage[] = [];
 
-  if (order && order.length > 0) {
-    galleryImages = [...galleryImages].sort((a, b) => {
-      const idxA = order.indexOf(a.src);
-      const idxB = order.indexOf(b.src);
-      if (idxA === -1 && idxB === -1) return 0;
-      if (idxA === -1) return 1;
-      if (idxB === -1) return -1;
-      return idxA - idxB;
+  if (images && images.length > 0) {
+    galleryImages = images;
+  } else if (order && order.length > 0) {
+    const defaultMap = new Map(DEFAULT_GALLERY_IMAGES.map((img) => [img.src, img]));
+    order.forEach((path) => {
+      if (defaultMap.has(path)) {
+        galleryImages.push(defaultMap.get(path)!);
+      } else {
+        galleryImages.push({
+          src: path,
+          alt: "Деца с умения в образователен клуб УМеНИе",
+        });
+      }
     });
+  }
+
+  if (galleryImages.length === 0) {
+    galleryImages = DEFAULT_GALLERY_IMAGES;
   }
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
