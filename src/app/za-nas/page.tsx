@@ -50,46 +50,46 @@ export default async function AboutPage() {
   return (
     <div className="w-full bg-[#f1f2f6] text-brand-dark overflow-x-hidden">
       {/* 1. SECTION: ЗАЩО ДА ИЗБЕРЕТЕ УМЕНИЕ? */}
-      <section className="pt-28 sm:pt-36 pb-12 sm:pb-20 relative overflow-hidden">
-        {/* Soft, faint background watermarks on mobile (behind text, -z-10, never overlapping) */}
-        <div
-          className="absolute right-2 top-32 w-24 h-24 sm:w-32 sm:h-32 opacity-20 rotate-12 pointer-events-none select-none -z-10 lg:hidden"
-        >
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-        <div
-          className="absolute right-4 bottom-16 w-24 h-24 sm:w-32 sm:h-32 opacity-20 -rotate-12 pointer-events-none select-none -z-10 lg:hidden"
-        >
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-
-        <div className="max-w-5xl mx-auto px-4 relative z-10">
-          {/* Header Title with Doodle Lightbulb */}
-          <div className="mb-8 sm:mb-12 flex items-center justify-center lg:justify-start gap-3 sm:gap-4">
-            <div className="relative w-12 h-12 sm:w-16 sm:h-16 shrink-0 -rotate-6">
+      <section className="pt-28 sm:pt-36 pb-14 sm:pb-20 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+          {/* Header Title with Desktop Bulb 1 */}
+          <div className="relative text-center mb-12 sm:mb-16">
+            {/* Desktop Bulb 1 (Large, tilted up-left): Positioned absolute to the top-left of the main title */}
+            <div className="hidden md:block absolute -top-8 lg:-top-10 left-2 lg:left-6 w-24 h-24 lg:w-32 lg:h-32 -rotate-12 pointer-events-none select-none z-0">
               <Image src="/images/bulb.webp" alt="" fill className="object-contain" priority />
             </div>
-            <h1 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-[#887ed8] uppercase leading-tight text-center lg:text-left">
+
+            <h1 className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl text-[#887ed8] uppercase leading-tight tracking-wide">
               ЗАЩО ДА ИЗБЕРЕТЕ УМЕНИЕ?
             </h1>
           </div>
 
-          {/* Two-column responsive layout on desktop */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative">
-            {/* Left side (8 cols): The 3 text blocks with clean typography */}
-            <div className="lg:col-span-8 space-y-6 sm:space-y-8">
-              {/* Item 1 */}
-              <div className="space-y-2">
-                <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
-                  УМЕНИЯ ОТВЪД УРОЦИТЕ
-                </h2>
-                <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                  Децата развиват умения отвъд уроците, които ще носят цял живот – увереност,
-                  отговорност, работа в екип и критично мислене.
-                </p>
+          {/* Features Container: 3-column horizontal grid on desktop, vertical stack on mobile */}
+          <div className="relative">
+            {/* Desktop Bulb 2 (Medium, tilted up-right): Floating gently between Col 2 and Col 3 above the text */}
+            <div className="hidden md:block absolute -top-14 lg:-top-16 right-[31%] lg:right-[32%] w-20 h-20 lg:w-24 lg:h-24 rotate-12 pointer-events-none select-none z-0">
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
+              {/* Feature 1: УМЕНИЯ ОТВЪД УРОЦИТЕ */}
+              <div className="relative space-y-2">
+                <div className="pr-20 sm:pr-24 md:pr-0 space-y-2">
+                  <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
+                    УМЕНИЯ ОТВЪД УРОЦИТЕ
+                  </h2>
+                  <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
+                    Децата развиват умения отвъд уроците, които ще носят цял живот – увереност,
+                    отговорност, работа в екип и критично мислене.
+                  </p>
+                </div>
+                {/* Mobile Bulb 1: Floating on the right side next to the text */}
+                <div className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 w-20 h-20 sm:w-24 sm:h-24 pointer-events-none select-none z-0 rotate-12">
+                  <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+                </div>
               </div>
 
-              {/* Item 2 */}
+              {/* Feature 2: СРЕДА, БЛИЗКА ДО ДОМА */}
               <div className="space-y-2">
                 <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
                   СРЕДА, БЛИЗКА ДО ДОМА
@@ -100,32 +100,21 @@ export default async function AboutPage() {
                 </p>
               </div>
 
-              {/* Item 3 */}
-              <div className="space-y-2">
-                <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
-                  ИНДИВИДУАЛЕН ПОДХОД
-                </h2>
-                <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                  В малки групи всяко дете получава лично внимание и подкрепа, защото започваме от
-                  неговото ниво и го издигаме нагоре.
-                </p>
-              </div>
-            </div>
-
-            {/* Right side (4 cols on desktop): Dedicated decorative visual space */}
-            <div className="hidden lg:flex lg:col-span-4 relative flex-col items-center justify-center min-h-[380px] pointer-events-none select-none">
-              {/* Bulb 1 (Near "УМЕНИЯ ОТВЪД УРОЦИТЕ"): Positioned to upper-right, tilted clockwise */}
-              <div
-                className="absolute top-2 right-4 w-36 h-36 lg:w-48 lg:h-48 opacity-20 sm:opacity-30 rotate-12 translate-x-2 -translate-y-4 pointer-events-none select-none -z-10"
-              >
-                <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-              </div>
-
-              {/* Bulb 2 (Near "ИНДИВИДУАЛЕН ПОДХОД"): Positioned to lower-right, tilted counter-clockwise */}
-              <div
-                className="absolute bottom-4 right-2 w-36 h-36 lg:w-48 lg:h-48 opacity-20 sm:opacity-30 -rotate-12 translate-x-4 translate-y-2 pointer-events-none select-none -z-10"
-              >
-                <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+              {/* Feature 3: ИНДИВИДУАЛЕН ПОДХОД */}
+              <div className="relative space-y-2">
+                <div className="pr-20 sm:pr-24 md:pr-0 space-y-2">
+                  <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
+                    ИНДИВИДУАЛЕН ПОДХОД
+                  </h2>
+                  <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
+                    В малки групи всяко дете получава лично внимание и подкрепа, защото започваме от
+                    неговото ниво и го издигаме нагоре.
+                  </p>
+                </div>
+                {/* Mobile Bulb 2: Floating on the right side next to the text */}
+                <div className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 w-20 h-20 sm:w-24 sm:h-24 pointer-events-none select-none z-0 rotate-12">
+                  <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+                </div>
               </div>
             </div>
           </div>
@@ -133,9 +122,9 @@ export default async function AboutPage() {
       </section>
 
       {/* 2. SECTION: ЕТО КАКВО КАЗВАТ РОДИТЕЛИТЕ (Solid Purple Section matching mockup 1:1) */}
-      <section className="w-full bg-[#887ed8] py-8 sm:py-12 md:py-14 text-white relative overflow-hidden">
+      <section className="w-full bg-[#887ed8] py-10 sm:py-14 text-white text-center relative overflow-hidden">
         <Container size="xl" className="relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-4 sm:mb-6">
+          <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-8">
             <h2 className="font-heading font-bold text-2xl sm:text-4xl lg:text-5xl text-white tracking-wide uppercase">
               ЕТО КАКВО КАЗВАТ РОДИТЕЛИТЕ
             </h2>
@@ -152,59 +141,67 @@ export default async function AboutPage() {
       {/* 3. SECTION: И ОЩЕ НЕЩО ВАЖНО */}
       <section className="py-14 sm:py-24 relative overflow-hidden">
         <Container size="xl" className="relative z-10">
-          {/* Header Title with Doodle Lightbulb */}
-          <div className="relative flex items-center justify-center gap-3 sm:gap-4 max-w-3xl mx-auto mb-10 sm:mb-16 px-4">
-            <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-[#2b3a67] tracking-tight uppercase leading-snug">
+          {/* Header Title Centered */}
+          <div className="relative text-center max-w-3xl mx-auto mb-12 sm:mb-16 px-4">
+            <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-[#2b3a67] tracking-tight uppercase leading-snug">
               И ОЩЕ НЕЩО ВАЖНО
             </h2>
-            <div className="relative w-12 h-12 sm:w-16 sm:h-16 shrink-0 rotate-12 -mt-1">
-              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-            </div>
           </div>
 
-          {/* 3 Secondary Features (Desktop: 3 columns side-by-side, Mobile: stacked vertically) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 relative max-w-5xl mx-auto px-4">
-            {/* Feature 1 */}
-            <div className="space-y-3">
-              <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
-                БЕЗ ЕКРАНИ
-              </h3>
-              <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                Екраните остават настрана, за да има място за знание, мечти и истински
-                приятелства.
-              </p>
+          {/* 3 Secondary Features: 3-column horizontal grid on desktop, vertical stack on mobile */}
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+            {/* Desktop Bulb 1: Floating on the left near Col 1 ("БЕЗ ЕКРАНИ") */}
+            <div className="hidden md:block absolute -top-12 lg:-top-14 left-0 lg:-left-6 w-20 h-20 lg:w-24 lg:h-24 -rotate-12 pointer-events-none select-none z-0">
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
             </div>
 
-            {/* Feature 2 */}
-            <div className="space-y-3">
-              <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
-                УЧЕНЕ ЧРЕЗ ПРАКТИКА
-              </h3>
-              <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                Знанията влизат в действие чрез задачи, игри и практика, вместо да остават само
-                на хартия.
-              </p>
+            {/* Desktop Bulb 2 (Large, tilted up-right): Floating on the right above/next to Col 3 ("РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА") */}
+            <div className="hidden md:block absolute -top-14 lg:-top-16 right-0 lg:-right-4 w-24 h-24 lg:w-32 lg:h-32 rotate-12 pointer-events-none select-none z-0">
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
             </div>
 
-            {/* Feature 3 */}
-            <div className="space-y-3">
-              <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
-                РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА
-              </h3>
-              <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                Регулярната обратна връзка ви държи близо до напредъка, интересите и нуждите на
-                детето.
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
+              {/* Feature 1: БЕЗ ЕКРАНИ */}
+              <div className="space-y-2">
+                <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
+                  БЕЗ ЕКРАНИ
+                </h3>
+                <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
+                  Екраните остават настрана, за да има място за знание, мечти и истински
+                  приятелства.
+                </p>
+              </div>
+
+              {/* Feature 2: УЧЕНЕ ЧРЕЗ ПРАКТИКА */}
+              <div className="space-y-2">
+                <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
+                  УЧЕНЕ ЧРЕЗ ПРАКТИКА
+                </h3>
+                <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
+                  Знанията влизат в действие чрез задачи, игри и практика, вместо да остават само
+                  на хартия.
+                </p>
+              </div>
+
+              {/* Feature 3: РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА */}
+              <div className="relative space-y-2">
+                <div className="space-y-2">
+                  <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
+                    РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА
+                  </h3>
+                  <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
+                    Регулярната обратна връзка ви държи близо до напредъка, интересите и нуждите на
+                    детето.
+                  </p>
+                </div>
+                {/* Mobile Bulb 3: Floating on the bottom-left below the text */}
+                <div className="md:hidden mt-4 -ml-2 w-20 h-20 sm:w-24 sm:h-24 -rotate-12 pointer-events-none select-none z-0">
+                  <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+                </div>
+              </div>
             </div>
           </div>
         </Container>
-
-        {/* Decorative bulb positioned subtly at the bottom corner with opacity-25 -z-10 rotate-6, completely clear of text */}
-        <div
-          className="absolute right-4 bottom-4 w-28 h-28 sm:w-36 sm:h-36 lg:w-44 lg:h-44 opacity-20 sm:opacity-25 -z-10 rotate-6 pointer-events-none select-none"
-        >
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
       </section>
 
       {/* 4. QUICK INFO CONTACT PILL / BANNER (matching mockups 1:1) */}

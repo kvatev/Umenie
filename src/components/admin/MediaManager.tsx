@@ -38,6 +38,7 @@ import {
   saveKidsGalleryOrderAction,
   uploadReviewImageAction,
   deleteReviewImageAction,
+  reorderReviewImagesAction,
   StorageMediaItem,
   ReviewImageRecord,
 } from "@/actions/admin-media";
@@ -350,6 +351,28 @@ export function MediaManager({
       const res = await deleteReviewImageAction(id, publicUrl);
       if (!res.success) {
         alert(res.message || "Грешка при изтриване на отзива.");
+      }
+    });
+  };
+
+  const handleMoveReviewImage = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= reviewsImages.length) return;
+
+    const newReviews = [...reviewsImages];
+    const temp = newReviews[index];
+    newReviews[index] = newReviews[targetIndex];
+    newReviews[targetIndex] = temp;
+
+    setReviewsImages(newReviews);
+
+    startTransition(async () => {
+      const ids = newReviews.map((r) => r.id).filter(Boolean);
+      const res = await reorderReviewImagesAction(ids);
+      if (!res.success) {
+        setReviewImgMessage({ type: "error", text: res.message });
+      } else {
+        setReviewImgMessage({ type: "success", text: "Подредбата на отзивите е обновена!" });
       }
     });
   };
@@ -1042,9 +1065,31 @@ export function MediaManager({
                       </div>
 
                       <div className="p-2.5 flex items-center justify-between bg-white border-t border-brand-purple/10">
-                        <span className="text-[11px] font-bold text-brand-purple">
-                          #{idx + 1}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-brand-purple">
+                            #{idx + 1}
+                          </span>
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveReviewImage(idx, "up")}
+                              disabled={idx === 0 || isPending}
+                              className="p-1 rounded border border-brand-purple/20 hover:bg-brand-purple hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                              title="Премести по-напред"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveReviewImage(idx, "down")}
+                              disabled={idx === reviewsImages.length - 1 || isPending}
+                              className="p-1 rounded border border-brand-purple/20 hover:bg-brand-purple hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                              title="Премести по-назад"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
 
                         <button
                           type="button"

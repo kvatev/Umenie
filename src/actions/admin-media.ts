@@ -522,6 +522,7 @@ export async function deleteReviewImageAction(id: string, publicUrl?: string) {
     revalidatePublicPages();
     revalidatePath("/admin/media");
     revalidatePath("/admin");
+    revalidatePath("/za-nas");
 
     return { success: true, message: "Отзивът е изтрит успешно!" };
   } catch (err) {
@@ -529,3 +530,32 @@ export async function deleteReviewImageAction(id: string, publicUrl?: string) {
     return { success: false, message: "Грешка при изтриване на отзива." };
   }
 }
+
+/**
+ * Reorder review screenshots in reviews_images table
+ */
+export async function reorderReviewImagesAction(orderedIds: string[]) {
+  try {
+    for (let i = 0; i < orderedIds.length; i++) {
+      const id = orderedIds[i];
+      await supabaseAdmin
+        .from("reviews_images")
+        .update({ display_order: i + 1 })
+        .eq("id", id);
+    }
+
+    revalidatePublicPages();
+    revalidatePath("/admin/media");
+    revalidatePath("/admin");
+    revalidatePath("/za-nas");
+
+    return {
+      success: true,
+      message: "Подредбата на отзивите е запазена успешно!",
+    };
+  } catch (err: unknown) {
+    console.error("Reorder review images exception:", err);
+    return { success: false, message: "Грешка при записване на подредбата." };
+  }
+}
+
