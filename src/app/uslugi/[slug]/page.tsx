@@ -7,6 +7,7 @@ import { Container } from "@/components/ui/Container";
 import { SERVICES_DATA, getServiceBySlug } from "@/lib/services-data";
 import { ServiceSlider } from "@/components/services/ServiceSlider";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
+import { getSiteSettings } from "@/lib/site-settings";
 import { ArrowRight } from "lucide-react";
 
 interface PageProps {
@@ -24,8 +25,12 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const service = getServiceBySlug(slug);
-  if (!service) return { title: "Услугата не е намерена" };
+  const baseService = getServiceBySlug(slug);
+  if (!baseService) return { title: "Услугата не е намерена" };
+
+  const settings = await getSiteSettings();
+  const override = settings.servicesOverrides?.[baseService.slug] || settings.servicesOverrides?.[slug] || {};
+  const service = { ...baseService, ...override };
 
   const fullTitle = `${service.title} | Клуб УМеНИе Бургас`;
   const canonicalUrl = `https://www.umenie.net/uslugi/${service.slug}`;
@@ -74,11 +79,30 @@ function renderHighlightedText(text: string) {
 
 export default async function ServiceDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const service = getServiceBySlug(slug);
+  const baseService = getServiceBySlug(slug);
 
-  if (!service) {
+  if (!baseService) {
     notFound();
   }
+
+  const settings = await getSiteSettings();
+  const override = settings.servicesOverrides?.[baseService.slug] || settings.servicesOverrides?.[slug] || {};
+
+  const service = {
+    ...baseService,
+    title: override.title || baseService.title,
+    shortTitle: override.shortTitle || baseService.shortTitle,
+    sloganPart1: override.sloganPart1 || baseService.sloganPart1,
+    sloganPart2: override.sloganPart2 || baseService.sloganPart2,
+    intro: override.intro || baseService.intro,
+    bulletPoints: override.bulletPoints && override.bulletPoints.length > 0 ? override.bulletPoints : baseService.bulletPoints,
+    pageImages: [
+      override.pageImages?.[0] || baseService.pageImages[0],
+      override.pageImages?.[1] || baseService.pageImages[1] || baseService.pageImages[0],
+    ],
+    sliderImages: override.sliderImages && override.sliderImages.length > 0 ? override.sliderImages : baseService.sliderImages,
+    galleryTitle: override.galleryTitle || baseService.galleryTitle,
+  };
 
   const titleLine1 = service.titleLines ? service.titleLines[0] : service.title;
   const titleLine2 = service.titleLines && service.titleLines.length > 1 ? service.titleLines[1] : null;

@@ -75,6 +75,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       kidsGalleryOrder: Array.isArray(json.kidsGalleryOrder) ? json.kidsGalleryOrder : [],
       scheduleFileUrl: json.scheduleFileUrl?.trim() || "",
       scheduleFileName: json.scheduleFileName?.trim() || "",
+      aboutValues: Array.isArray(json.aboutValues) && json.aboutValues.length > 0 ? json.aboutValues : DEFAULT_SETTINGS.aboutValues,
+      aboutFeatures: Array.isArray(json.aboutFeatures) && json.aboutFeatures.length > 0 ? json.aboutFeatures : DEFAULT_SETTINGS.aboutFeatures,
+      servicesOverrides: typeof json.servicesOverrides === "object" && json.servicesOverrides !== null ? json.servicesOverrides : {},
     };
   } catch (err) {
     console.warn("Failed to load site settings from Supabase, using defaults:", err);

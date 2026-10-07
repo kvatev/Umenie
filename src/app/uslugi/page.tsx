@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { SERVICES_DATA } from "@/lib/services-data";
 import { ServiceCard } from "@/components/services/ServiceCard";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
+import { getSiteSettings } from "@/lib/site-settings";
 import { Calendar } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -43,7 +44,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ServicesPage() {
+export const revalidate = 60;
+
+export default async function ServicesPage() {
+  const settings = await getSiteSettings();
+  const overrides = settings.servicesOverrides || {};
+
+  const services = SERVICES_DATA.map((srv) => {
+    const o = overrides[srv.slug];
+    if (!o) return srv;
+    return {
+      ...srv,
+      title: o.title || srv.title,
+      shortTitle: o.shortTitle || srv.shortTitle,
+      shortDescription: o.intro || srv.shortDescription,
+    };
+  });
+
   return (
     <div className="w-full bg-brand-bg pt-28 sm:pt-32 pb-12 sm:pb-16">
       <Container size="xl" className="px-0 sm:px-4 lg:px-8">
@@ -70,7 +87,7 @@ export default function ServicesPage() {
 
         {/* Interactive 6-Card Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 max-w-6xl mx-auto px-3 sm:px-4 lg:px-8 items-stretch">
-          {SERVICES_DATA.map((service) => (
+          {services.map((service) => (
             <ServiceCard
               key={service.slug}
               service={service}

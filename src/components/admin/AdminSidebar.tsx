@@ -6,16 +6,16 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
-  ClipboardList,
+  Home,
+  Palette,
+  BookOpen,
   CalendarDays,
-  Image as ImageIcon,
-  KeyRound,
+  ClipboardList,
   Settings,
   LogOut,
   Menu,
   X,
   ExternalLink,
-  PhoneCall,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -27,27 +27,32 @@ const NAV_ITEMS = [
     icon: LayoutDashboard,
   },
   {
+    label: "Страница: Начало",
+    href: "/admin/pages/home",
+    icon: Home,
+  },
+  {
+    label: "Страница: Услуги",
+    href: "/admin/pages/services",
+    icon: Palette,
+  },
+  {
+    label: "Страница: За нас",
+    href: "/admin/pages/about",
+    icon: BookOpen,
+  },
+  {
+    label: "Календар и График",
+    href: "/admin/pages/schedule",
+    icon: CalendarDays,
+  },
+  {
     label: "Заявки за записване",
     href: "/admin/bookings",
     icon: ClipboardList,
   },
   {
-    label: "Управление на график",
-    href: "/admin/schedule",
-    icon: CalendarDays,
-  },
-  {
-    label: "Банери и Снимки",
-    href: "/admin/media",
-    icon: ImageIcon,
-  },
-  {
-    label: "Контакти и мрежи",
-    href: "/admin/contacts",
-    icon: PhoneCall,
-  },
-  {
-    label: "Настройки на сайта",
+    label: "Основни настройки",
     href: "/admin/settings",
     icon: Settings,
   },
@@ -77,7 +82,7 @@ export function AdminSidebar() {
         const isActive =
           item.href === "/admin"
             ? pathname === "/admin"
-            : pathname.startsWith(item.href);
+            : pathname === item.href || pathname.startsWith(item.href + "/");
         const Icon = item.icon;
 
         return (

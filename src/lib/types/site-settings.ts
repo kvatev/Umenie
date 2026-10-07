@@ -1,5 +1,22 @@
 import { SITE_CONFIG } from "@/lib/constants";
 
+export interface AboutTextItem {
+  title: string;
+  text: string;
+}
+
+export interface ServiceOverride {
+  title?: string;
+  shortTitle?: string;
+  sloganPart1?: string;
+  sloganPart2?: string;
+  intro?: string;
+  bulletPoints?: string[];
+  pageImages?: string[];
+  sliderImages?: string[];
+  galleryTitle?: string;
+}
+
 export interface SiteSettings {
   phoneDisplay: string;
   phoneFull: string;
@@ -22,6 +39,11 @@ export interface SiteSettings {
   // Weekly Schedule File (PDF/Image)
   scheduleFileUrl?: string;
   scheduleFileName?: string;
+  // About Page texts
+  aboutValues?: AboutTextItem[];
+  aboutFeatures?: AboutTextItem[];
+  // Services Overrides
+  servicesOverrides?: Record<string, ServiceOverride>;
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -42,6 +64,35 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   kidsGalleryOrder: [],
   scheduleFileUrl: "",
   scheduleFileName: "",
+  aboutValues: [
+    {
+      title: "УМЕНИЯ ОТВЪД УРОЦИТЕ",
+      text: "Децата развиват умения отвъд уроците, които ще носят цял живот – увереност, отговорност, работа в екип и критично мислене.",
+    },
+    {
+      title: "СРЕДА, БЛИЗКА ДО ДОМА",
+      text: "Място, където всяко дете се чувства прието и спокойно да бъде себе си, а уважението, добротата и отношението към другите са част от всеки ден.",
+    },
+    {
+      title: "ИНДИВИДУАЛЕН ПОДХОД",
+      text: "В малки групи всяко дете получава лично внимание и подкрепа, защото започваме от неговото ниво и го издигаме нагоре.",
+    },
+  ],
+  aboutFeatures: [
+    {
+      title: "БЕЗ ЕКРАНИ",
+      text: "Екраните остават настрана, за да има място за знание, мечти и истински приятелства.",
+    },
+    {
+      title: "УЧЕНЕ ЧРЕЗ ПРАКТИКА",
+      text: "Знанията влизат в действие чрез задачи, игри и практика, вместо да остават само на хартия.",
+    },
+    {
+      title: "РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА",
+      text: "Регулярната обратна връзка ви държи близо до напредъка, интересите и нуждите на детето.",
+    },
+  ],
+  servicesOverrides: {},
 };
 
 /**

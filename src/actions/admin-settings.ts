@@ -41,12 +41,16 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
       tagline: formData.tagline?.trim() ?? current.tagline,
       facebookUrl: formData.facebookUrl?.trim() ?? current.facebookUrl,
       instagramUrl: formData.instagramUrl?.trim() ?? current.instagramUrl,
+      heroBannerUrl: formData.heroBannerUrl !== undefined ? formData.heroBannerUrl.trim() : (current.heroBannerUrl || ""),
       heroVideoUrl: formData.heroVideoUrl !== undefined ? formData.heroVideoUrl.trim() : (current.heroVideoUrl || ""),
       heroMediaType: formData.heroMediaType ?? (current.heroMediaType || "image"),
       reviewScreenshotUrl: formData.reviewScreenshotUrl !== undefined ? formData.reviewScreenshotUrl.trim() : (current.reviewScreenshotUrl || ""),
       kidsGalleryOrder: formData.kidsGalleryOrder ?? (current.kidsGalleryOrder || []),
       scheduleFileUrl: formData.scheduleFileUrl !== undefined ? formData.scheduleFileUrl.trim() : (current.scheduleFileUrl || ""),
       scheduleFileName: formData.scheduleFileName !== undefined ? formData.scheduleFileName.trim() : (current.scheduleFileName || ""),
+      aboutValues: formData.aboutValues ?? (current.aboutValues || DEFAULT_SETTINGS.aboutValues),
+      aboutFeatures: formData.aboutFeatures ?? (current.aboutFeatures || DEFAULT_SETTINGS.aboutFeatures),
+      servicesOverrides: formData.servicesOverrides ?? (current.servicesOverrides || {}),
     };
 
     const jsonString = JSON.stringify(updatedSettings, null, 2);

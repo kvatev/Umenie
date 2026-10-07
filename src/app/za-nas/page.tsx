@@ -47,6 +47,36 @@ export default async function AboutPage() {
   const settings = await getSiteSettings();
   const reviewsRes = await listReviewsImagesAction();
 
+  const values = settings.aboutValues && settings.aboutValues.length >= 3 ? settings.aboutValues : [
+    {
+      title: "УМЕНИЯ ОТВЪД УРОЦИТЕ",
+      text: "Децата развиват умения отвъд уроците, които ще носят цял живот – увереност, отговорност, работа в екип и критично мислене.",
+    },
+    {
+      title: "СРЕДА, БЛИЗКА ДО ДОМА",
+      text: "Място, където всяко дете се чувства прието и спокойно да бъде себе си, а уважението, добротата и отношението към другите са част от всеки ден.",
+    },
+    {
+      title: "ИНДИВИДУАЛЕН ПОДХОД",
+      text: "В малки групи всяко дете получава лично внимание и подкрепа, защото започваме от неговото ниво и го издигаме нагоре.",
+    },
+  ];
+
+  const features = settings.aboutFeatures && settings.aboutFeatures.length >= 3 ? settings.aboutFeatures : [
+    {
+      title: "БЕЗ ЕКРАНИ",
+      text: "Екраните остават настрана, за да има място за знание, мечти и истински приятелства.",
+    },
+    {
+      title: "УЧЕНЕ ЧРЕЗ ПРАКТИКА",
+      text: "Знанията влизат в действие чрез задачи, игри и практика, вместо да остават само на хартия.",
+    },
+    {
+      title: "РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА",
+      text: "Регулярната обратна връзка ви държи близо до напредъка, интересите и нуждите на детето.",
+    },
+  ];
+
   return (
     <div className="w-full bg-[#f1f2f6] text-brand-dark overflow-x-hidden">
       {/* 1. SECTION: ЗАЩО ДА ИЗБЕРЕТЕ УМЕНИЕ? */}
@@ -72,15 +102,14 @@ export default async function AboutPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-              {/* Feature 1: УМЕНИЯ ОТВЪД УРОЦИТЕ */}
+              {/* Feature 1 */}
               <div className="relative space-y-2">
                 <div className="pr-20 sm:pr-24 md:pr-0 space-y-2">
                   <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
-                    УМЕНИЯ ОТВЪД УРОЦИТЕ
+                    {values[0].title}
                   </h2>
                   <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                    Децата развиват умения отвъд уроците, които ще носят цял живот – увереност,
-                    отговорност, работа в екип и критично мислене.
+                    {values[0].text}
                   </p>
                 </div>
                 {/* Mobile Bulb 1: Floating on the right side next to the text */}
@@ -89,26 +118,24 @@ export default async function AboutPage() {
                 </div>
               </div>
 
-              {/* Feature 2: СРЕДА, БЛИЗКА ДО ДОМА */}
+              {/* Feature 2 */}
               <div className="space-y-2">
                 <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
-                  СРЕДА, БЛИЗКА ДО ДОМА
+                  {values[1].title}
                 </h2>
                 <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                  Място, където всяко дете се чувства прието и спокойно да бъде себе си, а
-                  уважението, добротата и отношението към другите са част от всеки ден.
+                  {values[1].text}
                 </p>
               </div>
 
-              {/* Feature 3: ИНДИВИДУАЛЕН ПОДХОД */}
+              {/* Feature 3 */}
               <div className="relative space-y-2">
                 <div className="pr-20 sm:pr-24 md:pr-0 space-y-2">
                   <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
-                    ИНДИВИДУАЛЕН ПОДХОД
+                    {values[2].title}
                   </h2>
                   <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                    В малки групи всяко дете получава лично внимание и подкрепа, защото започваме от
-                    неговото ниво и го издигаме нагоре.
+                    {values[2].text}
                   </p>
                 </div>
                 {/* Mobile Bulb 2: Floating on the right side next to the text */}
@@ -161,37 +188,34 @@ export default async function AboutPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-              {/* Feature 1: БЕЗ ЕКРАНИ */}
+              {/* Feature 1 */}
               <div className="space-y-2">
                 <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
-                  БЕЗ ЕКРАНИ
+                  {features[0].title}
                 </h3>
                 <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                  Екраните остават настрана, за да има място за знание, мечти и истински
-                  приятелства.
+                  {features[0].text}
                 </p>
               </div>
 
-              {/* Feature 2: УЧЕНЕ ЧРЕЗ ПРАКТИКА */}
+              {/* Feature 2 */}
               <div className="space-y-2">
                 <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
-                  УЧЕНЕ ЧРЕЗ ПРАКТИКА
+                  {features[1].title}
                 </h3>
                 <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                  Знанията влизат в действие чрез задачи, игри и практика, вместо да остават само
-                  на хартия.
+                  {features[1].text}
                 </p>
               </div>
 
-              {/* Feature 3: РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА */}
+              {/* Feature 3 */}
               <div className="relative space-y-2">
                 <div className="space-y-2">
                   <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
-                    РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА
+                    {features[2].title}
                   </h3>
                   <p className="text-slate-800 text-sm sm:text-base leading-relaxed font-sans font-normal">
-                    Регулярната обратна връзка ви държи близо до напредъка, интересите и нуждите на
-                    детето.
+                    {features[2].text}
                   </p>
                 </div>
                 {/* Mobile Bulb 3: Floating on the bottom-left below the text */}
