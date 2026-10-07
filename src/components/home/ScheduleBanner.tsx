@@ -27,61 +27,38 @@ export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBa
               ГРАФИКА ЗА<br className="hidden xs:block" /> СЕДМИЦАТА
             </h2>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              <Link
-                href="/grafik"
-                className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-white text-brand-purple font-heading font-bold text-sm sm:text-base tracking-wider uppercase shadow-xl hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-              >
-                НАУЧЕТЕ ПОВЕЧЕ
-              </Link>
+            <div className="pt-2 flex justify-center lg:justify-start">
+              <div className="relative inline-block">
+                <Link
+                  href="/grafik"
+                  className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-white text-brand-purple font-heading font-bold text-sm sm:text-base tracking-wider uppercase shadow-xl hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  НАУЧЕТЕ ПОВЕЧЕ
+                </Link>
 
-              {/* Hand-drawn style curved arrow pointing to the white schedule box */}
-              <div className="hidden lg:block shrink-0 -mt-2 -ml-2">
                 <svg
-                  className="w-24 h-16 text-white drop-shadow-md transform rotate-12"
-                  viewBox="0 0 120 70"
+                  className="hidden sm:block absolute -right-16 md:-right-20 lg:-right-24 top-1/2 -translate-y-2 w-16 h-12 md:w-20 md:h-14 lg:w-24 lg:h-16 pointer-events-none select-none"
+                  viewBox="0 0 100 60"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
+                  {/* Smooth swooping arc dipping down and curving up-right */}
                   <path
-                    d="M10,20 C45,10 80,15 105,45"
-                    stroke="currentColor"
+                    d="M 12 14 C 28 52, 68 56, 92 22"
+                    stroke="white"
                     strokeWidth="3.5"
                     strokeLinecap="round"
                   />
+                  {/* Arrow head pointing up and right toward the card */}
                   <path
-                    d="M92,42 L106,47 L105,32"
-                    stroke="currentColor"
+                    d="M 75 22 L 92 22 L 87 38"
+                    stroke="white"
                     strokeWidth="3.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                 </svg>
               </div>
-            </div>
-
-            {/* Mobile curved arrow pointing downwards */}
-            <div className="flex lg:hidden justify-center pt-1">
-              <svg
-                className="w-16 h-12 text-white/90"
-                viewBox="0 0 80 60"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M15,10 C45,10 55,25 50,48"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M40,40 L50,50 L60,42"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
             </div>
           </div>
 
