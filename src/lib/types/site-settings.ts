@@ -5,6 +5,12 @@ export interface AboutTextItem {
   text: string;
 }
 
+export interface SlideViewSetting {
+  fit?: "cover" | "contain";
+  position?: string;
+  scale?: number;
+}
+
 export interface ServiceOverride {
   title?: string;
   shortTitle?: string;
@@ -16,6 +22,7 @@ export interface ServiceOverride {
   sliderImages?: string[];
   galleryTitle?: string;
   hasSlider?: boolean;
+  sliderImageSettings?: Record<string, SlideViewSetting>;
 }
 
 export interface SiteSettings {

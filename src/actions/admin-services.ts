@@ -107,22 +107,40 @@ export async function uploadServiceImageAction(formData: FormData) {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    let buffer = Buffer.from(arrayBuffer);
+    let contentType = file.type || "image/webp";
+    let extension = "webp";
+
+    // Convert and optimize using high-fidelity WebP (quality 92, max 1920px, EXIF orientation preserved)
+    try {
+      const sharpModule = await import("sharp");
+      const sharp = sharpModule.default;
+      buffer = await sharp(buffer)
+        .rotate()
+        .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 92, effort: 4 })
+        .toBuffer();
+      contentType = "image/webp";
+      extension = "webp";
+    } catch (sharpErr) {
+      console.warn("Sharp optimization skipped, uploading original buffer:", sharpErr);
+    }
 
     let filePath = "";
     if (imageType === "page-1") {
-      filePath = `services/${slug}/page-1.webp`;
+      filePath = `services/${slug}/page-1.${extension}`;
     } else if (imageType === "page-2") {
-      filePath = `services/${slug}/page-2.webp`;
+      filePath = `services/${slug}/page-2.${extension}`;
     } else {
-      const sanitizedName = file.name
+      const baseName = file.name
+        .substring(0, file.name.lastIndexOf(".") > 0 ? file.name.lastIndexOf(".") : file.name.length)
         .toLowerCase()
-        .replace(/[^a-z0-9.]/g, "-")
+        .replace(/[^a-z0-9]/g, "-")
         .replace(/-+/g, "-");
-      filePath = `services/${slug}/slider/${Date.now()}-${sanitizedName}`;
+      filePath = `services/${slug}/slider/${Date.now()}-${baseName || "slide"}.${extension}`;
     }
 
-    const { publicUrl } = await safeUpload(filePath, buffer, file.type || "image/webp", true);
+    const { publicUrl } = await safeUpload(filePath, buffer, contentType, true);
     const fullUrl = `${publicUrl}?t=${Date.now()}`;
 
     // Update service override in site settings
@@ -166,12 +184,59 @@ export async function uploadServiceImageAction(formData: FormData) {
 
     return {
       success: true,
-      message: "Снимката е качена и обновена успешно!",
+      message: "Снимката е качена и оптимизирана с отлично качество!",
       url: fullUrl,
     };
   } catch (err: unknown) {
     console.error("Upload service image exception:", err);
     return { success: false, message: "Грешка при качване на снимката." };
+  }
+}
+
+/**
+ * 3. Save framing & crop settings for an individual slider image
+ */
+export async function saveSliderImageSettingAction(
+  slug: string,
+  imageUrl: string,
+  setting: { fit?: "cover" | "contain"; position?: string; scale?: number }
+) {
+  try {
+    const settings = await getSiteSettings();
+    const currentOverrides = settings.servicesOverrides || {};
+    const serviceOverride = currentOverrides[slug] || {};
+    const currentSettings = serviceOverride.sliderImageSettings || {};
+
+    const fileName = imageUrl.split("/").pop() || imageUrl;
+
+    const updatedSettings = {
+      ...currentSettings,
+      [imageUrl]: setting,
+      [fileName]: setting,
+    };
+
+    await updateSiteSettingsAction({
+      servicesOverrides: {
+        ...currentOverrides,
+        [slug]: {
+          ...serviceOverride,
+          sliderImageSettings: updatedSettings,
+        },
+      },
+    });
+
+    revalidatePath("/uslugi");
+    revalidatePath(`/uslugi/${slug}`);
+    revalidatePath("/");
+    revalidatePath("/admin/pages/services");
+
+    return {
+      success: true,
+      message: "Настройките за кадъра бяха запазени успешно!",
+    };
+  } catch (err: unknown) {
+    console.error("Save slider image setting exception:", err);
+    return { success: false, message: "Грешка при запазване на настройките на кадъра." };
   }
 }
 

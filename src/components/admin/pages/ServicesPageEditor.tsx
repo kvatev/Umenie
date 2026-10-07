@@ -12,15 +12,21 @@ import {
   AlertCircle,
   ExternalLink,
   Layers,
-  Sparkles,
-  Info,
+  Sliders,
+  Crop,
+  X,
+  RotateCcw,
+  ZoomIn,
+  Maximize2,
+  Eye,
 } from "lucide-react";
 import { SERVICES_DATA, ServiceData } from "@/lib/services-data";
-import { ServiceOverride, SiteSettings } from "@/lib/types/site-settings";
+import { ServiceOverride, SiteSettings, SlideViewSetting } from "@/lib/types/site-settings";
 import {
   saveServiceContentAction,
   uploadServiceImageAction,
   deleteServiceSliderImageAction,
+  saveSliderImageSettingAction,
 } from "@/actions/admin-services";
 import { getActivityIcon } from "@/lib/schedule-icons";
 import { cn } from "@/lib/utils";
@@ -43,6 +49,14 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
   // File upload state for page-1 and page-2
   const [uploadingType, setUploadingType] = useState<string | null>(null);
 
+  // Framing & crop modal state for slider images
+  const [editingImage, setEditingImage] = useState<string | null>(null);
+  const [draftSetting, setDraftSetting] = useState<SlideViewSetting>({
+    fit: "cover",
+    position: "center center",
+    scale: 1,
+  });
+
   // Get active service merged with override
   const baseService = SERVICES_DATA.find((s) => s.slug === selectedSlug) || SERVICES_DATA[0];
   const activeOverride = overrides[selectedSlug] || {};
@@ -59,6 +73,7 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
   const currentSliderImages = activeOverride.sliderImages ?? baseService.sliderImages;
   const currentGalleryTitle = activeOverride.galleryTitle ?? baseService.galleryTitle;
   const currentHasSlider = activeOverride.hasSlider !== undefined ? activeOverride.hasSlider : baseService.hasSlider;
+  const currentSliderImageSettings = activeOverride.sliderImageSettings || {};
 
   const updateCurrentOverride = (partial: Partial<ServiceOverride>) => {
     setOverrides((prev) => ({
@@ -68,6 +83,47 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
         ...partial,
       },
     }));
+  };
+
+  const handleOpenFrameSettings = (img: string) => {
+    const fileName = img.split("/").pop() || img;
+    const existing =
+      currentSliderImageSettings[img] ||
+      currentSliderImageSettings[fileName] ||
+      {};
+    setDraftSetting({
+      fit: existing.fit || "cover",
+      position: existing.position || "center center",
+      scale: existing.scale || 1,
+    });
+    setEditingImage(img);
+  };
+
+  const handleSaveFrameSettings = () => {
+    if (!editingImage) return;
+    setStatusMessage(null);
+    startTransition(async () => {
+      const res = await saveSliderImageSettingAction(selectedSlug, editingImage, draftSetting);
+      if (res.success) {
+        const fileName = editingImage.split("/").pop() || editingImage;
+        const updated = {
+          ...currentSliderImageSettings,
+          [editingImage]: draftSetting,
+          [fileName]: draftSetting,
+        };
+        updateCurrentOverride({ sliderImageSettings: updated });
+        setStatusMessage({
+          type: "success",
+          text: "Настройките за кадъра са запазени успешно и приложени на живо!",
+        });
+        setEditingImage(null);
+      } else {
+        setStatusMessage({
+          type: "error",
+          text: res.message || "Грешка при запазване на кадъра.",
+        });
+      }
+    });
   };
 
   const handleSaveTextChanges = () => {
@@ -82,6 +138,7 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
         bulletPoints: currentBullets,
         galleryTitle: currentGalleryTitle,
         hasSlider: currentHasSlider,
+        sliderImageSettings: activeOverride.sliderImageSettings,
       };
 
       const res = await saveServiceContentAction(selectedSlug, dataToSave);
@@ -106,6 +163,7 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
         bulletPoints: currentBullets,
         galleryTitle: currentGalleryTitle,
         hasSlider: newVal,
+        sliderImageSettings: activeOverride.sliderImageSettings,
       };
 
       const res = await saveServiceContentAction(selectedSlug, dataToSave);
@@ -596,28 +654,110 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
               </div>
 
               {currentSliderImages.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 pt-2">
-                  {currentSliderImages.map((img, i) => (
-                    <div
-                      key={i}
-                      className="relative aspect-[4/3] rounded-xl overflow-hidden border border-brand-purple/15 bg-slate-100 group shadow-xs"
-                    >
-                      <Image src={img} alt={`Слайд ${i + 1}`} fill className="object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteSliderImage(img)}
-                          className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors shadow-md cursor-pointer"
-                          title="Изтрий от слайдъра"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                        #{i + 1}
-                      </div>
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-xl bg-purple-50/80 border border-brand-purple/20 flex items-start gap-2.5 text-xs text-brand-dark">
+                    <Sliders className="w-4 h-4 text-brand-purple shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-brand-purple">Корекция на кадрирането:</span>{" "}
+                      Кликнете върху бутона <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-brand-purple/20">Кадър</span> на всяка снимка, за да зададете дали да се вижда цяла (без никакво изрязване за вертикални портрети) или да коригирате центрирането и приближението за изрязване на нежелани обекти.
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 pt-1">
+                    {currentSliderImages.map((img, i) => {
+                      const fileName = img.split("/").pop() || img;
+                      const imgSetting =
+                        currentSliderImageSettings[img] ||
+                        currentSliderImageSettings[fileName] ||
+                        {};
+                      const fitMode = imgSetting.fit || "cover";
+                      const position = imgSetting.position || "center center";
+                      const scale = imgSetting.scale && imgSetting.scale > 1 ? imgSetting.scale : 1;
+                      const hasCustomSetting =
+                        fitMode === "contain" ||
+                        (position && position !== "center center") ||
+                        scale > 1;
+
+                      return (
+                        <div
+                          key={i}
+                          className="relative aspect-[4/3] rounded-xl overflow-hidden border border-brand-purple/20 bg-slate-900 group shadow-xs"
+                        >
+                          {/* Contain mode background backdrop */}
+                          {fitMode === "contain" && (
+                            <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+                              <Image
+                                src={img}
+                                alt=""
+                                fill
+                                sizes="100px"
+                                className="object-cover blur-md opacity-35 scale-125"
+                              />
+                            </div>
+                          )}
+
+                          {/* Image preview */}
+                          <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
+                            <Image
+                              src={img}
+                              alt={`Слайд ${i + 1}`}
+                              fill
+                              sizes="(max-width: 640px) 50vw, 200px"
+                              style={{
+                                objectFit: fitMode,
+                                objectPosition: position,
+                                transform: scale > 1 ? `scale(${scale})` : undefined,
+                              }}
+                              className="transition-transform duration-200"
+                            />
+                          </div>
+
+                          {/* Top Badges */}
+                          <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10 pointer-events-none">
+                            {fitMode === "contain" && (
+                              <span className="bg-brand-purple text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow-sm">
+                                Цяла
+                              </span>
+                            )}
+                            {scale > 1 && (
+                              <span className="bg-amber-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow-sm">
+                                +{Math.round((scale - 1) * 100)}%
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Bottom Number Badge */}
+                          <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-10 pointer-events-none flex items-center gap-1">
+                            <span>#{i + 1}</span>
+                            {hasCustomSetting && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Има персонализирани настройки" />
+                            )}
+                          </div>
+
+                          {/* Hover Actions */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2 z-20">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenFrameSettings(img)}
+                              className="px-2.5 py-1.5 rounded-lg bg-white text-brand-purple hover:bg-brand-purple hover:text-white transition-all shadow-md cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                              title="Настройки на кадъра (Позиция, кадриране и зуум)"
+                            >
+                              <Sliders className="w-3.5 h-3.5" />
+                              <span>Кадър</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSliderImage(img)}
+                              className="p-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-md cursor-pointer"
+                              title="Изтрий от слайдъра"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
                 <div className="p-8 rounded-2xl border border-dashed border-brand-purple/30 text-center space-y-2 bg-brand-bg/20">
@@ -643,6 +783,299 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
           )}
         </div>
       </div>
+
+      {/* Frame & Crop Settings Modal */}
+      {editingImage && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-brand-purple/20 overflow-hidden my-auto flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-brand-bg/70 border-b border-brand-purple/15 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-brand-purple text-white flex items-center justify-center shadow-xs">
+                  <Crop className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-heading font-bold text-sm sm:text-base text-brand-dark">
+                    Настройки на кадъра на слайда
+                  </h3>
+                  <p className="text-[11px] text-brand-muted">
+                    {baseService.shortTitle} &bull; Прецизно кадриране, центриране и изрязване
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setEditingImage(null)}
+                className="p-1.5 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                title="Затвори"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
+              {/* Interactive Live Preview Box */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-brand-dark flex items-center gap-1.5">
+                    <Eye className="w-3.5 h-3.5 text-brand-purple" />
+                    Преглед на живо (Как изглежда в слайдъра)
+                  </span>
+                  <span className="text-[10px] text-brand-muted bg-slate-100 px-2 py-0.5 rounded-full font-mono">
+                    Съотношение 16:9
+                  </span>
+                </div>
+
+                <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden shadow-inner border-2 border-brand-purple/20 bg-slate-950 flex items-center justify-center">
+                  {/* Ambient blurred backdrop for Contain mode */}
+                  {draftSetting.fit === "contain" && (
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+                      <Image
+                        src={editingImage}
+                        alt=""
+                        fill
+                        sizes="250px"
+                        className="object-cover object-center blur-2xl opacity-40 scale-125"
+                      />
+                      <div className="absolute inset-0 bg-black/25" />
+                    </div>
+                  )}
+
+                  {/* Foreground Image */}
+                  <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
+                    <Image
+                      src={editingImage}
+                      alt="Преглед на кадъра"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 600px"
+                      style={{
+                        objectFit: draftSetting.fit || "cover",
+                        objectPosition: draftSetting.position || "center center",
+                        transform:
+                          draftSetting.scale && draftSetting.scale > 1
+                            ? `scale(${draftSetting.scale})`
+                            : undefined,
+                      }}
+                      className="transition-all duration-150"
+                    />
+                  </div>
+
+                  {/* Overlay Badges */}
+                  <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-[10px] text-white font-medium">
+                    {draftSetting.fit === "contain" ? "Цяла снимка (Contain)" : "Запълване (Cover)"}
+                    {draftSetting.scale && draftSetting.scale > 1 ? ` • Зуум ${Math.round(draftSetting.scale * 100)}%` : ""}
+                  </div>
+                </div>
+              </div>
+
+              {/* 1. Mode Selector */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-brand-dark">
+                  1. Режим на визуализация (Как да се показва)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDraftSetting((prev) => ({ ...prev, fit: "contain" }))}
+                    className={cn(
+                      "p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1",
+                      draftSetting.fit === "contain"
+                        ? "border-brand-purple bg-brand-purple/10 ring-2 ring-brand-purple/30 text-brand-purple"
+                        : "border-slate-200 hover:border-brand-purple/40 bg-white text-slate-700"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs">Цяла снимка (Contain)</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-brand-purple/15 text-brand-purple">
+                        Препоръчително за портрети
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-brand-muted leading-tight">
+                      Показва 100% от снимката без абсолютно никакво изрязване, с елегантен замъглен фон отстрани.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDraftSetting((prev) => ({ ...prev, fit: "cover" }))}
+                    className={cn(
+                      "p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1",
+                      draftSetting.fit !== "contain"
+                        ? "border-brand-purple bg-brand-purple/10 ring-2 ring-brand-purple/30 text-brand-purple"
+                        : "border-slate-200 hover:border-brand-purple/40 bg-white text-slate-700"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs">Запълване на кадъра (Cover)</span>
+                    </div>
+                    <p className="text-[11px] text-brand-muted leading-tight">
+                      Снимката запълва целия слайд. Можете да центрирате лицата и да отрежете нежелани обекти по краищата.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Alignment & Focus Position */}
+              <div className="space-y-3 pt-3 border-t border-brand-purple/10">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-brand-dark">
+                    2. Позиция & Центриране (Къде да е фокусът)
+                  </label>
+                  <span className="text-[11px] text-brand-muted font-mono">
+                    {draftSetting.position || "center center"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {[
+                    { label: "Горе (Лица)", value: "center top" },
+                    { label: "Център", value: "center center" },
+                    { label: "Долу", value: "center bottom" },
+                    { label: "Ляво", value: "left center" },
+                    { label: "Дясно", value: "right center" },
+                  ].map((btn) => (
+                    <button
+                      key={btn.value}
+                      type="button"
+                      onClick={() =>
+                        setDraftSetting((prev) => ({ ...prev, position: btn.value }))
+                      }
+                      className={cn(
+                        "py-2 px-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer text-center",
+                        draftSetting.position === btn.value
+                          ? "bg-brand-purple text-white border-brand-purple shadow-xs"
+                          : "bg-white text-slate-700 border-slate-200 hover:border-brand-purple/40 hover:bg-brand-bg/50"
+                      )}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Fine Vertical Adjustment Slider */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-brand-muted">Фин плъзгач за вертикално изместване (Y-Offset):</span>
+                    <span className="font-bold text-brand-purple font-mono">
+                      {draftSetting.position?.includes("top")
+                        ? "10% (Горе)"
+                        : draftSetting.position?.includes("bottom")
+                        ? "90% (Долу)"
+                        : draftSetting.position?.match(/\d+%/)?.[0] || "50% (Център)"}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={
+                      draftSetting.position?.includes("top")
+                        ? 10
+                        : draftSetting.position?.includes("bottom")
+                        ? 90
+                        : parseInt(draftSetting.position?.match(/\d+%/)?.[0] || "50", 10)
+                    }
+                    onChange={(e) =>
+                      setDraftSetting((prev) => ({
+                        ...prev,
+                        position: `center ${e.target.value}%`,
+                      }))
+                    }
+                    className="w-full accent-brand-purple cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-400">
+                    <span>0% (Най-горе)</span>
+                    <span>50% (Център)</span>
+                    <span>100% (Най-долу)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Zoom / Scale Slider to crop unwanted elements */}
+              <div className="space-y-2 pt-3 border-t border-brand-purple/10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-bold text-brand-dark">
+                      3. Мащабиране и отрязване на нежелани обекти (Zoom & Crop)
+                    </label>
+                    <p className="text-[11px] text-brand-muted">
+                      Увеличете снимката, за да отрежете излишни странични предмети или да фокусирате децата.
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold font-mono text-brand-purple bg-brand-purple/10 px-2 py-0.5 rounded-lg">
+                    {Math.round((draftSetting.scale || 1) * 100)}%
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <ZoomIn className="w-4 h-4 text-brand-muted shrink-0" />
+                  <input
+                    type="range"
+                    min="1"
+                    max="1.8"
+                    step="0.05"
+                    value={draftSetting.scale || 1}
+                    onChange={(e) =>
+                      setDraftSetting((prev) => ({
+                        ...prev,
+                        scale: parseFloat(e.target.value),
+                      }))
+                    }
+                    className="flex-1 accent-brand-purple cursor-pointer"
+                  />
+                  <span className="text-xs text-brand-muted font-bold w-12 text-right">
+                    {(draftSetting.scale || 1).toFixed(2)}x
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-brand-bg/70 border-t border-brand-purple/15 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setDraftSetting({
+                    fit: "cover",
+                    position: "center center",
+                    scale: 1,
+                  })
+                }
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Възстанови оригинални</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingImage(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Отказ
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveFrameSettings}
+                  disabled={isPending}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-brand-purple text-white text-xs font-heading font-bold shadow-button hover:bg-brand-purple-hover transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isPending ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Save className="w-3.5 h-3.5" />
+                  )}
+                  <span>Запази за този кадър</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

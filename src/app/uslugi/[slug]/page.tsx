@@ -103,6 +103,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
     sliderImages: override.sliderImages && override.sliderImages.length > 0 ? override.sliderImages : baseService.sliderImages,
     galleryTitle: override.galleryTitle || baseService.galleryTitle,
     hasSlider: override.hasSlider !== undefined ? override.hasSlider : baseService.hasSlider,
+    sliderImageSettings: override.sliderImageSettings || {},
   };
 
   const titleLine1 = service.titleLines ? service.titleLines[0] : service.title;
@@ -228,6 +229,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
         <ServiceSlider
           images={service.sliderImages}
           title={service.galleryTitle}
+          imageSettings={service.sliderImageSettings}
         />
       )}
 
