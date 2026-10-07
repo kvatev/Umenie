@@ -83,9 +83,9 @@ export default async function AboutPage() {
       <section className="pt-28 sm:pt-36 pb-14 sm:pb-20 relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
           {/* Header Title with Desktop Bulb 1 */}
-          <div className="relative text-center mb-12 sm:mb-16">
+          <div className="relative z-10 text-center mb-12 sm:mb-16">
             {/* Desktop Bulb 1 (Large, tilted up-left): Positioned absolute to the top-left of the main title */}
-            <div className="hidden md:block absolute -top-8 lg:-top-10 left-2 lg:left-6 w-24 h-24 lg:w-32 lg:h-32 -rotate-12 pointer-events-none select-none z-0">
+            <div className="hidden md:block absolute -z-10 pointer-events-none select-none opacity-20 sm:opacity-30 -top-8 lg:-top-10 left-2 lg:left-6 w-24 h-24 lg:w-32 lg:h-32 -rotate-12">
               <Image src="/images/bulb.webp" alt="" fill className="object-contain" priority />
             </div>
 
@@ -96,14 +96,14 @@ export default async function AboutPage() {
 
           {/* Features Container: 3-column horizontal grid on desktop, vertical stack on mobile */}
           <div className="relative">
-            {/* Desktop Bulb 2 (Medium, tilted up-right): Floating gently between Col 2 and Col 3 above the text */}
-            <div className="hidden md:block absolute -top-14 lg:-top-16 right-[31%] lg:right-[32%] w-20 h-20 lg:w-24 lg:h-24 rotate-12 pointer-events-none select-none z-0">
+            {/* Desktop Bulb 2 (Medium, tilted up-right): Floating gently between Col 2 and Col 3 behind/above text */}
+            <div className="hidden md:block absolute -z-10 pointer-events-none select-none opacity-20 sm:opacity-30 -top-14 lg:-top-16 right-[31%] lg:right-[32%] w-20 h-20 lg:w-24 lg:h-24 rotate-12">
               <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
               {/* Feature 1 */}
-              <div className="relative space-y-2">
+              <div className="relative z-10 space-y-2">
                 <div className="pr-20 sm:pr-24 md:pr-0 space-y-2">
                   <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
                     {values[0].title}
@@ -112,14 +112,14 @@ export default async function AboutPage() {
                     {values[0].text}
                   </p>
                 </div>
-                {/* Mobile Bulb 1: Floating on the right side next to the text */}
-                <div className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 w-20 h-20 sm:w-24 sm:h-24 pointer-events-none select-none z-0 rotate-12">
+                {/* Mobile Bulb 1: Floating behind text on mobile */}
+                <div className="md:hidden absolute -z-10 pointer-events-none select-none opacity-20 sm:opacity-30 right-0 top-1/2 -translate-y-1/2 w-20 h-20 sm:w-24 sm:h-24 rotate-12">
                   <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
                 </div>
               </div>
 
               {/* Feature 2 */}
-              <div className="space-y-2">
+              <div className="relative z-10 space-y-2">
                 <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
                   {values[1].title}
                 </h2>
@@ -129,7 +129,7 @@ export default async function AboutPage() {
               </div>
 
               {/* Feature 3 */}
-              <div className="relative space-y-2">
+              <div className="relative z-10 space-y-2">
                 <div className="pr-20 sm:pr-24 md:pr-0 space-y-2">
                   <h2 className="font-heading font-bold text-xl sm:text-2xl text-brand-purple uppercase tracking-wide leading-snug">
                     {values[2].title}
@@ -138,8 +138,8 @@ export default async function AboutPage() {
                     {values[2].text}
                   </p>
                 </div>
-                {/* Mobile Bulb 2: Floating on the right side next to the text */}
-                <div className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 w-20 h-20 sm:w-24 sm:h-24 pointer-events-none select-none z-0 rotate-12">
+                {/* Mobile Bulb 2: Floating behind text on mobile */}
+                <div className="md:hidden absolute -z-10 pointer-events-none select-none opacity-20 sm:opacity-30 right-0 top-1/2 -translate-y-1/2 w-20 h-20 sm:w-24 sm:h-24 rotate-12">
                   <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
                 </div>
               </div>
@@ -177,19 +177,18 @@ export default async function AboutPage() {
 
           {/* 3 Secondary Features: 3-column horizontal grid on desktop, vertical stack on mobile */}
           <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
-            {/* Desktop Bulb 1: Floating on the left near Col 1 ("БЕЗ ЕКРАНИ") */}
-            <div className="hidden md:block absolute -top-12 lg:-top-14 left-0 lg:-left-6 w-20 h-20 lg:w-24 lg:h-24 -rotate-12 pointer-events-none select-none z-0">
-              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-            </div>
-
-            {/* Desktop Bulb 2 (Large, tilted up-right): Floating on the right above/next to Col 3 ("РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА") */}
-            <div className="hidden md:block absolute -top-14 lg:-top-16 right-0 lg:-right-4 w-24 h-24 lg:w-32 lg:h-32 rotate-12 pointer-events-none select-none z-0">
+            {/* Desktop Bulb 2 (Large, tilted up-right): Floating on the right behind/above Col 3 ("РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА") */}
+            <div className="hidden md:block absolute -z-10 pointer-events-none select-none opacity-20 sm:opacity-30 -top-14 lg:-top-16 right-0 lg:-right-4 w-24 h-24 lg:w-32 lg:h-32 rotate-12">
               <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-              {/* Feature 1 */}
-              <div className="space-y-2">
+              {/* Feature 1: "БЕЗ ЕКРАНИ" */}
+              <div className="relative z-10 space-y-2">
+                {/* Decorative Lightbulb Watermark strictly behind text */}
+                <div className="absolute -z-10 pointer-events-none select-none opacity-20 sm:opacity-30 top-1/2 -translate-y-1/2 -left-8 sm:-left-12 w-24 h-24 sm:w-28 sm:h-28 -rotate-12">
+                  <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+                </div>
                 <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
                   {features[0].title}
                 </h3>
@@ -198,8 +197,8 @@ export default async function AboutPage() {
                 </p>
               </div>
 
-              {/* Feature 2 */}
-              <div className="space-y-2">
+              {/* Feature 2: "УЧЕНЕ ЧРЕЗ ПРАКТИКА" */}
+              <div className="relative z-10 space-y-2">
                 <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
                   {features[1].title}
                 </h3>
@@ -208,8 +207,8 @@ export default async function AboutPage() {
                 </p>
               </div>
 
-              {/* Feature 3 */}
-              <div className="relative space-y-2">
+              {/* Feature 3: "РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА" */}
+              <div className="relative z-10 space-y-2">
                 <div className="space-y-2">
                   <h3 className="font-heading font-bold text-xl sm:text-2xl text-[#2b3a67] uppercase tracking-wide leading-snug">
                     {features[2].title}
@@ -218,8 +217,8 @@ export default async function AboutPage() {
                     {features[2].text}
                   </p>
                 </div>
-                {/* Mobile Bulb 3: Floating on the bottom-left below the text */}
-                <div className="md:hidden mt-4 -ml-2 w-20 h-20 sm:w-24 sm:h-24 -rotate-12 pointer-events-none select-none z-0">
+                {/* Mobile Bulb 3: Floating behind text on mobile */}
+                <div className="md:hidden absolute -z-10 pointer-events-none select-none opacity-20 sm:opacity-30 -bottom-6 -right-4 w-20 h-20 sm:w-24 sm:h-24 -rotate-12">
                   <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
                 </div>
               </div>
