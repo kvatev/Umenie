@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import {
   ChevronLeft,
@@ -72,26 +72,60 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
   const schedules =
     initialSchedules && initialSchedules.length > 0 ? initialSchedules : DEFAULT_SCHEDULES;
 
-  // Current year & month view (defaults to current date, with Oct 2025 as featured mockup anchor)
-  const [currentDate, setCurrentDate] = useState(() => new Date(2025, 9, 15)); // 15 Октомври 2025 as in mockup
-  const [selectedDayNumber, setSelectedDayNumber] = useState<number>(15);
+  // Track today's live date
+  const [today, setToday] = useState(() => new Date());
+
+  // Current year & month view (defaults dynamically to today's date)
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [selectedDayNumber, setSelectedDayNumber] = useState<number>(() => new Date().getDate());
   const [selectedSchedule, setSelectedSchedule] = useState<{
     item: ScheduleItem;
     dateStr: string;
   } | null>(null);
 
+  // Synchronize with client's actual system date upon mount
+  useEffect(() => {
+    const now = new Date();
+    setToday(now);
+    setCurrentDate(now);
+    setSelectedDayNumber(now.getDate());
+  }, []);
+
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
+  const todayDate = today.getDate();
+  const todayMonth = today.getMonth();
+  const todayYear = today.getFullYear();
+
   // Navigation handlers
   const handlePrevMonth = () => {
-    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-    setSelectedDayNumber(1);
+    setCurrentDate((prev) => {
+      const newD = new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
+      if (newD.getFullYear() === todayYear && newD.getMonth() === todayMonth) {
+        setSelectedDayNumber(todayDate);
+      } else {
+        setSelectedDayNumber(1);
+      }
+      return newD;
+    });
   };
 
   const handleNextMonth = () => {
-    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-    setSelectedDayNumber(1);
+    setCurrentDate((prev) => {
+      const newD = new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
+      if (newD.getFullYear() === todayYear && newD.getMonth() === todayMonth) {
+        setSelectedDayNumber(todayDate);
+      } else {
+        setSelectedDayNumber(1);
+      }
+      return newD;
+    });
+  };
+
+  const handleToday = () => {
+    setCurrentDate(new Date(todayYear, todayMonth, 1));
+    setSelectedDayNumber(todayDate);
   };
 
   // Group schedules by day of week (1 = Mon ... 7 = Sun)
@@ -171,8 +205,8 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
       {/* 1. CALENDAR CONTAINER CARD */}
       <div className="bg-white rounded-3xl sm:rounded-4xl shadow-card border border-brand-purple/15 p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Month & Year Navigation Header (matching mockups 1:1) */}
-        <div className="flex items-center justify-between border-b border-brand-purple/10 pb-5">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-purple/10 pb-5">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handlePrevMonth}
               aria-label="Предишен месец"
@@ -181,7 +215,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
               <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
             </button>
 
-            <h2 className="font-heading font-bold text-xl sm:text-2xl lg:text-3xl text-brand-dark min-w-[200px] text-center tracking-wide">
+            <h2 className="font-heading font-bold text-xl sm:text-2xl lg:text-3xl text-brand-dark min-w-[180px] sm:min-w-[200px] text-center tracking-wide">
               {MONTH_NAMES[currentMonth]} {currentYear}
             </h2>
 
@@ -191,6 +225,14 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
               className="p-2 sm:p-2.5 rounded-full bg-brand-bg hover:bg-brand-purple/15 text-brand-purple transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
               <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+            </button>
+
+            <button
+              onClick={handleToday}
+              className="ml-1 sm:ml-2 px-3 py-1.5 rounded-full text-xs font-heading font-bold border border-brand-purple/20 text-brand-purple hover:bg-brand-purple/10 active:scale-95 transition-all cursor-pointer"
+              title="Към днешна дата"
+            >
+              Днес
             </button>
           </div>
 
@@ -220,27 +262,43 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
                 const dayActivities = cell.isCurrentMonth
                   ? schedulesByDayOfWeek[cell.dayOfWeek] || []
                   : [];
+                const isToday =
+                  cell.isCurrentMonth &&
+                  cell.dayNumber === todayDate &&
+                  currentMonth === todayMonth &&
+                  currentYear === todayYear;
 
                 return (
                   <div
                     key={index}
                     className={cn(
-                      "min-h-[125px] p-2 flex flex-col justify-start transition-colors",
+                      "min-h-[125px] p-2 flex flex-col justify-start transition-colors relative",
                       cell.isCurrentMonth
-                        ? "bg-white hover:bg-brand-purple/[0.02]"
+                        ? isToday
+                          ? "bg-brand-purple/[0.04] ring-2 ring-inset ring-brand-purple/50"
+                          : "bg-white hover:bg-brand-purple/[0.02]"
                         : "bg-gray-50/60 opacity-40 pointer-events-none"
                     )}
                   >
-                    {/* Date Number */}
+                    {/* Date Number & Today badge */}
                     <div className="flex items-center justify-between mb-1.5">
                       <span
                         className={cn(
-                          "font-heading font-bold text-xs",
-                          cell.isCurrentMonth ? "text-brand-dark" : "text-gray-400"
+                          "font-heading font-bold text-xs flex items-center justify-center transition-all",
+                          isToday
+                            ? "bg-brand-purple text-white w-6 h-6 rounded-full shadow-xs"
+                            : cell.isCurrentMonth
+                            ? "text-brand-dark"
+                            : "text-gray-400"
                         )}
                       >
                         {cell.dayNumber}
                       </span>
+                      {isToday && (
+                        <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-brand-purple bg-brand-purple/15 px-2 py-0.5 rounded-full">
+                          Днес
+                        </span>
+                      )}
                     </div>
 
                     {/* Activity Pill Badges */}
@@ -296,6 +354,11 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
             <div className="grid grid-cols-7 gap-y-2 pt-2 text-center text-xs">
               {calendarDays.map((cell, idx) => {
                 const isSelected = cell.isCurrentMonth && cell.dayNumber === selectedDayNumber;
+                const isToday =
+                  cell.isCurrentMonth &&
+                  cell.dayNumber === todayDate &&
+                  currentMonth === todayMonth &&
+                  currentYear === todayYear;
                 const activities = cell.isCurrentMonth
                   ? schedulesByDayOfWeek[cell.dayOfWeek] || []
                   : [];
@@ -310,15 +373,17 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
                       }
                     }}
                     className={cn(
-                      "flex flex-col items-center justify-center py-1 cursor-pointer select-none rounded-xl transition-all",
+                      "flex flex-col items-center justify-center py-1 cursor-pointer select-none rounded-xl transition-all relative",
                       !cell.isCurrentMonth && "opacity-30 pointer-events-none text-gray-400"
                     )}
                   >
                     <div
                       className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center font-heading font-bold text-xs transition-all",
+                        "w-8 h-8 rounded-full flex items-center justify-center font-heading font-bold text-xs transition-all relative",
                         isSelected
                           ? "bg-brand-purple text-white shadow-md scale-105"
+                          : isToday
+                          ? "border-2 border-brand-purple text-brand-purple font-extrabold bg-brand-purple/10"
                           : "text-brand-dark hover:bg-brand-purple/10"
                       )}
                     >
@@ -344,8 +409,17 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
 
           {/* Activities List for Selected Day (matching "График 1 - мобилна.png" 1:1) */}
           <div className="space-y-3 pt-1">
-            <h3 className="font-heading font-bold text-lg text-brand-dark px-1">
-              Занимания на {selectedDayNumber} {MONTH_NAMES[currentMonth].toLowerCase()} {currentYear}
+            <h3 className="font-heading font-bold text-lg text-brand-dark px-1 flex items-center gap-2">
+              <span>
+                Занимания на {selectedDayNumber} {MONTH_NAMES[currentMonth].toLowerCase()} {currentYear}
+              </span>
+              {selectedDayNumber === todayDate &&
+                currentMonth === todayMonth &&
+                currentYear === todayYear && (
+                  <span className="text-[11px] font-heading font-bold uppercase tracking-wider text-brand-purple bg-brand-purple/15 px-2 py-0.5 rounded-full">
+                    Днес
+                  </span>
+                )}
             </h3>
 
             {mobileDayActivities.length > 0 ? (
