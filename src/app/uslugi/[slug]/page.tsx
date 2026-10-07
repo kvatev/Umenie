@@ -145,9 +145,9 @@ export default async function ServiceDetailPage({ params }: PageProps) {
               src={service.pageImages[1] || service.pageImages[0]}
               alt={service.title}
               fill
-              sizes="(max-width: 1023px) 100vw, 550px"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
               className="object-cover object-center"
-              quality={75}
+              quality={85}
               priority
             />
           </div>
@@ -158,9 +158,9 @@ export default async function ServiceDetailPage({ params }: PageProps) {
               src={service.pageImages[0]}
               alt={service.title}
               fill
-              sizes="(max-width: 1023px) 100vw, 550px"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
               className="object-cover object-center"
-              quality={75}
+              quality={85}
             />
           </div>
 

@@ -105,10 +105,10 @@ export function ServiceSlider({
                       src={imgSrc}
                       alt={`${title} - снимка ${idx + 1}`}
                       fill
-                      quality={75}
+                      quality={85}
                       loading="lazy"
-                      className="object-cover"
-                      sizes="(max-width: 896px) 100vw, 896px"
+                      className="object-cover object-center"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
                     />
                   )}
                 </div>
