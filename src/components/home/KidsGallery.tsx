@@ -76,7 +76,11 @@ export function KidsGallery({ images, order }: KidsGalleryProps) {
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
+    requestAnimationFrame(() => {
+      if (emblaApi) {
+        setSelectedIndex(emblaApi.selectedScrollSnap());
+      }
+    });
   }, [emblaApi]);
 
   useEffect(() => {

@@ -181,14 +181,16 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook страница"
-              className="p-2.5 rounded-full bg-white text-brand-purple shadow-sm hover:scale-110 hover:bg-brand-purple hover:text-white transition-all"
+              className="p-2.5 rounded-full bg-white text-brand-purple shadow-sm hover:scale-110 hover:bg-brand-purple hover:text-white transition-all flex items-center justify-center"
             >
               <div className="relative w-5 h-5">
                 <Image
                   src="/images/fb.webp"
                   alt="Facebook"
-                  fill
-                  className="object-contain"
+                  width={42}
+                  height={42}
+                  sizes="42px"
+                  className="w-full h-full object-contain"
                 />
               </div>
             </a>
@@ -197,14 +199,16 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram профил"
-              className="p-2.5 rounded-full bg-white text-brand-purple shadow-sm hover:scale-110 hover:bg-brand-purple hover:text-white transition-all"
+              className="p-2.5 rounded-full bg-white text-brand-purple shadow-sm hover:scale-110 hover:bg-brand-purple hover:text-white transition-all flex items-center justify-center"
             >
               <div className="relative w-5 h-5">
                 <Image
                   src="/images/ig.webp"
                   alt="Instagram"
-                  fill
-                  className="object-contain"
+                  width={42}
+                  height={42}
+                  sizes="42px"
+                  className="w-full h-full object-contain"
                 />
               </div>
             </a>

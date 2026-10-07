@@ -506,13 +506,15 @@ export function AdminContactsManager({ initialSettings }: AdminContactsManagerPr
                     target="_blank"
                     rel="noopener noreferrer"
                     title={formData.facebookUrl}
-                    className="relative w-8 h-8 rounded-full p-1.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all shadow-sm"
+                    className="relative w-8 h-8 rounded-full p-1.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all shadow-sm flex items-center justify-center"
                   >
                     <Image
                       src="/images/fb.webp"
                       alt="Facebook"
-                      fill
-                      className="object-contain p-1"
+                      width={32}
+                      height={32}
+                      sizes="32px"
+                      className="object-contain p-0.5 w-full h-full"
                     />
                   </a>
                   <a
@@ -520,13 +522,15 @@ export function AdminContactsManager({ initialSettings }: AdminContactsManagerPr
                     target="_blank"
                     rel="noopener noreferrer"
                     title={formData.instagramUrl}
-                    className="relative w-8 h-8 rounded-full p-1.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all shadow-sm"
+                    className="relative w-8 h-8 rounded-full p-1.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all shadow-sm flex items-center justify-center"
                   >
                     <Image
                       src="/images/ig.webp"
                       alt="Instagram"
-                      fill
-                      className="object-contain p-1"
+                      width={32}
+                      height={32}
+                      sizes="32px"
+                      className="object-contain p-0.5 w-full h-full"
                     />
                   </a>
                 </div>

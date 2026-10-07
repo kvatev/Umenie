@@ -68,14 +68,16 @@ export async function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook страница на УМеНИе"
-                className="relative w-11 h-11 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm active:scale-95"
+                className="relative w-11 h-11 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm active:scale-95 flex items-center justify-center"
               >
-                <div className="relative w-full h-full">
+                <div className="relative w-6 h-6">
                   <Image
                     src="/images/fb.webp"
                     alt="Facebook"
-                    fill
-                    className="object-contain"
+                    width={42}
+                    height={42}
+                    sizes="42px"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               </a>
@@ -84,14 +86,16 @@ export async function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram профил на УМеНИе"
-                className="relative w-11 h-11 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm active:scale-95"
+                className="relative w-11 h-11 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm active:scale-95 flex items-center justify-center"
               >
-                <div className="relative w-full h-full">
+                <div className="relative w-6 h-6">
                   <Image
                     src="/images/ig.webp"
                     alt="Instagram"
-                    fill
-                    className="object-contain"
+                    width={42}
+                    height={42}
+                    sizes="42px"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               </a>
@@ -118,14 +122,16 @@ export async function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook страница на УМеНИе"
-                className="relative w-12 h-12 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm"
+                className="relative w-12 h-12 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm flex items-center justify-center"
               >
-                <div className="relative w-full h-full">
+                <div className="relative w-7 h-7">
                   <Image
                     src="/images/fb.webp"
                     alt="Facebook"
-                    fill
-                    className="object-contain"
+                    width={42}
+                    height={42}
+                    sizes="42px"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               </a>
@@ -134,14 +140,16 @@ export async function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram профил на УМеНИе"
-                className="relative w-12 h-12 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm"
+                className="relative w-12 h-12 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm flex items-center justify-center"
               >
-                <div className="relative w-full h-full">
+                <div className="relative w-7 h-7">
                   <Image
                     src="/images/ig.webp"
                     alt="Instagram"
-                    fill
-                    className="object-contain"
+                    width={42}
+                    height={42}
+                    sizes="42px"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               </a>

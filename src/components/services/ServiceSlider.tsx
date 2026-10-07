@@ -83,8 +83,8 @@ export function ServiceSlider({
           onTouchEnd={(e) => {
             if (touchStartX.current === null) return;
             const diff = touchStartX.current - e.changedTouches[0].clientX;
-            if (diff > 40) nextSlide();
-            else if (diff < -40) prevSlide();
+            if (diff > 40) requestAnimationFrame(() => nextSlide());
+            else if (diff < -40) requestAnimationFrame(() => prevSlide());
             touchStartX.current = null;
           }}
         >

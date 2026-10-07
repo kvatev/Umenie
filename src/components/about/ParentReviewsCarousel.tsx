@@ -173,9 +173,9 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
     if (touchStartX.current !== null && touchEndX.current !== null) {
       const diff = touchStartX.current - touchEndX.current;
       if (diff > 45) {
-        nextSlide();
+        requestAnimationFrame(() => nextSlide());
       } else if (diff < -45) {
-        prevSlide();
+        requestAnimationFrame(() => prevSlide());
       }
     }
     touchStartX.current = null;

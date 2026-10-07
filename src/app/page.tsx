@@ -179,9 +179,10 @@ export default async function HomePage() {
             src={heroMediaSrc}
             alt="Деца в образователен клуб УМеНИе"
             fill
-            priority
+            priority={true}
+            fetchPriority="high"
             className="object-cover object-center"
-            sizes="100vw"
+            sizes="(max-width: 768px) 100vw, 1200px"
           />
         )}
 
