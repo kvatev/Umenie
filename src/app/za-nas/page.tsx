@@ -64,8 +64,11 @@ export default async function AboutPage() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 relative z-10">
-          {/* Header Title */}
-          <div className="mb-8 sm:mb-12">
+          {/* Header Title with Doodle Lightbulb */}
+          <div className="mb-8 sm:mb-12 flex items-center justify-center lg:justify-start gap-3 sm:gap-4">
+            <div className="relative w-12 h-12 sm:w-16 sm:h-16 shrink-0 -rotate-6">
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" priority />
+            </div>
             <h1 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-[#887ed8] uppercase leading-tight text-center lg:text-left">
               ЗАЩО ДА ИЗБЕРЕТЕ УМЕНИЕ?
             </h1>
@@ -149,11 +152,14 @@ export default async function AboutPage() {
       {/* 3. SECTION: И ОЩЕ НЕЩО ВАЖНО */}
       <section className="py-14 sm:py-24 relative overflow-hidden">
         <Container size="xl" className="relative z-10">
-          {/* Header Title */}
-          <div className="relative text-center max-w-3xl mx-auto mb-10 sm:mb-16 px-4">
+          {/* Header Title with Doodle Lightbulb */}
+          <div className="relative flex items-center justify-center gap-3 sm:gap-4 max-w-3xl mx-auto mb-10 sm:mb-16 px-4">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-[#2b3a67] tracking-tight uppercase leading-snug">
               И ОЩЕ НЕЩО ВАЖНО
             </h2>
+            <div className="relative w-12 h-12 sm:w-16 sm:h-16 shrink-0 rotate-12 -mt-1">
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+            </div>
           </div>
 
           {/* 3 Secondary Features (Desktop: 3 columns side-by-side, Mobile: stacked vertically) */}

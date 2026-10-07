@@ -53,12 +53,13 @@ export default function ServicesPage() {
             <h1 className="font-heading font-bold text-4xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide">
               УСЛУГИ
             </h1>
-            <div className="relative w-12 h-12 sm:w-16 sm:h-16">
+            <div className="relative w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rotate-6 shrink-0 -mt-2">
               <Image
                 src="/images/bulb.webp"
                 alt=""
                 fill
                 className="object-contain"
+                priority
               />
             </div>
           </div>

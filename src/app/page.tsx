@@ -207,77 +207,72 @@ export default async function HomePage() {
 
       {/* 2. MISSION / INTRO SECTION (matching mockups 1:1) */}
       <section className="py-12 sm:py-20 md:py-24 relative overflow-hidden bg-brand-bg">
-        {/* Scattered chaotic bulb line-art decorations with gentle bleach/glow effect */}
+        {/* Scattered delicate doodle lightbulbs naturally placed in background */}
         <div
-          className="absolute pointer-events-none"
+          className="absolute pointer-events-none -z-10 select-none"
           style={{
             left: "-2%",
             top: "4%",
             width: "140px",
             height: "140px",
-            opacity: 0.5,
+            opacity: 0.35,
             transform: "rotate(-25deg)",
-            filter: "brightness(1.5) saturate(0.65)",
           }}
         >
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
         <div
-          className="absolute pointer-events-none"
+          className="absolute pointer-events-none -z-10 select-none"
           style={{
             right: "4%",
             top: "6%",
             width: "80px",
             height: "80px",
-            opacity: 0.4,
+            opacity: 0.3,
             transform: "rotate(18deg)",
-            filter: "brightness(1.7) saturate(0.55)",
           }}
         >
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
         <div
-          className="absolute pointer-events-none hidden sm:block"
+          className="absolute pointer-events-none hidden sm:block -z-10 select-none"
           style={{
             right: "-2%",
             top: "40%",
             width: "120px",
             height: "120px",
-            opacity: 0.35,
+            opacity: 0.28,
             transform: "rotate(38deg)",
-            filter: "brightness(1.55) saturate(0.6)",
           }}
         >
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
         <div
-          className="absolute pointer-events-none"
+          className="absolute pointer-events-none -z-10 select-none"
           style={{
             left: "6%",
             bottom: "8%",
             width: "70px",
             height: "70px",
-            opacity: 0.32,
+            opacity: 0.28,
             transform: "rotate(-12deg)",
-            filter: "brightness(1.75) saturate(0.5)",
           }}
         >
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
         <div
-          className="absolute pointer-events-none hidden md:block"
+          className="absolute pointer-events-none hidden md:block -z-10 select-none"
           style={{
             left: "1%",
             top: "48%",
             width: "60px",
             height: "60px",
-            opacity: 0.22,
+            opacity: 0.2,
             transform: "rotate(-32deg)",
-            filter: "brightness(1.7) saturate(0.5)",
           }}
         >
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />

@@ -93,8 +93,7 @@ export default async function SchedulePage() {
       <Container size="xl" className="relative">
         {/* Decorative bulb top-right matching mobile mockup */}
         <div
-          className="absolute pointer-events-none -top-6 right-2 sm:right-10 w-16 h-16 sm:w-24 sm:h-24 opacity-85 transform rotate-12"
-          style={{ filter: "brightness(1.05)" }}
+          className="absolute pointer-events-none -top-6 right-2 sm:right-10 w-16 h-16 sm:w-24 sm:h-24 opacity-80 transform rotate-12 select-none"
         >
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
