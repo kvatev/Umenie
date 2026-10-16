@@ -111,7 +111,7 @@ export function KidsGallery({ images, order }: KidsGalleryProps) {
           {galleryImages.map((img, idx) => (
             <div
               key={idx}
-              className="flex-[0_0_82%] xs:flex-[0_0_75%] sm:flex-[0_0_48%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%] min-w-0 pl-3 sm:pl-5"
+              className="flex-[0_0_88%] xs:flex-[0_0_82%] sm:flex-[0_0_58%] md:flex-[0_0_40%] lg:flex-[0_0_30%] min-w-0 pl-3 sm:pl-5"
             >
               <div
                 onClick={() => scrollTo(idx)}
@@ -125,7 +125,7 @@ export function KidsGallery({ images, order }: KidsGalleryProps) {
                   alt={img.alt}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 33vw, 25vw"
+                  sizes="(max-width: 640px) 88vw, (max-width: 1024px) 40vw, 30vw"
                 />
               </div>
             </div>
