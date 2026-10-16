@@ -226,98 +226,95 @@ export default async function HomePage() {
 
       {/* 2. MISSION / INTRO SECTION (matching mockups 1:1) */}
       <section className="py-12 sm:py-20 md:py-24 relative overflow-hidden bg-brand-bg">
-        {/* Scattered delicate doodle lightbulbs naturally placed in background */}
+        {/* Ambient subtle doodle lightbulbs in the section margins */}
         <div
-          className="absolute pointer-events-none -z-10 select-none"
-          style={{
-            left: "-2%",
-            top: "4%",
-            width: "140px",
-            height: "140px",
-            opacity: 0.35,
-            transform: "rotate(-25deg)",
-          }}
+          className="absolute pointer-events-none select-none -top-6 -left-6 sm:left-4 sm:top-4 w-28 h-28 sm:w-36 sm:h-36 opacity-20 sm:opacity-25"
+          style={{ transform: "rotate(-25deg)" }}
         >
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
         <div
-          className="absolute pointer-events-none -z-10 select-none"
-          style={{
-            right: "4%",
-            top: "6%",
-            width: "80px",
-            height: "80px",
-            opacity: 0.3,
-            transform: "rotate(18deg)",
-          }}
-        >
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-
-        <div
-          className="absolute pointer-events-none hidden sm:block -z-10 select-none"
-          style={{
-            right: "-2%",
-            top: "40%",
-            width: "120px",
-            height: "120px",
-            opacity: 0.28,
-            transform: "rotate(38deg)",
-          }}
-        >
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-
-        <div
-          className="absolute pointer-events-none -z-10 select-none"
-          style={{
-            left: "6%",
-            bottom: "8%",
-            width: "70px",
-            height: "70px",
-            opacity: 0.28,
-            transform: "rotate(-12deg)",
-          }}
-        >
-          <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-        </div>
-
-        <div
-          className="absolute pointer-events-none hidden md:block -z-10 select-none"
-          style={{
-            left: "1%",
-            top: "48%",
-            width: "60px",
-            height: "60px",
-            opacity: 0.2,
-            transform: "rotate(-32deg)",
-          }}
+          className="absolute pointer-events-none select-none hidden sm:block -bottom-8 right-6 w-28 h-28 sm:w-36 sm:h-36 opacity-20 sm:opacity-25"
+          style={{ transform: "rotate(25deg)" }}
         >
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
         <Container size="lg" className="relative z-10">
-          <div className="bg-white/80 backdrop-blur-sm p-6 sm:p-10 md:p-14 rounded-3xl sm:rounded-4xl shadow-card border border-brand-purple/15 text-center space-y-6 sm:space-y-8 max-w-3xl mx-auto">
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold">
-              В образователен клуб „УМеНИе“ децата{" "}
-              <span className="text-brand-purple">растат с едно умение</span> повече
-              всеки ден.
-            </h2>
+          <div className="relative max-w-3xl mx-auto">
+            {/* Decorative Bulb 1: Top-Left (горе вляво, леко наклонена) */}
+            <div
+              className="absolute pointer-events-none select-none z-0 -top-8 sm:-top-14 -left-4 sm:-left-12 w-20 h-20 sm:w-32 sm:h-32 opacity-35 sm:opacity-45"
+              style={{ transform: "rotate(-18deg)" }}
+            >
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" priority />
+            </div>
 
-            <div className="space-y-4 sm:space-y-5 text-base sm:text-lg md:text-xl text-brand-dark/90 leading-relaxed font-normal">
-              <p>
-                Английски, български, математика, шах, плетиво и учебна занималня.
-                Различни занимания с една обща цел – детето да вземе от всяко от тях
-                нещо, което остава и след края на часа.
-              </p>
-              <p>
-                В <strong className="text-brand-purple font-bold">малки групи</strong> и с{" "}
-                <strong className="text-brand-purple font-bold">внимание към всяко дете</strong>{" "}
-                превръщаме различните занимания в начин то да се учи да мисли
-                самостоятелно, да довършва започнатото, да намира решение и да
-                работи с другите.
-              </p>
+            {/* Decorative Bulb 2: Top-Right (горе вдясно) */}
+            <div
+              className="absolute pointer-events-none select-none z-0 -top-6 sm:-top-12 -right-3 sm:-right-10 w-18 h-18 sm:w-28 sm:h-28 opacity-30 sm:opacity-40"
+              style={{ transform: "rotate(20deg)" }}
+            >
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+            </div>
+
+            {/* Decorative Bulb 3: Bottom-Left (долу вляво) */}
+            <div
+              className="absolute pointer-events-none select-none z-0 -bottom-6 sm:-bottom-10 -left-3 sm:-left-9 w-16 h-16 sm:w-26 sm:h-26 opacity-25 sm:opacity-35"
+              style={{ transform: "rotate(14deg)" }}
+            >
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+            </div>
+
+            {/* Decorative Bulb 4: Bottom-Right (долу вдясно) */}
+            <div
+              className="absolute pointer-events-none select-none z-0 -bottom-8 sm:-bottom-12 -right-4 sm:-right-12 w-20 h-20 sm:w-32 sm:h-32 opacity-35 sm:opacity-45"
+              style={{ transform: "rotate(-22deg)" }}
+            >
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+            </div>
+
+            {/* Decorative Bulb 5: Behind / Top-Center (отзад зад горния ръб) */}
+            <div
+              className="hidden md:block absolute pointer-events-none select-none z-0 -top-12 left-1/3 w-24 h-24 opacity-25"
+              style={{ transform: "rotate(-6deg)" }}
+            >
+              <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+            </div>
+
+            {/* Mission Card */}
+            <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 sm:p-10 md:p-14 rounded-3xl sm:rounded-4xl shadow-card border border-brand-purple/15 text-center space-y-6 sm:space-y-8 overflow-hidden">
+              {/* Decorative Bulb Watermark strictly behind the text */}
+              <div
+                className="absolute pointer-events-none select-none -z-0 opacity-15 sm:opacity-20 top-4 sm:top-8 left-1/2 -translate-x-1/2 w-48 h-48 sm:w-64 sm:h-64"
+                style={{ transform: "rotate(10deg)" }}
+              >
+                <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
+              </div>
+
+              <div className="relative z-10 space-y-6 sm:space-y-8">
+                <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold">
+                  В образователен клуб „УМеНИе“ децата{" "}
+                  <span className="text-brand-purple">растат с едно умение</span> повече
+                  всеки ден.
+                </h2>
+
+                <div className="space-y-4 sm:space-y-5 text-base sm:text-lg md:text-xl text-brand-dark/90 leading-relaxed font-normal">
+                  <p>
+                    Английски, български, математика, шах, плетиво и учебна занималня.
+                    Различни занимания с една обща цел – детето да вземе от всяко от тях
+                    нещо, което остава и след края на часа.
+                  </p>
+                  <p>
+                    В <strong className="text-brand-purple font-bold">малки групи</strong> и с{" "}
+                    <strong className="text-brand-purple font-bold">внимание към всяко дете</strong>{" "}
+                    превръщаме различните занимания в начин то да се учи да мисли
+                    самостоятелно, да довършва започнатото, да намира решение и да
+                    работи с другите.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </Container>
