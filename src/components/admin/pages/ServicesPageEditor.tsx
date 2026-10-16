@@ -29,6 +29,7 @@ import {
   saveSliderImageSettingAction,
 } from "@/actions/admin-services";
 import { getActivityIcon } from "@/lib/schedule-icons";
+import { BulletBulbIcon } from "@/components/common/BulletBulbIcon";
 import { cn } from "@/lib/utils";
 
 interface ServicesPageEditorProps {
@@ -467,9 +468,7 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
           <div className="space-y-2.5">
             {currentBullets.map((bullet, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                <div className="relative w-6 h-6 shrink-0">
-                  <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
-                </div>
+                <BulletBulbIcon className="text-brand-purple w-5 h-5 shrink-0" />
                 <input
                   type="text"
                   value={bullet}

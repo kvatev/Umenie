@@ -7,6 +7,7 @@ import { Container } from "@/components/ui/Container";
 import { SERVICES_DATA, getServiceBySlug } from "@/lib/services-data";
 import { ServiceSlider } from "@/components/services/ServiceSlider";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
+import { BulletBulbIcon } from "@/components/common/BulletBulbIcon";
 import { getSiteSettings } from "@/lib/site-settings";
 import { ArrowRight } from "lucide-react";
 
@@ -195,15 +196,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             <ul className="space-y-3 sm:space-y-4 text-sm sm:text-base leading-relaxed text-white/95">
               {service.bulletPoints.map((bullet, idx) => (
                 <li key={idx} className="flex items-start gap-3">
-                  <span className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 relative mt-0.5">
-                    <Image
-                      src="/images/bulb.webp"
-                      alt=""
-                      fill
-                      sizes="24px"
-                      className="object-contain"
-                    />
-                  </span>
+                  <BulletBulbIcon className="text-white drop-shadow-sm mt-0.5" />
                   <span className="text-white/95 leading-snug">
                     {renderHighlightedText(bullet)}
                   </span>
