@@ -21,11 +21,13 @@ export const NAV_LINKS = [
   { label: "НАЧАЛО", href: "/" },
   { label: "УСЛУГИ", href: "/uslugi" },
   { label: "ЗА НАС", href: "/za-nas" },
+  { label: "БЛОГ", href: "/blog" },
   { label: "КАЛЕНДАР / ГРАФИК", href: "/grafik" },
 ];
 
 export const FOOTER_LEGAL_LINKS = [
+  { label: "Блог и Статии", href: "/blog" },
+  { label: "За нас", href: "/za-nas" },
   { label: "Политика за поверителност", href: "/politika-za-poveritelnost" },
   { label: "Общи условия", href: "/obsti-usloviya" },
-  { label: "За нас", href: "/za-nas" },
 ];

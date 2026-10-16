@@ -9,6 +9,7 @@ import {
   Home,
   Palette,
   BookOpen,
+  Newspaper,
   CalendarDays,
   ClipboardList,
   Settings,
@@ -40,6 +41,11 @@ const NAV_ITEMS = [
     label: "Страница: За нас",
     href: "/admin/pages/about",
     icon: BookOpen,
+  },
+  {
+    label: "Блог и Статии",
+    href: "/admin/pages/blog",
+    icon: Newspaper,
   },
   {
     label: "Календар и График",

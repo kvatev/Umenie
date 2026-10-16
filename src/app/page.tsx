@@ -9,6 +9,8 @@ import { KidsGallery } from "@/components/home/KidsGallery";
 import { ReviewsSection } from "@/components/home/ReviewsSection";
 import { ScheduleBanner } from "@/components/home/ScheduleBanner";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
+import { HomeBlogSection } from "@/components/home/HomeBlogSection";
+import { getBlogPosts } from "@/lib/blog-service";
 import { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -51,7 +53,10 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const settings = await getSiteSettings();
+  const [settings, blogPosts] = await Promise.all([
+    getSiteSettings(),
+    getBlogPosts({ limit: 3 }),
+  ]);
 
   let heroMediaSrc = "/images/opening-photo.webp";
   let isHeroVideo = false;
@@ -341,13 +346,16 @@ export default async function HomePage() {
       {/* 5. REVIEWS & WHY CHOOSE US (matching mockups 1:1) */}
       <ReviewsSection screenshotUrl={reviewScreenshotUrl} />
 
-      {/* 6. WEEKLY SCHEDULE BANNER (matching mockups 1:1) */}
+      {/* 6. LATEST FROM BLOG SECTION */}
+      <HomeBlogSection posts={blogPosts} />
+
+      {/* 7. WEEKLY SCHEDULE BANNER (matching mockups 1:1) */}
       <ScheduleBanner
         scheduleFileUrl={settings.scheduleFileUrl}
         scheduleFileName={settings.scheduleFileName}
       />
 
-      {/* 7. GALLERY / AUTOPLAY SLIDER: НАШИТЕ ДЕЦА С УМЕНИЯ */}
+      {/* 8. GALLERY / AUTOPLAY SLIDER: НАШИТЕ ДЕЦА С УМЕНИЯ */}
       <section className="py-12 sm:py-20 bg-brand-bg">
         <Container size="xl">
           <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-10">
