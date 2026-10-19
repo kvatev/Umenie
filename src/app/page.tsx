@@ -10,6 +10,8 @@ import { ReviewsSection } from "@/components/home/ReviewsSection";
 import { ScheduleBanner } from "@/components/home/ScheduleBanner";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { HomeBlogSection } from "@/components/home/HomeBlogSection";
+import { HeroMobileVideo } from "@/components/home/HeroMobileVideo";
+import { ClubTourVideo } from "@/components/home/ClubTourVideo";
 import { getBlogPosts } from "@/lib/blog-service";
 import { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -187,27 +189,35 @@ export default async function HomePage() {
     <div className="w-full">
       {/* 1. HERO SECTION (matching mockups 1:1) */}
       <section className="relative w-full h-[380px] xs:h-[440px] sm:h-[520px] lg:h-[600px] overflow-hidden flex items-center justify-center bg-brand-dark">
-        {/* Dynamic Media Zone: Video or Image */}
-        {isHeroVideo ? (
-          <video
-            src={heroMediaSrc}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover object-center"
-          />
-        ) : (
-          <Image
-            src={heroMediaSrc}
-            alt="Деца в образователен клуб УМеНИе"
-            fill
-            priority={true}
-            fetchPriority="high"
-            className="object-cover object-center"
-            sizes="(max-width: 768px) 100vw, 1200px"
-          />
-        )}
+        {/* Mobile only (< md): looping, softly blurred & darkened background video */}
+        <HeroMobileVideo
+          src="/videos/hero-mobile.mp4"
+          poster="/videos/hero-mobile-poster.webp"
+        />
+
+        {/* Desktop (md+): Dynamic Media Zone: Video or Image */}
+        <div className="hidden md:block absolute inset-0">
+          {isHeroVideo ? (
+            <video
+              src={heroMediaSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+          ) : (
+            <Image
+              src={heroMediaSrc}
+              alt="Деца в образователен клуб УМеНИе"
+              fill
+              priority={true}
+              fetchPriority="high"
+              className="object-cover object-center"
+              sizes="(max-width: 768px) 100vw, 1200px"
+            />
+          )}
+        </div>
 
         {/* Soft gradient overlay for crisp white text contrast */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/25" />
@@ -342,6 +352,12 @@ export default async function HomePage() {
 
       {/* 4. QUICK CONTACT BANNER (matching mockups 1:1) */}
       <QuickContactBanner />
+
+      {/* 4.5 CLUB TOUR VIDEO: КАК ИЗГЛЕЖДА НАШИЯТ КЛУБ (mobile + desktop) */}
+      <ClubTourVideo
+        src="/videos/club-tour.mp4"
+        poster="/videos/club-tour-poster.webp"
+      />
 
       {/* 5. REVIEWS & WHY CHOOSE US (matching mockups 1:1) */}
       <ReviewsSection screenshotUrl={reviewScreenshotUrl} />
