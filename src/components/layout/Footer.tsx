@@ -25,7 +25,7 @@ export async function Footer() {
                   href={`tel:${settings.phoneRaw}`}
                   className="inline-flex items-center gap-3 hover:text-brand-purple transition-colors group"
                 >
-                  <span className="p-2 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors shrink-0">
                     <Phone className="w-4 h-4 shrink-0" />
                   </span>
                   <span className="font-semibold">{settings.phoneFull}</span>
@@ -36,12 +36,12 @@ export async function Footer() {
                   href={settings.googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-start gap-3 hover:text-brand-purple transition-colors group"
+                  className="inline-flex items-center gap-3 hover:text-brand-purple transition-colors group"
                 >
-                  <span className="p-2 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors mt-0.5">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors shrink-0">
                     <MapPin className="w-4 h-4 shrink-0" />
                   </span>
-                  <span className="text-xs md:text-sm font-medium leading-relaxed">
+                  <span className="text-xs md:text-sm font-medium">
                     {settings.locationFull}
                   </span>
                 </a>
@@ -51,7 +51,7 @@ export async function Footer() {
                   href={`mailto:${settings.email}`}
                   className="inline-flex items-center gap-3 hover:text-brand-purple transition-colors group"
                 >
-                  <span className="p-2 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors shrink-0">
                     <Mail className="w-4 h-4 shrink-0" />
                   </span>
                   <span className="text-xs md:text-sm font-medium">
