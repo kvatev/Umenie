@@ -49,7 +49,7 @@ export function HeroMobileVideo({ src, poster }: HeroMobileVideoProps) {
         priority
         fetchPriority="high"
         sizes="100vw"
-        className="object-cover object-center scale-105"
+        className="object-cover object-center"
       />
 
       {shouldMount && (
@@ -64,13 +64,13 @@ export function HeroMobileVideo({ src, poster }: HeroMobileVideoProps) {
           preload="auto"
           disablePictureInPicture
           onPlaying={() => setIsPlaying(true)}
-          className={`absolute inset-0 w-full h-full object-cover object-center scale-105 transition-opacity duration-700 ${
+          className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ${
             isPlaying ? "opacity-100" : "opacity-0"
           }`}
         />
       )}
 
-      {/* Dark cinematic tint on top of the (already softly blurred) video */}
+      {/* Subtle dark filter to keep white hero typography crisp and legible */}
       <div className="absolute inset-0 bg-black/35" />
     </div>
   );
