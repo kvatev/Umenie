@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
-import { Volume2, VolumeX, Play, Pause, Sparkles, Users, Home, Puzzle } from "lucide-react";
+import { Play, Pause, Sparkles, Users, Home, Puzzle } from "lucide-react";
 
 interface ClubTourVideoProps {
   src: string;
@@ -21,14 +21,13 @@ const HIGHLIGHTS = [
  * "Как изглежда нашият клуб" – vertical tour video shown on both
  * mobile and desktop. The video is lazy-loaded when it approaches the
  * viewport, autoplays muted in a loop while visible and pauses when
- * scrolled away. Visitors can unmute or pause it.
+ * scrolled away. Visitors can tap to pause/resume playback.
  */
 export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isNear, setIsNear] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   const [isPaused, setIsPaused] = useState(false); // user-initiated pause
 
   // 1. Lazy-load: attach the source only when the block gets close
@@ -61,25 +60,13 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
     const video = videoRef.current;
     if (!video || !isNear) return;
     if (isVisible && !isPaused) {
-      if (isMuted) video.muted = true;
+      video.muted = true;
       const p = video.play();
       if (p) p.catch(() => {});
     } else {
       video.pause();
     }
-  }, [isVisible, isNear, isPaused, isMuted]);
-
-  const toggleMute = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    const next = !isMuted;
-    video.muted = next;
-    setIsMuted(next);
-    if (!next && video.paused) {
-      setIsPaused(false);
-      video.play().catch(() => {});
-    }
-  };
+  }, [isVisible, isNear, isPaused]);
 
   const togglePlay = () => setIsPaused((p) => !p);
 
@@ -206,15 +193,6 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 transition-all hover:bg-white/35 active:scale-90"
                     >
                       {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
-                    </button>
-                    <button
-                      type="button"
-                      id="club-tour-sound-toggle"
-                      onClick={toggleMute}
-                      aria-label={isMuted ? "Включи звука" : "Изключи звука"}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 transition-all hover:bg-white/35 active:scale-90"
-                    >
-                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>

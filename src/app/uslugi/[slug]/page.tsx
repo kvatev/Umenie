@@ -174,8 +174,9 @@ export default async function ServiceDetailPage({ params }: PageProps) {
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
               className="object-cover object-center"
-              quality={85}
+              quality={87}
               priority
+              fetchPriority="high"
             />
           </div>
 
@@ -187,7 +188,8 @@ export default async function ServiceDetailPage({ params }: PageProps) {
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
               className="object-cover object-center"
-              quality={85}
+              quality={87}
+              priority
             />
           </div>
 
