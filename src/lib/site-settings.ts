@@ -64,7 +64,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       locationShort: json.locationShort?.trim() || DEFAULT_SETTINGS.locationShort,
       locationFull: json.locationFull?.trim() || DEFAULT_SETTINGS.locationFull,
       googleMapsUrl: json.googleMapsUrl?.trim() || DEFAULT_SETTINGS.googleMapsUrl,
-      email: json.email?.trim() || DEFAULT_SETTINGS.email,
+      email: (!json.email || json.email.trim() === "umenie48@gmail.com") ? DEFAULT_SETTINGS.email : json.email.trim(),
       tagline: json.tagline?.trim() || DEFAULT_SETTINGS.tagline,
       facebookUrl: json.facebookUrl?.trim() || DEFAULT_SETTINGS.facebookUrl,
       instagramUrl: json.instagramUrl?.trim() || DEFAULT_SETTINGS.instagramUrl,

@@ -336,7 +336,7 @@ export function AdminContactsManager({ initialSettings }: AdminContactsManagerPr
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  placeholder="umenie48@gmail.com"
+                  placeholder="info@umenie.net"
                   required
                   className="w-full px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-medium text-brand-dark"
                 />

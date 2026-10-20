@@ -60,7 +60,7 @@ export default function TermsPage() {
                   0877 488 481
                 </a>
                 <br />
-                <strong>Електронна поща:</strong> umenie48@gmail.com
+                <strong>Електронна поща:</strong> info@umenie.net
               </p>
             </div>
             <p>С използването на уебсайта потребителят се съгласява с настоящите Общи условия.</p>
@@ -184,8 +184,8 @@ export default function TermsPage() {
               </p>
               <p className="text-sm">
                 Имейл:{" "}
-                <a href="mailto:umenie48@gmail.com" className="text-brand-purple underline">
-                  umenie48@gmail.com
+                <a href="mailto:info@umenie.net" className="text-brand-purple underline">
+                  info@umenie.net
                 </a>
               </p>
               <p className="text-sm">Адрес: гр. Бургас, ж.к. Славейков, бл. 48, партер</p>

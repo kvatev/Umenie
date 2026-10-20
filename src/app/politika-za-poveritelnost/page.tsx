@@ -63,7 +63,7 @@ export default function PrivacyPolicyPage() {
                   0877 488 481
                 </a>
                 <br />
-                <strong>Електронна поща:</strong> umenie48@gmail.com
+                <strong>Електронна поща:</strong> info@umenie.net
               </p>
             </div>
 
@@ -137,10 +137,10 @@ export default function PrivacyPolicyPage() {
               Съгласието може да бъде оттеглено по всяко време чрез механизма за отписване в съответното
               електронно съобщение или чрез изпращане на писмено искане на имейл:{" "}
               <a
-                href="mailto:umenie48@gmail.com"
+                href="mailto:info@umenie.net"
                 className="text-brand-purple underline font-semibold hover:text-brand-purple-hover"
               >
-                umenie48@gmail.com
+                info@umenie.net
               </a>
               . Оттеглянето на съгласието не засяга законосъобразността на обработването, извършено
               преди неговото оттегляне.
@@ -231,8 +231,8 @@ export default function PrivacyPolicyPage() {
               </p>
               <p className="text-sm">
                 Имейл:{" "}
-                <a href="mailto:umenie48@gmail.com" className="text-brand-purple underline">
-                  umenie48@gmail.com
+                <a href="mailto:info@umenie.net" className="text-brand-purple underline">
+                  info@umenie.net
                 </a>
               </p>
             </div>
