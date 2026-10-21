@@ -14,6 +14,8 @@ export interface ServiceData {
   pageImages: string[];
   galleryTitle: string;
   seoDescription: string;
+  videos?: string[];
+  videoPosters?: string[];
 }
 
 export const SERVICES_DATA: ServiceData[] = [
@@ -94,6 +96,11 @@ export const SERVICES_DATA: ServiceData[] = [
     ],
     hasSlider: true,
     sliderImages: [
+      "/videos/pletivo/pletivo-video-1.mp4",
+      "/videos/pletivo/pletivo-video-2.mp4",
+      "/images/services/pletivo/page/page-1.webp",
+      "/images/services/pletivo/page/page-2.webp",
+      "/images/services/pletivo/page/page-3.webp",
       "/images/services/pletivo/slider/slide-1.webp",
       "/images/services/pletivo/slider/slide-2.webp",
       "/images/services/pletivo/slider/slide-3.webp",
@@ -114,6 +121,14 @@ export const SERVICES_DATA: ServiceData[] = [
       "/images/services/pletivo/page/page-1.webp",
       "/images/services/pletivo/page/page-2.webp",
       "/images/services/pletivo/page/page-3.webp",
+    ],
+    videos: [
+      "/videos/pletivo/pletivo-video-1.mp4",
+      "/videos/pletivo/pletivo-video-2.mp4",
+    ],
+    videoPosters: [
+      "/videos/pletivo/pletivo-video-1-poster.webp",
+      "/videos/pletivo/pletivo-video-2-poster.webp",
     ],
     galleryTitle: "ВИЖТЕ УМЕНИЕТО В РЪЦЕТЕ ИМ.",
     seoDescription:
@@ -249,4 +264,3 @@ export function getServiceBySlug(slug: string): ServiceData | undefined {
   }
   return SERVICES_DATA.find((s) => s.slug === slug);
 }
-

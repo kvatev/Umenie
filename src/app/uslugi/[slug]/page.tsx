@@ -9,7 +9,7 @@ import { ServiceSlider } from "@/components/services/ServiceSlider";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { BulletBulbIcon } from "@/components/common/BulletBulbIcon";
 import { getSiteSettings } from "@/lib/site-settings";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Video } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -105,10 +105,9 @@ export default async function ServiceDetailPage({ params }: PageProps) {
     galleryTitle: override.galleryTitle || baseService.galleryTitle,
     hasSlider: override.hasSlider !== undefined ? override.hasSlider : baseService.hasSlider,
     sliderImageSettings: override.sliderImageSettings || {},
+    videos: override.videos && override.videos.length > 0 ? override.videos : baseService.videos,
+    videoPosters: override.videoPosters && override.videoPosters.length > 0 ? override.videoPosters : baseService.videoPosters,
   };
-
-  const titleLine1 = service.titleLines ? service.titleLines[0] : service.title;
-  const titleLine2 = service.titleLines && service.titleLines.length > 1 ? service.titleLines[1] : null;
 
   return (
     <div className="w-full bg-[#f1f2f6] min-h-screen overflow-x-hidden pt-28 sm:pt-32 pb-16">
@@ -127,7 +126,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             <span className="text-brand-purple/70">{service.shortTitle}</span>
           </nav>
 
-          {/* Title Header with Hand-drawn Lightbulb */}
+          {/* Title Header with Exact Hand-drawn Logo Lightbulb */}
           <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
             <h1 className="font-heading font-extrabold text-3xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide uppercase leading-[1.05]">
               {service.title}
@@ -209,7 +208,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             <div>
               <Link
                 href="/grafik"
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-[#887ed8] font-heading font-bold text-sm sm:text-base shadow-xl hover:bg-[#ede9fe] transition-all transform hover:scale-[1.02] active:scale-[0.98] uppercase"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-[#887ed8] font-heading font-bold text-sm sm:text-base shadow-xl hover:bg-[#ede9fe] transition-all transform hover:scale-[1.02] active:scale-[0.98] uppercase cursor-pointer"
               >
                 <span>ВИЖТЕ ГРАФИКА</span>
                 <ArrowRight className="w-4 h-4" />
@@ -218,6 +217,61 @@ export default async function ServiceDetailPage({ params }: PageProps) {
           </div>
         </div>
       </section>
+
+      {/* Dedicated Video Showcase for Services with Videos (e.g. Плетиво) */}
+      {service.videos && service.videos.length > 0 && (
+        <section className="py-12 sm:py-16 bg-white/60 border-y border-brand-purple/15 my-6 sm:my-10">
+          <Container size="xl">
+            <div className="max-w-2xl mx-auto text-center mb-8 sm:mb-12 space-y-2">
+              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-purple/10 text-brand-purple font-heading font-bold text-xs uppercase tracking-wider">
+                <Video className="w-3.5 h-3.5" />
+                ВИДЕА ОТ ЗАНИМАНИЯТА
+              </span>
+              <h2 className="font-heading font-extrabold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase">
+                ВИЖТЕ УМЕНИЕТО В ДЕЙСТВИЕ
+              </h2>
+              <p className="text-brand-muted text-xs sm:text-base max-w-xl mx-auto">
+                Реални кадри от творческия процес и занятията по {service.shortTitle.toLowerCase()} в образователен клуб „УМеНИе“.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto items-stretch">
+              {service.videos.map((vidSrc, vidIdx) => {
+                const posterSrc = service.videoPosters?.[vidIdx];
+                return (
+                  <div
+                    key={vidIdx}
+                    className="bg-white rounded-3xl overflow-hidden shadow-card border border-brand-purple/15 flex flex-col group hover:border-brand-purple hover:shadow-card-hover transition-all"
+                  >
+                    <div className="relative aspect-[9/16] max-h-[480px] w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+                      <video
+                        src={vidSrc}
+                        poster={posterSrc}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-5 text-left space-y-1.5 mt-auto bg-white border-t border-brand-purple/10">
+                      <h4 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
+                        {vidIdx === 0
+                          ? "Учим първите бримки"
+                          : "Резултатът от търпението"}
+                      </h4>
+                      <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">
+                        {vidIdx === 0
+                          ? "Индивидуално внимание, спокойна атмосфера и усвояване на основните техники в малка група."
+                          : "Сръчност, креативност и истинска гордост от създаденото със собствените ръце."}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Container>
+        </section>
+      )}
 
       {/* Image Slideshow / Gallery (Rendered only on services with dedicated galleries) */}
       {service.hasSlider && service.sliderImages && service.sliderImages.length > 0 && (
@@ -233,4 +287,3 @@ export default async function ServiceDetailPage({ params }: PageProps) {
     </div>
   );
 }
-

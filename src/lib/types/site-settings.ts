@@ -23,6 +23,9 @@ export interface ServiceOverride {
   galleryTitle?: string;
   hasSlider?: boolean;
   sliderImageSettings?: Record<string, SlideViewSetting>;
+  videos?: string[];
+  videoPosters?: string[];
+  showVideos?: boolean;
 }
 
 export interface SiteSettings {

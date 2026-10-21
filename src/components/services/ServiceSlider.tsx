@@ -34,8 +34,7 @@ export function ServiceSlider({
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   }, [images.length]);
 
-  // Only start fetching once the slider is near the viewport, so it never
-  // competes for bandwidth with the above-the-fold hero photos.
+  // Only start fetching once the slider is near the viewport
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -47,7 +46,7 @@ export function ServiceSlider({
     return () => observer.disconnect();
   }, []);
 
-  // Mount only the current + next slide (previously shown slides stay mounted).
+  // Mount only the current + next slide
   useEffect(() => {
     if (!inView || images.length === 0) return;
     const n = images.length;
@@ -62,7 +61,7 @@ export function ServiceSlider({
 
   useEffect(() => {
     if (isPaused || !inView || images.length <= 1) return;
-    const timer = setInterval(nextSlide, 3500);
+    const timer = setInterval(nextSlide, 4500);
     return () => clearInterval(timer);
   }, [isPaused, inView, images.length, nextSlide]);
 
@@ -92,6 +91,7 @@ export function ServiceSlider({
         >
           {images.map((imgSrc, idx) => {
             const isActive = idx === currentIndex;
+            const isVideo = imgSrc.endsWith(".mp4") || imgSrc.endsWith(".webm");
             const fileName = imgSrc.split("/").pop() || "";
             const setting =
               imageSettings[imgSrc] ||
@@ -113,43 +113,57 @@ export function ServiceSlider({
               >
                 <div className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-slate-900">
                   {mounted.has(idx) && (
-                    <>
-                      {/* Ambient blurred backdrop for contain mode */}
-                      {fitMode === "contain" && (
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-                          <Image
-                            src={imgSrc}
-                            alt=""
-                            fill
-                            sizes="200px"
-                            quality={30}
-                            className="object-cover object-center blur-2xl opacity-40 scale-125"
-                            aria-hidden="true"
-                          />
-                          <div className="absolute inset-0 bg-black/25" />
-                        </div>
-                      )}
-
-                      {/* Crisp Foreground Slide Image */}
-                      <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
-                        <Image
+                    isVideo ? (
+                      <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-black">
+                        <video
                           src={imgSrc}
-                          alt={`${title} - снимка ${idx + 1}`}
-                          fill
-                          quality={92}
-                          loading="lazy"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 1200px"
-                          style={{
-                            objectFit: fitMode,
-                            objectPosition: position,
-                            transform: scale > 1 ? `scale(${scale})` : undefined,
-                          }}
-                          className={`w-full h-full transition-all duration-300 ${
-                            fitMode === "contain" ? "drop-shadow-lg" : "shadow-sm"
-                          }`}
+                          autoPlay={isActive}
+                          loop
+                          muted
+                          playsInline
+                          controls
+                          className="w-full h-full object-contain"
                         />
                       </div>
-                    </>
+                    ) : (
+                      <>
+                        {/* Ambient blurred backdrop for contain mode */}
+                        {fitMode === "contain" && (
+                          <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+                            <Image
+                              src={imgSrc}
+                              alt=""
+                              fill
+                              sizes="200px"
+                              quality={30}
+                              className="object-cover object-center blur-2xl opacity-40 scale-125"
+                              aria-hidden="true"
+                            />
+                            <div className="absolute inset-0 bg-black/25" />
+                          </div>
+                        )}
+
+                        {/* Crisp Foreground Slide Image */}
+                        <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
+                          <Image
+                            src={imgSrc}
+                            alt={`${title} - снимка ${idx + 1}`}
+                            fill
+                            quality={92}
+                            loading="lazy"
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 1200px"
+                            style={{
+                              objectFit: fitMode,
+                              objectPosition: position,
+                              transform: scale > 1 ? `scale(${scale})` : undefined,
+                            }}
+                            className={`w-full h-full transition-all duration-300 ${
+                              fitMode === "contain" ? "drop-shadow-lg" : "shadow-sm"
+                            }`}
+                          />
+                        </div>
+                      </>
+                    )
                   )}
                 </div>
               </div>
@@ -162,7 +176,7 @@ export function ServiceSlider({
               <button
                 onClick={prevSlide}
                 aria-label="Предишна снимка"
-                className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2.5 sm:p-3 rounded-full bg-white/90 text-brand-purple hover:bg-brand-purple hover:text-white shadow-lg backdrop-blur-sm transition-all transform hover:scale-110 active:scale-95"
+                className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2.5 sm:p-3 rounded-full bg-white/90 text-brand-purple hover:bg-brand-purple hover:text-white shadow-lg backdrop-blur-sm transition-all transform hover:scale-110 active:scale-95 cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
@@ -170,7 +184,7 @@ export function ServiceSlider({
               <button
                 onClick={nextSlide}
                 aria-label="Следваща снимка"
-                className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2.5 sm:p-3 rounded-full bg-white/90 text-brand-purple hover:bg-brand-purple hover:text-white shadow-lg backdrop-blur-sm transition-all transform hover:scale-110 active:scale-95"
+                className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2.5 sm:p-3 rounded-full bg-white/90 text-brand-purple hover:bg-brand-purple hover:text-white shadow-lg backdrop-blur-sm transition-all transform hover:scale-110 active:scale-95 cursor-pointer"
               >
                 <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
@@ -186,7 +200,7 @@ export function ServiceSlider({
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 aria-label={`Снимка ${idx + 1}`}
-                className={`transition-all duration-300 rounded-full ${
+                className={`transition-all duration-300 rounded-full cursor-pointer ${
                   idx === currentIndex
                     ? "w-8 h-2.5 bg-brand-purple"
                     : "w-2.5 h-2.5 bg-brand-purple/30 hover:bg-brand-purple/60"
