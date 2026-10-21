@@ -366,7 +366,7 @@ export function AdminContactsManager({ initialSettings }: AdminContactsManagerPr
               <Share2 className="w-4 h-4" /> 4. Социални мрежи
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold text-brand-dark mb-1 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-blue-600 inline-block" /> Facebook страница
@@ -390,6 +390,20 @@ export function AdminContactsManager({ initialSettings }: AdminContactsManagerPr
                   value={formData.instagramUrl}
                   onChange={(e) => handleChange("instagramUrl", e.target.value)}
                   placeholder="https://www.instagram.com/..."
+                  required
+                  className="w-full px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-medium text-brand-dark"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-brand-dark mb-1 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-black inline-block" /> TikTok профил
+                </label>
+                <input
+                  type="url"
+                  value={formData.tiktokUrl || ""}
+                  onChange={(e) => handleChange("tiktokUrl", e.target.value)}
+                  placeholder="https://www.tiktok.com/@..."
                   required
                   className="w-full px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all text-sm font-medium text-brand-dark"
                 />
@@ -532,6 +546,17 @@ export function AdminContactsManager({ initialSettings }: AdminContactsManagerPr
                       sizes="32px"
                       className="object-contain p-0.5 w-full h-full"
                     />
+                  </a>
+                  <a
+                    href={formData.tiktokUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={formData.tiktokUrl}
+                    className="relative w-8 h-8 rounded-full p-1.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all shadow-sm flex items-center justify-center"
+                  >
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.49 6.27 6.27 0 0 0 1.94-4.52V8.78a8.16 8.16 0 0 0 4.77 1.53v-3.47a4.85 4.85 0 0 1-.94-.15z" />
+                    </svg>
                   </a>
                 </div>
               </div>

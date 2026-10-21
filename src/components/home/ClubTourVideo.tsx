@@ -82,8 +82,8 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
 
       <Container size="xl" className="relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-          {/* Text column */}
-          <div className="lg:col-span-6 lg:order-1 order-1 text-center lg:text-left space-y-5 sm:space-y-6">
+          {/* Text column - left aligned on mobile and desktop */}
+          <div className="lg:col-span-6 lg:order-1 order-1 text-left space-y-5 sm:space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-4 py-1.5 text-xs sm:text-sm font-semibold tracking-wide text-brand-purple shadow-sm border border-brand-purple/15">
               <Sparkles className="w-4 h-4" />
               Разходка из клуба
@@ -91,13 +91,13 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
 
             <h2
               id="club-tour-heading"
-              className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple leading-tight tracking-wide uppercase"
+              className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple leading-tight tracking-wide uppercase text-left"
             >
               Как изглежда
               <br className="hidden sm:block" /> нашият клуб
             </h2>
 
-            <p className="text-brand-dark/90 text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0">
+            <p className="text-brand-dark/90 text-base sm:text-lg leading-relaxed max-w-xl text-left">
               Надникнете вътре и вижте мястото, където децата учат, играят и
               творят всеки ден – подредено, светло и създадено с мисъл за тях.
             </p>
@@ -152,12 +152,16 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
                   ref={videoRef}
                   src={isNear ? src : undefined}
                   poster={poster}
-                  loop
-                  muted
-                  playsInline
+                  loop={true}
+                  muted={true}
+                  playsInline={true}
                   preload="none"
                   disablePictureInPicture
                   onClick={togglePlay}
+                  onEnded={(e) => {
+                    e.currentTarget.currentTime = 0;
+                    e.currentTarget.play().catch(() => {});
+                  }}
                   className="absolute inset-0 w-full h-full object-cover cursor-pointer"
                   aria-label="Видео: как изглежда образователен клуб УМеНИе отвътре"
                 />
@@ -201,7 +205,7 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
           </div>
 
           {/* Mobile CTA under the video */}
-          <div className="lg:hidden order-3 flex justify-center">
+          <div className="lg:hidden order-3 flex justify-start sm:justify-center">
             <Link
               href="/za-nas"
               className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm tracking-wider uppercase shadow-button hover:bg-brand-purple-hover transition-all active:scale-95"

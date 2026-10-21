@@ -52,7 +52,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       // Fallback
     }
 
-    const json = {
+    const json: Record<string, any> = {
       ...storageJson,
       ...(dbRow?.settings_json || {}),
     };
@@ -68,6 +68,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       tagline: json.tagline?.trim() || DEFAULT_SETTINGS.tagline,
       facebookUrl: json.facebookUrl?.trim() || DEFAULT_SETTINGS.facebookUrl,
       instagramUrl: json.instagramUrl?.trim() || DEFAULT_SETTINGS.instagramUrl,
+      tiktokUrl: json.tiktokUrl?.trim() || json.tiktok_url?.trim() || DEFAULT_SETTINGS.tiktokUrl,
       heroBannerUrl: (dbRow?.hero_media_type === "image" ? dbRow?.hero_media_url : null) || json.heroBannerUrl?.trim() || "",
       heroVideoUrl: (dbRow?.hero_media_type === "video" ? dbRow?.hero_media_url : null) || json.heroVideoUrl?.trim() || "",
       heroMediaType: dbRow?.hero_media_type || (json.heroMediaType === "video" ? "video" : "image"),

@@ -36,6 +36,7 @@ export interface SiteSettings {
   tagline: string;
   facebookUrl: string;
   instagramUrl: string;
+  tiktokUrl: string;
   // Hero Banner settings
   heroBannerUrl?: string;
   heroVideoUrl?: string;
@@ -65,6 +66,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   tagline: SITE_CONFIG.tagline,
   facebookUrl: SITE_CONFIG.social.facebook,
   instagramUrl: SITE_CONFIG.social.instagram,
+  tiktokUrl: SITE_CONFIG.social.tiktok,
   heroBannerUrl: "",
   heroVideoUrl: "",
   heroMediaType: "image",

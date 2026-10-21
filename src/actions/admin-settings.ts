@@ -41,6 +41,7 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
       tagline: formData.tagline?.trim() ?? current.tagline,
       facebookUrl: formData.facebookUrl?.trim() ?? current.facebookUrl,
       instagramUrl: formData.instagramUrl?.trim() ?? current.instagramUrl,
+      tiktokUrl: formData.tiktokUrl?.trim() ?? current.tiktokUrl,
       heroBannerUrl: formData.heroBannerUrl !== undefined ? formData.heroBannerUrl.trim() : (current.heroBannerUrl || ""),
       heroVideoUrl: formData.heroVideoUrl !== undefined ? formData.heroVideoUrl.trim() : (current.heroVideoUrl || ""),
       heroMediaType: formData.heroMediaType ?? (current.heroMediaType || "image"),

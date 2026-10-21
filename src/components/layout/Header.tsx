@@ -73,7 +73,7 @@ export function Header({ initialSettings }: HeaderProps) {
           {/* Logo */}
           <Link
             href="/"
-            className="relative flex items-center h-16 w-44 sm:h-20 sm:w-56 focus:outline-none group"
+            className="relative flex items-center h-16 w-48 sm:h-20 sm:w-60 md:w-64 focus:outline-none group"
             aria-label="Начална страница на клуб УМеНИе"
           >
             <Image
@@ -81,7 +81,7 @@ export function Header({ initialSettings }: HeaderProps) {
               alt={SITE_CONFIG.name}
               fill
               className="object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-              sizes="(max-width: 640px) 176px, 224px"
+              sizes="(max-width: 640px) 192px, 256px"
               priority
             />
           </Link>

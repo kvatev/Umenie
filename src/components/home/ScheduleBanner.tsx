@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
-import { Clock, Calendar, ArrowRight, FileText, Download } from "lucide-react";
+import { Clock, Calendar, ArrowRight, FileText } from "lucide-react";
 
 interface ScheduleBannerProps {
   scheduleFileUrl?: string | null;
@@ -21,13 +21,13 @@ export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBa
     <section className="py-12 sm:py-20 bg-brand-purple text-white relative overflow-hidden">
       <Container size="xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Left Column: Heading, Button and Curved Arrow (matching mockups 1:1) */}
-          <div className="lg:col-span-5 text-center lg:text-left space-y-6">
-            <h2 className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide uppercase">
-              ГРАФИКА ЗА<br className="hidden xs:block" /> СЕДМИЦАТА
+          {/* Left Column: Heading, Button and Curved Arrow */}
+          <div className="lg:col-span-5 text-left space-y-6">
+            <h2 className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide uppercase text-left">
+              ГРАФИКЪТ ЗА<br className="hidden xs:block" /> СЕДМИЦАТА
             </h2>
 
-            <div className="pt-2 flex justify-center lg:justify-start">
+            <div className="pt-2 flex justify-start">
               <div className="relative inline-block">
                 <Link
                   href="/grafik"

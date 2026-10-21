@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { BlogPost } from "@/lib/types/blog";
@@ -36,21 +36,21 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
       </div>
 
       <Container size="xl" className="relative z-10">
-        {/* Section Header */}
+        {/* Section Header - clean left aligned on mobile */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12 gap-4">
-          <div className="space-y-2 text-center md:text-left">
+          <div className="space-y-2 text-left">
             <span className="inline-block px-3.5 py-1 rounded-full bg-brand-purple/10 text-brand-purple font-heading font-bold text-xs uppercase tracking-wider">
               ПОЛЕЗНО ЗА РОДИТЕЛИ И ДЕЦА
             </span>
-            <h2 className="font-heading font-extrabold text-2xl sm:text-4xl lg:text-5xl text-brand-purple tracking-wide uppercase">
+            <h2 className="font-heading font-extrabold text-2xl sm:text-4xl lg:text-5xl text-brand-purple tracking-wide uppercase text-left">
               ОТ НАШИЯ БЛОГ
             </h2>
-            <p className="text-brand-dark/80 text-sm sm:text-base md:text-lg max-w-xl">
+            <p className="text-brand-dark/80 text-sm sm:text-base md:text-lg max-w-xl text-left">
               Практични съвети, идеи за развитие и вдъхновение от екипа на клуб „УМеНИе“.
             </p>
           </div>
 
-          <div className="text-center md:text-right shrink-0">
+          <div className="text-left md:text-right shrink-0">
             <Link
               href="/blog"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-brand-purple border border-brand-purple/20 hover:bg-brand-purple hover:text-white transition-all transform hover:scale-[1.02] active:scale-95 shadow-sm font-heading font-bold text-xs sm:text-sm uppercase tracking-wide group"

@@ -13,8 +13,7 @@ interface HeroMobileVideoProps {
  * - The <video> element is mounted only on small screens, so desktop
  *   visitors never download the file.
  * - Muted, inline, endless loop (required for autoplay on iOS/Android).
- * - The blur is baked into the encoded file (cheaper than a CSS filter
- *   on mobile GPUs); the dark tint is applied with an overlay.
+ * - Explicit fallback loop event handler ensures it never stops on mobile Safari/Chrome.
  */
 export function HeroMobileVideo({ src, poster }: HeroMobileVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -32,7 +31,7 @@ export function HeroMobileVideo({ src, poster }: HeroMobileVideoProps) {
   useEffect(() => {
     const video = videoRef.current;
     if (!shouldMount || !video) return;
-    // iOS Safari requires the muted *property* to be set before play()
+    // iOS Safari requires the muted property to be set before play()
     video.muted = true;
     video.defaultMuted = true;
     const p = video.play();
@@ -58,12 +57,16 @@ export function HeroMobileVideo({ src, poster }: HeroMobileVideoProps) {
           src={src}
           poster={poster}
           autoPlay
-          loop
-          muted
-          playsInline
+          loop={true}
+          muted={true}
+          playsInline={true}
           preload="auto"
           disablePictureInPicture
           onPlaying={() => setIsPlaying(true)}
+          onEnded={(e) => {
+            e.currentTarget.currentTime = 0;
+            e.currentTarget.play().catch(() => {});
+          }}
           className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ${
             isPlaying ? "opacity-100" : "opacity-0"
           }`}

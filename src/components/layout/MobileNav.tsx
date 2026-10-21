@@ -30,6 +30,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
   const googleMapsUrl = settings?.googleMapsUrl || SITE_CONFIG.googleMapsUrl;
   const facebookUrl = settings?.facebookUrl || SITE_CONFIG.social.facebook;
   const instagramUrl = settings?.instagramUrl || SITE_CONFIG.social.instagram;
+  const tiktokUrl = settings?.tiktokUrl || SITE_CONFIG.social.tiktok;
 
   const prevPathnameRef = useRef(pathname);
 
@@ -96,13 +97,13 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
         <div className="flex-1 flex flex-col">
           {/* Drawer Header */}
           <div className="flex items-center justify-between pb-4 border-b border-brand-purple/15 shrink-0">
-            <Link href="/" onClick={onClose} className="relative block h-12 w-32 focus:outline-none">
+            <Link href="/" onClick={onClose} className="relative block h-12 w-36 focus:outline-none">
               <Image
                 src="/images/logo.webp"
                 alt={SITE_CONFIG.name}
                 fill
                 className="object-contain"
-                sizes="128px"
+                sizes="144px"
                 priority
               />
             </Link>
@@ -117,55 +118,56 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
           </div>
 
           {/* Navigation Links */}
-          <nav className="mt-6 flex flex-col space-y-2">
-            {NAV_LINKS.map((item) => {
+          <nav className="flex-1 py-6 space-y-1">
+            {NAV_LINKS.map((link) => {
               const isActive =
-                item.href === "/"
+                link.href === "/"
                   ? pathname === "/"
-                  : pathname.startsWith(item.href);
+                  : pathname.startsWith(link.href);
 
               return (
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  key={link.href}
+                  href={link.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center justify-between px-4 py-3.5 rounded-2xl font-heading text-base font-bold transition-all",
+                    "flex items-center justify-between px-4 py-3 rounded-2xl font-heading text-base font-bold transition-all duration-200 tracking-wide",
                     isActive
-                      ? "bg-brand-purple text-white shadow-button"
-                      : "text-brand-dark hover:bg-white/80 hover:text-brand-purple"
+                      ? "bg-brand-purple text-white shadow-sm"
+                      : "text-brand-dark hover:bg-brand-purple/10 hover:text-brand-purple"
                   )}
                 >
-                  <span>{item.label}</span>
+                  <span>{link.label}</span>
                   <ArrowRight
                     className={cn(
                       "w-4 h-4 transition-transform",
-                      isActive ? "text-white translate-x-1" : "text-brand-purple/50"
+                      isActive ? "text-white translate-x-1" : "text-brand-purple/40"
                     )}
                   />
                 </Link>
               );
             })}
           </nav>
+
+          {/* CTA Phone Button */}
+          <div className="pt-2 pb-4">
+            <a
+              href={`tel:${phoneRaw}`}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-brand-purple text-white font-heading font-bold text-sm tracking-wide shadow-button hover:bg-brand-purple-hover active:scale-[0.98] transition-all"
+            >
+              <Phone className="w-4 h-4 shrink-0" />
+              <span>{phoneDisplay}</span>
+            </a>
+          </div>
         </div>
 
-        {/* Drawer Footer Contact Info */}
-        <div className="mt-8 pt-6 border-t border-brand-purple/15 space-y-4 shrink-0">
-          {/* Quick Call Button */}
-          <a
-            href={`tel:${phoneRaw}`}
-            className="flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-brand-purple text-white rounded-full font-heading font-bold text-sm shadow-button hover:bg-brand-purple-hover transition-all active:scale-[0.98]"
-          >
-            <Phone className="w-4 h-4" />
-            <span>{phoneDisplay}</span>
-          </a>
-
-          {/* Location Badge */}
+        {/* Drawer Footer: Contacts & Socials */}
+        <div className="pt-4 border-t border-brand-purple/15 text-xs text-brand-dark/80 space-y-3 shrink-0">
           <a
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-start gap-2.5 p-3 rounded-2xl bg-white/70 hover:bg-white text-xs text-brand-dark transition-colors"
+            className="flex items-start gap-2.5 hover:text-brand-purple transition-colors"
           >
             <MapPin className="w-4 h-4 text-brand-purple shrink-0 mt-0.5" />
             <div>
@@ -175,7 +177,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
           </a>
 
           {/* Social Icons */}
-          <div className="flex items-center justify-center gap-4 pt-2">
+          <div className="flex items-center justify-center gap-3.5 pt-2">
             <a
               href={facebookUrl}
               target="_blank"
@@ -210,6 +212,23 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
                   sizes="42px"
                   className="w-full h-full object-contain"
                 />
+              </div>
+            </a>
+            <a
+              href={tiktokUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="TikTok профил"
+              className="p-2.5 rounded-full bg-white text-brand-purple shadow-sm hover:scale-110 hover:bg-brand-purple hover:text-white transition-all flex items-center justify-center"
+            >
+              <div className="relative w-5 h-5 flex items-center justify-center">
+                <svg
+                  className="w-full h-full fill-current"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.49 6.27 6.27 0 0 0 1.94-4.52V8.78a8.16 8.16 0 0 0 4.77 1.53v-3.47a4.85 4.85 0 0 1-.94-.15z" />
+                </svg>
               </div>
             </a>
           </div>
