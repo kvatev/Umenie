@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { X, Loader2, Calendar, Clock, AlertCircle, Info, Check, Plus, Sparkles } from "lucide-react";
+import { X, Loader2, Calendar, Clock, AlertCircle, Info, Check, Plus } from "lucide-react";
 import {
   DAYS_OF_WEEK,
   RecurrenceRule,
@@ -13,6 +13,7 @@ import {
   formatDateHumanBg,
   isEventOnDate,
   getRecurrenceHumanSummary,
+  itemToRecord,
   CATEGORY_STYLES,
 } from "@/lib/schedule-data";
 import {
@@ -44,7 +45,7 @@ interface ScheduleModalProps {
   allSchedules?: ScheduleRecord[];
   initialDate?: string | null; // e.g. clicked date in calendar
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (savedItems?: ScheduleRecord[]) => void;
 }
 
 const CATEGORIES = [
@@ -250,7 +251,7 @@ export function ScheduleModal({
       if (isEditing && scheduleToEdit) {
         const res = await updateScheduleAction(scheduleToEdit.id, payload, editScope);
         if (res.success) {
-          onSaved();
+          onSaved(res.items ? res.items.map(itemToRecord) : undefined);
           onClose();
         } else {
           setErrorMessage(res.message || "Грешка при запис.");
@@ -258,7 +259,7 @@ export function ScheduleModal({
       } else {
         const res = await createScheduleAction(payload);
         if (res.success) {
-          onSaved();
+          onSaved(res.items ? res.items.map(itemToRecord) : undefined);
           onClose();
         } else {
           setErrorMessage(res.message || "Грешка при създаване.");
@@ -495,8 +496,7 @@ export function ScheduleModal({
               className="w-full px-4 py-2.5 rounded-2xl bg-white text-sm font-medium text-brand-dark border border-brand-purple/30 focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer"
             >
               <option value="none">Еднократно занятие (само на избраната дата)</option>
-              <option value="weekly_eoy">Всяка седмица в този ден до края на годината</option>
-              <option value="weekly_count">Повтаряй за определен брой седмици (напр. само за 2 седмици)</option>
+                            <option value="weekly_count">Повтаряй за определен брой седмици (напр. само за 2 седмици)</option>
               <option value="biweekly">През седмица (на всеки 2 седмици / 14 дни)</option>
               <option value="custom_until">Всяка седмица до избрана крайна дата</option>
             </select>
@@ -633,14 +633,11 @@ export function ScheduleModal({
             )}
 
             {/* Human Summary Box */}
-            <div className="p-3 rounded-xl bg-purple-50/70 border border-purple-200/80 text-xs text-brand-dark/90 leading-relaxed flex items-start gap-2">
-              <Sparkles className="w-4 h-4 text-brand-purple shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-brand-purple block font-semibold mb-0.5">
-                  Обобщение на насрочването:
-                </strong>
-                <span>{liveSummary}</span>
-              </div>
+            <div className="p-3 rounded-xl bg-purple-50/70 border border-purple-200/80 text-xs text-brand-dark/90 leading-relaxed">
+              <strong className="text-brand-purple block font-semibold mb-0.5">
+                Обобщение на насрочването:
+              </strong>
+              <span>{liveSummary}</span>
             </div>
           </div>
 

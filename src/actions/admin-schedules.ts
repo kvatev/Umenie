@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -91,14 +91,17 @@ async function saveStoredExtendedSchedules(items: ScheduleItem[]): Promise<boole
 
 /**
  * Universal schedule fetcher:
- * 1. schedule_events table (if migrated)
- * 2. schedules_extended.json in storage
- * 3. schedules table in Supabase
+ * 1. schedule_events table (primary modern store with recurrence & dates)
+ * 2. schedules table in Supabase (merges & auto-syncs any legacy/baseline items)
+ * 3. schedules_extended.json in storage
  * 4. DEFAULT_SCHEDULES fallback
+ * Guarantees zero events disappear when creating new ones.
  */
 export async function getSchedulesAction(): Promise<ScheduleItem[]> {
   try {
-    // 1. Try schedule_events table
+    const itemMap = new Map<string, ScheduleItem>();
+
+    // 1. Primary: Try schedule_events table
     try {
       const { data: eventData, error: eventErr } = await supabaseAdmin
         .from("schedule_events")
@@ -107,25 +110,75 @@ export async function getSchedulesAction(): Promise<ScheduleItem[]> {
         .order("start_time", { ascending: true });
 
       if (!eventErr && eventData && eventData.length > 0) {
-        return eventData.map((row) => mapRowToScheduleItem(row));
+        for (const row of eventData) {
+          itemMap.set(row.id, mapRowToScheduleItem(row));
+        }
       }
-    } catch {}
-
-    // 2. Try extended storage
-    const stored = await getStoredExtendedSchedules();
-    if (stored && stored.length > 0) {
-      return stored;
+    } catch (e) {
+      console.warn("Could not query schedule_events table:", e);
     }
 
-    // 3. Try schedules table
-    const { data, error } = await supabaseAdmin
-      .from("schedules")
-      .select("*")
-      .order("day_of_week", { ascending: true })
-      .order("start_time", { ascending: true });
+    // 2. Compatibility & Fallback: Query schedules table to ensure NO existing/legacy schedule is ever lost
+    try {
+      const { data: schedData, error: schedErr } = await supabaseAdmin
+        .from("schedules")
+        .select("*")
+        .order("day_of_week", { ascending: true })
+        .order("start_time", { ascending: true });
 
-    if (!error && data && data.length > 0) {
-      return data.map((row) => mapRowToScheduleItem(row));
+      if (!schedErr && schedData && schedData.length > 0) {
+        for (const row of schedData) {
+          if (!itemMap.has(row.id)) {
+            const mapped = mapRowToScheduleItem(row);
+            itemMap.set(row.id, mapped);
+
+            // Automatically mirror into schedule_events
+            try {
+              await supabaseAdmin.from("schedule_events").upsert({
+                id: row.id,
+                title: row.title,
+                category: row.category,
+                day_of_week: row.day_of_week,
+                start_time: row.start_time,
+                end_time: row.end_time,
+                age_group: row.age_group,
+                location: row.location || "Славейков, блок 48, партер",
+                capacity: 10,
+                is_active: row.is_active ?? true,
+                event_date: null,
+                recurrence_type: "none",
+                recurrence_count: null,
+                recurrence_until: null,
+                series_id: null,
+              });
+            } catch {}
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not query schedules table:", e);
+    }
+
+    // 3. Extended storage fallback
+    if (itemMap.size === 0) {
+      const stored = await getStoredExtendedSchedules();
+      if (stored && stored.length > 0) {
+        for (const item of stored) {
+          if (!itemMap.has(item.id)) {
+            itemMap.set(item.id, item);
+          }
+        }
+      }
+    }
+
+    if (itemMap.size > 0) {
+      const allItems = Array.from(itemMap.values());
+      return allItems.sort((a, b) => {
+        if (a.dayOfWeek !== b.dayOfWeek) {
+          return a.dayOfWeek - b.dayOfWeek;
+        }
+        return a.startTime.localeCompare(b.startTime);
+      });
     }
 
     return DEFAULT_SCHEDULES;
@@ -234,6 +287,7 @@ export async function createScheduleAction(data: ScheduleFormData) {
       message: `Успешно ${newItems.length > 1 ? `бяха добавени ${newItems.length} занятия` : "беше добавено занятието"}!`,
       ids: newItems.map((item) => item.id),
       seriesId,
+      items: newItems,
     };
   } catch (err: unknown) {
     console.error("Create schedule exception:", err);
@@ -327,6 +381,9 @@ export async function updateScheduleAction(
       message: updateAllSeries
         ? "Всички занятия от серията бяха обновени!"
         : "Занятието е обновено успешно!",
+      items: updatedList.filter((item) =>
+        updateAllSeries && seriesId ? item.seriesId === seriesId : item.id === id
+      ),
     };
   } catch (err: unknown) {
     console.error("Update schedule exception:", err);

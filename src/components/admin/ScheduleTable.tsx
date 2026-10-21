@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useMemo } from "react";
+import React, { useState, useEffect, useTransition, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -39,9 +39,11 @@ import {
   formatDateHumanBg,
   isEventOnDate,
   getRecurrenceHumanSummary,
+  itemToRecord,
 } from "@/lib/schedule-data";
 import { getActivityIcon } from "@/lib/schedule-icons";
 import {
+  getSchedulesAction,
   toggleScheduleActiveAction,
   deleteScheduleAction,
   uploadScheduleFileAction,
@@ -114,6 +116,10 @@ export function ScheduleTable({
   initialScheduleFileName = "",
 }: ScheduleTableProps) {
   const [schedules, setSchedules] = useState<ScheduleRecord[]>(initialSchedules);
+
+  useEffect(() => {
+    setSchedules(initialSchedules);
+  }, [initialSchedules]);
   const [scheduleFileUrl, setScheduleFileUrl] = useState<string>(initialScheduleFileUrl);
   const [scheduleFileName, setScheduleFileName] = useState<string>(initialScheduleFileName);
   const [selectedScheduleFile, setSelectedScheduleFile] = useState<File | null>(null);
@@ -1483,8 +1489,20 @@ export function ScheduleTable({
         allSchedules={schedules}
         initialDate={modalInitialDate}
         onClose={() => setModalOpen(false)}
-        onSaved={() => {
-          window.location.reload();
+        onSaved={async (savedItems) => {
+          if (savedItems && savedItems.length > 0) {
+            setSchedules((prev) => {
+              const newIds = new Set(savedItems.map((item) => item.id));
+              const filtered = prev.filter((item) => !newIds.has(item.id));
+              return [...filtered, ...savedItems];
+            });
+          }
+          try {
+            const fresh = await getSchedulesAction();
+            if (fresh && fresh.length > 0) {
+              setSchedules(fresh.map(itemToRecord));
+            }
+          } catch {}
         }}
       />
 
