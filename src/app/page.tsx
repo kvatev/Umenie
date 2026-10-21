@@ -17,6 +17,7 @@ import { getBlogPosts } from "@/lib/blog-service";
 import { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
+import { listReviewsImagesAction } from "@/actions/admin-media";
 
 export const revalidate = 60; // revalidate on demand or every 60s
 
@@ -55,9 +56,10 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [settings, blogPosts] = await Promise.all([
+  const [settings, blogPosts, reviewsRes] = await Promise.all([
     getSiteSettings(),
-    getBlogPosts({ limit: 3 }),
+    getBlogPosts({ limit: 6 }),
+    listReviewsImagesAction(),
   ]);
 
   let heroMediaSrc = "/images/opening-photo.webp";
@@ -71,8 +73,9 @@ export default async function HomePage() {
     heroMediaSrc = settings.heroBannerUrl;
   }
 
-  // 2. Resolve Review Screenshot
+  // 2. Resolve Review Screenshot & Reviews List
   let reviewScreenshotUrl: string | null = settings.reviewScreenshotUrl || "/images/review-screenshot.webp";
+  const reviewImages = reviewsRes.items || [];
 
   // 3. Resolve Gallery from gallery_images table or storage
   let dynamicGalleryImages: { src: string; alt: string }[] | undefined = undefined;
@@ -386,10 +389,13 @@ export default async function HomePage() {
       {/* 6. "ЗАЩО ДА ИЗБЕРЕТЕ КЛУБ УМЕНИЕ?" (Must be positioned ABOVE Reviews section!) */}
       <WhyChooseUs />
 
-      {/* 7. СЕКЦИЯ ОТЗИВИ ("Ето какво казват родителите") */}
-      <ReviewsSection screenshotUrl={reviewScreenshotUrl} />
+      {/* 7. СЕКЦИЯ ОТЗИВИ ("Ето какво казват родителите" - Dynamic slider for multiple reviews) */}
+      <ReviewsSection
+        screenshotUrl={reviewScreenshotUrl}
+        reviewImages={reviewImages}
+      />
 
-      {/* 8. BLOG / ARTICLES SECTION */}
+      {/* 8. BLOG / ARTICLES SECTION (Horizontal swipeable carousel with arrows) */}
       <HomeBlogSection posts={blogPosts} />
 
       {/* 9. QUICK CONTACT BANNER & FOOTER */}

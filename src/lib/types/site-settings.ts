@@ -41,8 +41,9 @@ export interface SiteSettings {
   heroBannerUrl?: string;
   heroVideoUrl?: string;
   heroMediaType?: "image" | "video";
-  // Review Screenshot setting
+  // Review Screenshot setting (single or multiple)
   reviewScreenshotUrl?: string;
+  reviewScreenshots?: string[];
   // Kids Gallery slide order
   kidsGalleryOrder?: string[];
   // Weekly Schedule File (PDF/Image)
@@ -71,6 +72,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   heroVideoUrl: "",
   heroMediaType: "image",
   reviewScreenshotUrl: "",
+  reviewScreenshots: [],
   kidsGalleryOrder: [],
   scheduleFileUrl: "",
   scheduleFileName: "",

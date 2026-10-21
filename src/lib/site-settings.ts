@@ -57,6 +57,14 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       ...(dbRow?.settings_json || {}),
     };
 
+    const resolvedReviewUrl = dbRow?.testimonial_image_url || json.reviewScreenshotUrl?.trim() || "";
+    let resolvedReviewScreenshots: string[] = [];
+    if (Array.isArray(json.reviewScreenshots) && json.reviewScreenshots.length > 0) {
+      resolvedReviewScreenshots = json.reviewScreenshots;
+    } else if (resolvedReviewUrl) {
+      resolvedReviewScreenshots = [resolvedReviewUrl];
+    }
+
     return {
       phoneDisplay: json.phoneDisplay?.trim() || DEFAULT_SETTINGS.phoneDisplay,
       phoneFull: json.phoneFull?.trim() || DEFAULT_SETTINGS.phoneFull,
@@ -72,7 +80,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       heroBannerUrl: (dbRow?.hero_media_type === "image" ? dbRow?.hero_media_url : null) || json.heroBannerUrl?.trim() || "",
       heroVideoUrl: (dbRow?.hero_media_type === "video" ? dbRow?.hero_media_url : null) || json.heroVideoUrl?.trim() || "",
       heroMediaType: dbRow?.hero_media_type || (json.heroMediaType === "video" ? "video" : "image"),
-      reviewScreenshotUrl: dbRow?.testimonial_image_url || json.reviewScreenshotUrl?.trim() || "",
+      reviewScreenshotUrl: resolvedReviewUrl,
+      reviewScreenshots: resolvedReviewScreenshots,
       kidsGalleryOrder: Array.isArray(json.kidsGalleryOrder) ? json.kidsGalleryOrder : [],
       scheduleFileUrl: json.scheduleFileUrl?.trim() || "",
       scheduleFileName: json.scheduleFileName?.trim() || "",

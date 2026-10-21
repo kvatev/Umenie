@@ -73,7 +73,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
               </p>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 mt-auto">
               <Link
                 href={`/blog/${post.slug}`}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm hover:bg-brand-purple-hover transition-all transform hover:scale-[1.02] active:scale-95 shadow-button"
@@ -144,17 +144,17 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
           </p>
         </div>
 
-        {/* Read More Link */}
-        <div className="pt-2 border-t border-brand-purple/10 flex items-center justify-between">
-          <span className="text-xs font-semibold text-brand-muted">
+        {/* Read More Link (pinned to bottom with mt-auto) */}
+        <div className="pt-3 border-t border-brand-purple/10 flex items-center justify-between mt-auto">
+          <span className="text-xs font-semibold text-brand-muted truncate max-w-[120px]">
             {post.author}
           </span>
           <Link
             href={`/blog/${post.slug}`}
-            className="inline-flex items-center gap-1.5 text-xs font-heading font-bold text-brand-purple hover:text-brand-purple-dark transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-heading font-bold text-brand-purple hover:text-brand-purple-dark transition-colors group/link"
           >
-            <span>Още</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            <span>Прочети повече</span>
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/link:translate-x-1" />
           </Link>
         </div>
       </div>

@@ -423,7 +423,7 @@ export async function saveKidsGalleryOrderAction(orderedPaths: string[]) {
 }
 
 /**
- * 3. Upload a review screenshot for "За Нас" page into reviews_images table
+ * 3. Upload a review screenshot into reviews_images table and site_settings.reviewScreenshots
  */
 export async function uploadReviewImageAction(formData: FormData) {
   try {
@@ -444,28 +444,64 @@ export async function uploadReviewImageAction(formData: FormData) {
 
     const { publicUrl } = await safeUpload(filePath, buffer, file.type || "image/jpeg", false);
 
-    // Insert into reviews_images table
+    // 1. Insert into reviews_images table (if present)
+    let newId = `rev-${Date.now()}`;
     try {
       const { count } = await supabaseAdmin
         .from("reviews_images")
         .select("*", { count: "exact", head: true });
 
-      await supabaseAdmin.from("reviews_images").insert({
-        public_url: publicUrl,
-        display_order: (count || 0) + 1,
-      });
+      const { data: inserted } = await supabaseAdmin
+        .from("reviews_images")
+        .insert({
+          public_url: publicUrl,
+          display_order: (count || 0) + 1,
+        })
+        .select()
+        .single();
+
+      if (inserted?.id) {
+        newId = inserted.id;
+      }
     } catch (err) {
-      console.warn("Could not insert into reviews_images table:", err);
+      console.warn("Could not insert into reviews_images table (syncing with site_settings):", err);
+    }
+
+    // 2. Sync to site_settings.reviewScreenshots
+    try {
+      const { getSiteSettings } = await import("@/lib/site-settings");
+      const { updateSiteSettingsAction } = await import("./admin-settings");
+      const currentSettings = await getSiteSettings();
+      const existing = Array.isArray(currentSettings.reviewScreenshots)
+        ? [...currentSettings.reviewScreenshots]
+        : [];
+      if (!existing.includes(publicUrl)) {
+        existing.push(publicUrl);
+      }
+      await updateSiteSettingsAction({
+        reviewScreenshots: existing,
+        reviewScreenshotUrl: currentSettings.reviewScreenshotUrl || publicUrl,
+      });
+    } catch (settingsErr) {
+      console.warn("Could not sync review to site_settings:", settingsErr);
     }
 
     revalidatePublicPages();
     revalidatePath("/admin/media");
     revalidatePath("/admin");
+    revalidatePath("/admin/pages/home");
+    revalidatePath("/");
+    revalidatePath("/za-nas");
 
     return {
       success: true,
       message: "Отзивът е качен успешно!",
       url: publicUrl,
+      item: {
+        id: newId,
+        public_url: publicUrl,
+        display_order: 999,
+      },
     };
   } catch (err: unknown) {
     console.error("Upload review image exception:", err);
@@ -474,7 +510,7 @@ export async function uploadReviewImageAction(formData: FormData) {
 }
 
 /**
- * List "За Нас" review images from reviews_images table or reviews/ storage folder
+ * List review images from reviews_images table, site_settings, or storage folder
  */
 export async function listReviewsImagesAction(): Promise<{
   success: boolean;
@@ -482,16 +518,30 @@ export async function listReviewsImagesAction(): Promise<{
 }> {
   try {
     // 1. Try querying reviews_images table
-    const { data: dbRows } = await supabaseAdmin
-      .from("reviews_images")
-      .select("*")
-      .order("display_order", { ascending: true });
+    try {
+      const { data: dbRows, error: dbErr } = await supabaseAdmin
+        .from("reviews_images")
+        .select("*")
+        .order("display_order", { ascending: true });
 
-    if (dbRows && dbRows.length > 0) {
-      return { success: true, items: dbRows as ReviewImageRecord[] };
+      if (!dbErr && dbRows && dbRows.length > 0) {
+        return { success: true, items: dbRows as ReviewImageRecord[] };
+      }
+    } catch {}
+
+    // 2. Check site settings reviewScreenshots
+    const { getSiteSettings } = await import("@/lib/site-settings");
+    const settings = await getSiteSettings();
+    if (settings.reviewScreenshots && settings.reviewScreenshots.length > 0) {
+      const items: ReviewImageRecord[] = settings.reviewScreenshots.map((url, idx) => ({
+        id: `settings-${idx}`,
+        public_url: url,
+        display_order: idx + 1,
+      }));
+      return { success: true, items };
     }
 
-    // 2. Fallback to storage folder reviews/
+    // 3. Fallback to storage folder reviews/
     const storageRes = await listMediaFolderAction("reviews");
     const fallbackItems: ReviewImageRecord[] = (storageRes.items || []).map((item, idx) => ({
       id: item.id || `storage-${idx}`,
@@ -507,25 +557,46 @@ export async function listReviewsImagesAction(): Promise<{
 }
 
 /**
- * Delete a review image from reviews_images table
+ * Delete a review image from reviews_images table, site_settings, and storage
  */
 export async function deleteReviewImageAction(id: string, publicUrl?: string) {
   try {
-    await supabaseAdmin.from("reviews_images").delete().eq("id", id);
+    try {
+      await supabaseAdmin.from("reviews_images").delete().eq("id", id);
+    } catch {}
 
     if (publicUrl) {
       try {
-        const filename = publicUrl.split("/").pop();
+        const filename = publicUrl.split("/").pop()?.split("?")[0];
         if (filename) {
           await supabaseAdmin.storage.from(MEDIA_BUCKET).remove([`reviews/${filename}`]);
           await supabaseAdmin.storage.from(FALLBACK_BUCKET).remove([`reviews/${filename}`]);
         }
+      } catch {}
+
+      try {
+        const { getSiteSettings } = await import("@/lib/site-settings");
+        const { updateSiteSettingsAction } = await import("./admin-settings");
+        const currentSettings = await getSiteSettings();
+        const existing = Array.isArray(currentSettings.reviewScreenshots)
+          ? [...currentSettings.reviewScreenshots]
+          : [];
+        const filtered = existing.filter((u) => u !== publicUrl && !u.includes(id));
+        await updateSiteSettingsAction({
+          reviewScreenshots: filtered,
+          reviewScreenshotUrl:
+            currentSettings.reviewScreenshotUrl === publicUrl
+              ? (filtered[0] || "")
+              : currentSettings.reviewScreenshotUrl,
+        });
       } catch {}
     }
 
     revalidatePublicPages();
     revalidatePath("/admin/media");
     revalidatePath("/admin");
+    revalidatePath("/admin/pages/home");
+    revalidatePath("/");
     revalidatePath("/za-nas");
 
     return { success: true, message: "Отзивът е изтрит успешно!" };
@@ -536,21 +607,34 @@ export async function deleteReviewImageAction(id: string, publicUrl?: string) {
 }
 
 /**
- * Reorder review screenshots in reviews_images table
+ * Reorder review screenshots in reviews_images table and site_settings
  */
-export async function reorderReviewImagesAction(orderedIds: string[]) {
+export async function reorderReviewImagesAction(orderedUrlsOrIds: string[]) {
   try {
-    for (let i = 0; i < orderedIds.length; i++) {
-      const id = orderedIds[i];
-      await supabaseAdmin
-        .from("reviews_images")
-        .update({ display_order: i + 1 })
-        .eq("id", id);
-    }
+    // 1. Try table update
+    try {
+      for (let i = 0; i < orderedUrlsOrIds.length; i++) {
+        const item = orderedUrlsOrIds[i];
+        await supabaseAdmin
+          .from("reviews_images")
+          .update({ display_order: i + 1 })
+          .or(`id.eq.${item},public_url.eq.${item}`);
+      }
+    } catch {}
+
+    // 2. Sync site_settings
+    try {
+      const { updateSiteSettingsAction } = await import("./admin-settings");
+      await updateSiteSettingsAction({
+        reviewScreenshots: orderedUrlsOrIds,
+      });
+    } catch {}
 
     revalidatePublicPages();
     revalidatePath("/admin/media");
     revalidatePath("/admin");
+    revalidatePath("/admin/pages/home");
+    revalidatePath("/");
     revalidatePath("/za-nas");
 
     return {
@@ -562,4 +646,3 @@ export async function reorderReviewImagesAction(orderedIds: string[]) {
     return { success: false, message: "Грешка при записване на подредбата." };
   }
 }
-

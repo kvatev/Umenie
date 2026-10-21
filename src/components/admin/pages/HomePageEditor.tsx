@@ -14,15 +14,25 @@ import {
   AlertCircle,
   ArrowUp,
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   ExternalLink,
   Save,
   RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Plus,
 } from "lucide-react";
 import {
   uploadHeroBannerAction,
   saveHeroVideoUrlAction,
   uploadReviewScreenshotAction,
   deleteReviewScreenshotAction,
+  uploadReviewImageAction,
+  deleteReviewImageAction,
+  reorderReviewImagesAction,
+  ReviewImageRecord,
   uploadGalleryPhotoAction,
   deleteMediaObjectAction,
   saveKidsGalleryOrderAction,
@@ -35,6 +45,7 @@ interface HomePageEditorProps {
   initialHeroVideoUrl?: string;
   initialHeroMediaType?: "image" | "video";
   initialReviewScreenshotUrl?: string;
+  initialReviewsImages?: ReviewImageRecord[];
   initialKidsGallery: StorageMediaItem[];
   initialKidsGalleryOrder?: string[];
 }
@@ -54,6 +65,7 @@ export function HomePageEditor({
   initialHeroVideoUrl = "",
   initialHeroMediaType = "image",
   initialReviewScreenshotUrl = "",
+  initialReviewsImages = [],
   initialKidsGallery,
   initialKidsGalleryOrder = [],
 }: HomePageEditorProps) {
@@ -68,11 +80,10 @@ export function HomePageEditor({
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [heroMessage, setHeroMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // 2. REVIEWS SCREENSHOT STATE
-  const [reviewScreenshotUrl, setReviewScreenshotUrl] = useState<string>(initialReviewScreenshotUrl);
-  const [reviewFile, setReviewFile] = useState<File | null>(null);
-  const [reviewPreview, setReviewPreview] = useState<string | null>(null);
+  // 2. REVIEWS SCREENSHOTS & CAROUSEL STATE
+  const [reviewsImages, setReviewsImages] = useState<ReviewImageRecord[]>(initialReviewsImages);
   const [reviewMessage, setReviewMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [previewReviewIndex, setPreviewReviewIndex] = useState<number>(0);
 
   // 3. KIDS GALLERY STATE
   const [kidsGallery, setKidsGallery] = useState<StorageMediaItem[]>(initialKidsGallery);
@@ -167,44 +178,77 @@ export function HomePageEditor({
     });
   };
 
-  // --- HANDLERS: REVIEWS ---
-  const handleReviewFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setReviewFile(file);
-      setReviewPreview(URL.createObjectURL(file));
-      setReviewMessage(null);
-    }
+  // --- HANDLERS: REVIEWS (MULTI-REVIEW CAROUSEL) ---
+  const handleUploadReviewImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setReviewMessage(null);
+    startTransition(async () => {
+      let successCount = 0;
+      const added: ReviewImageRecord[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await uploadReviewImageAction(formData);
+        if (res.success && res.url) {
+          successCount++;
+          added.push({
+            id: res.item?.id || res.url,
+            public_url: res.url,
+            display_order: reviewsImages.length + added.length + 1,
+          });
+        }
+      }
+
+      if (successCount > 0) {
+        setReviewsImages((prev) => [...prev, ...added]);
+        setReviewMessage({
+          type: "success",
+          text: `Успешно ${successCount === 1 ? "качихте 1 нов отзив" : `качихте ${successCount} нови отзива`}! Слайдърът на началната страница е обновен на живо.`,
+        });
+      } else {
+        setReviewMessage({ type: "error", text: "Грешка при качване на скрийншотите за отзиви." });
+      }
+      e.target.value = "";
+    });
   };
 
-  const handleUploadReview = () => {
-    if (!reviewFile) return;
+  const handleDeleteReviewImage = (id: string, publicUrl?: string) => {
+    if (!confirm("Сигурни ли сте, че искате да премахнете този отзив от слайдъра?")) return;
+    setReviewMessage(null);
     startTransition(async () => {
-      const formData = new FormData();
-      formData.append("file", reviewFile);
-      const res = await uploadReviewScreenshotAction(formData);
-      if (res.success && res.url) {
-        setReviewScreenshotUrl(res.url);
-        setReviewPreview(null);
-        setReviewFile(null);
-        setReviewMessage({ type: "success", text: res.message || "Скрийншотът е обновен успешно!" });
+      const res = await deleteReviewImageAction(id, publicUrl);
+      if (res.success) {
+        setReviewsImages((prev) => prev.filter((img) => img.id !== id && img.public_url !== publicUrl));
+        setReviewMessage({ type: "success", text: "Отзивът беше премахнат успешно!" });
       } else {
-        setReviewMessage({ type: "error", text: res.message || "Грешка при качване." });
+        setReviewMessage({ type: "error", text: res.message || "Грешка при изтриване на отзива." });
       }
     });
   };
 
-  const handleDeleteReview = () => {
-    if (!confirm("Сигурни ли сте, че искате да върнете стандартния скрийншот за отзив?")) return;
+  const handleMoveReviewImage = (index: number, direction: "left" | "right") => {
+    const targetIdx = direction === "left" ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= reviewsImages.length) return;
+
+    const updated = [...reviewsImages];
+    const temp = updated[index];
+    updated[index] = updated[targetIdx];
+    updated[targetIdx] = temp;
+
+    setReviewsImages(updated);
+    setReviewMessage(null);
+
     startTransition(async () => {
-      const res = await deleteReviewScreenshotAction();
+      const orderedIds = updated.map((img) => img.id);
+      const res = await reorderReviewImagesAction(orderedIds);
       if (res.success) {
-        setReviewScreenshotUrl("");
-        setReviewPreview(null);
-        setReviewFile(null);
-        setReviewMessage({ type: "success", text: res.message });
+        setReviewMessage({ type: "success", text: "Подредбата на отзивите в слайдъра е запазена на живо!" });
       } else {
-        setReviewMessage({ type: "error", text: res.message || "Грешка при изтриване." });
+        setReviewMessage({ type: "error", text: res.message || "Грешка при пренареждане." });
       }
     });
   };
@@ -361,7 +405,7 @@ export function HomePageEditor({
           Страница: Начало
         </h1>
         <p className="text-brand-muted text-xs sm:text-sm font-sans mt-0.5">
-          Управлявайте главния банер или видео, отзива и детската въртележка „Нашите деца с умения“.
+          Управлявайте главния банер или видео, отзивите от родители (интерактивен слайдър) и детската въртележка „Нашите деца с умения“.
         </p>
       </div>
 
@@ -390,7 +434,7 @@ export function HomePageEditor({
           )}
         >
           <MessageSquareQuote className="w-4 h-4" />
-          <span>2. Секция Отзиви</span>
+          <span>2. Секция Отзиви ({reviewsImages.length})</span>
         </button>
 
         <button
@@ -455,7 +499,7 @@ export function HomePageEditor({
                   )}
                 >
                   <Video className="w-3.5 h-3.5" />
-                  <span>Видео URL</span>
+                  <span>Видео</span>
                 </button>
               </div>
             </div>
@@ -478,15 +522,15 @@ export function HomePageEditor({
               </div>
             )}
 
-            {/* A. Image Upload Mode */}
             {heroMediaType === "image" ? (
+              /* A. Image Banner Upload Mode */
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 <div className="space-y-4">
                   <h3 className="font-heading font-bold text-sm text-brand-dark">
-                    Качване на ново изображение
+                    Качване на нов главен банер
                   </h3>
                   <p className="text-xs text-brand-muted leading-relaxed font-sans">
-                    Препоръчителен формат: WebP или JPEG с висока резолюция (1920x1080px или по-висока). Снимката автоматично се качва в Supabase Storage.
+                    Препоръчителен размер: 1920x1080px (съотношение 16:9), WebP или JPEG формат за максимално бързо зареждане.
                   </p>
 
                   <div className="p-4 rounded-2xl bg-brand-bg/60 border border-dashed border-brand-purple/30 space-y-3">
@@ -508,13 +552,13 @@ export function HomePageEditor({
                         ) : (
                           <Upload className="w-4 h-4" />
                         )}
-                        <span>Качи и активирай банера</span>
+                        <span>Качи банера</span>
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Hero Preview */}
+                {/* Preview */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-brand-dark">Текущ активен банер:</span>
@@ -571,18 +615,43 @@ export function HomePageEditor({
       )}
 
       {/* ============================================================ */}
-      {/* 2. REVIEWS SECTION CONTROLS (Single review screenshot) */}
+      {/* 2. REVIEWS SECTION CONTROLS (Multi-review Slider / Carousel) */}
       {/* ============================================================ */}
       {activeSubTab === "reviews" && (
         <div className="space-y-6">
           <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-card border border-brand-purple/15 space-y-6">
-            <div className="pb-4 border-b border-brand-purple/10">
-              <h2 className="font-heading font-bold text-xl text-brand-dark">
-                Секция Отзиви: Заглавен скрийншот
-              </h2>
-              <p className="text-xs text-brand-muted mt-0.5">
-                Управлявайте скрийншота на реален отзив от родител, показан в секцията „Ето какво казват родителите“ на началната страница.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-brand-purple/10">
+              <div>
+                <h2 className="font-heading font-bold text-xl text-brand-dark flex items-center gap-2">
+                  <span>Секция Отзиви: Интерактивен слайдър</span>
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand-purple/15 text-brand-purple">
+                    {reviewsImages.length} {reviewsImages.length === 1 ? "отзив" : "отзива"}
+                  </span>
+                </h2>
+                <p className="text-xs text-brand-muted mt-1 max-w-2xl font-sans leading-relaxed">
+                  Качвайте скрийншоти от доволни родители (Facebook, Viber, Instagram). Когато има 1 отзив, той се показва статично. Когато качите 2 или повече, на началната страница автоматично се включва динамичен слайдър със стрелки, точки за превъртане и touch-swipe поддръжка!
+                </p>
+              </div>
+
+              {/* Upload Action */}
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <label className="px-4 py-2.5 rounded-2xl bg-brand-purple text-white font-heading font-bold text-xs shadow-button hover:bg-brand-purple-hover transition-all flex items-center gap-2 cursor-pointer">
+                  {isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  <span>Добави отзив(и)</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    disabled={isPending}
+                    onChange={handleUploadReviewImages}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
 
             {reviewMessage && (
@@ -603,72 +672,168 @@ export function HomePageEditor({
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-              <div className="space-y-4">
-                <h3 className="font-heading font-bold text-sm text-brand-dark">
-                  Качване на нов скрийншот
-                </h3>
-                <p className="text-xs text-brand-muted leading-relaxed font-sans">
-                  Качете екранна снимка на отзив от Facebook, Viber или Instagram. Файлът ще се качи като `review-screenshot.webp`.
-                </p>
+            {/* List of uploaded reviews */}
+            {reviewsImages.length === 0 ? (
+              <div className="p-8 rounded-2xl border-2 border-dashed border-brand-purple/20 text-center space-y-3 bg-brand-bg/40">
+                <div className="w-12 h-12 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center mx-auto">
+                  <MessageSquareQuote className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-heading font-bold text-sm text-brand-dark">
+                    Няма качени скрийншоти с отзиви
+                  </h4>
+                  <p className="text-xs text-brand-muted mt-1 max-w-md mx-auto">
+                    В момента на началната страница се показва фабричният примерен отзив на Нели Иванова. Натиснете бутона „Добави отзив(и)“ по-горе, за да качите реални екранни снимки.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-heading font-bold text-sm text-brand-dark mb-3">
+                    Качени отзиви в слайдъра (плъзнете или използвайте стрелките за пренареждане):
+                  </h3>
 
-                <div className="p-4 rounded-2xl bg-brand-bg/60 border border-dashed border-brand-purple/30 space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleReviewFileChange}
-                    className="block w-full text-xs text-brand-muted file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-heading file:font-bold file:bg-brand-purple/10 file:text-brand-purple hover:file:bg-brand-purple hover:file:text-white file:transition-colors cursor-pointer"
-                  />
-
-                  <div className="flex items-center gap-2">
-                    {reviewFile && (
-                      <button
-                        onClick={handleUploadReview}
-                        disabled={isPending}
-                        className="flex-1 py-2.5 px-4 rounded-xl bg-brand-purple text-white font-heading font-bold text-xs uppercase tracking-wider shadow-button hover:bg-brand-purple-hover transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {reviewsImages.map((review, idx) => (
+                      <div
+                        key={review.id}
+                        className="bg-brand-bg/50 rounded-2xl border border-brand-purple/15 overflow-hidden flex flex-col justify-between group hover:border-brand-purple transition-all shadow-xs"
                       >
-                        {isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Upload className="w-4 h-4" />
-                        )}
-                        <span>Качи новия отзив</span>
-                      </button>
-                    )}
+                        <div className="relative aspect-[4/3] w-full bg-slate-900 overflow-hidden flex items-center justify-center">
+                          <Image
+                            src={review.public_url}
+                            alt={`Отзив #${idx + 1}`}
+                            fill
+                            className="object-contain"
+                          />
+                          <div className="absolute top-2 left-2 bg-brand-purple text-white text-[10px] font-heading font-bold px-2 py-0.5 rounded-md shadow-xs">
+                            #{idx + 1}
+                          </div>
+                        </div>
 
-                    {reviewScreenshotUrl && (
-                      <button
-                        onClick={handleDeleteReview}
-                        disabled={isPending}
-                        className="py-2.5 px-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1 cursor-pointer"
-                        title="Върни фабричния скрийншот"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Фабричен</span>
-                      </button>
+                        <div className="p-3 space-y-2">
+                          <div className="flex items-center justify-between pt-1 border-t border-brand-purple/10">
+                            {/* Reorder Buttons */}
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleMoveReviewImage(idx, "left")}
+                                disabled={idx === 0 || isPending}
+                                className="p-1.5 rounded-lg bg-white border border-brand-purple/20 text-brand-dark hover:bg-brand-purple hover:text-white transition-colors disabled:opacity-30 cursor-pointer"
+                                title="Премести напред"
+                              >
+                                <ArrowLeft className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveReviewImage(idx, "right")}
+                                disabled={idx === reviewsImages.length - 1 || isPending}
+                                className="p-1.5 rounded-lg bg-white border border-brand-purple/20 text-brand-dark hover:bg-brand-purple hover:text-white transition-colors disabled:opacity-30 cursor-pointer"
+                                title="Премести назад"
+                              >
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                              {/* Open link */}
+                              <a
+                                href={review.public_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-white border border-brand-purple/20 text-brand-purple hover:bg-brand-purple hover:text-white transition-colors cursor-pointer"
+                                title="Преглед в пълен размер"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+
+                              {/* Delete button */}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteReviewImage(review.id, review.public_url)}
+                                disabled={isPending}
+                                className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
+                                title="Изтрий отзива"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Live Slider Preview for Admin */}
+                <div className="pt-4 border-t border-brand-purple/10">
+                  <h3 className="font-heading font-bold text-sm text-brand-dark mb-1">
+                    Интерактивен предварителен преглед на слайдъра:
+                  </h3>
+                  <p className="text-xs text-brand-muted mb-4 font-sans">
+                    Ето как посетителите на началната страница виждат и прелистват отзивите:
+                  </p>
+
+                  <div className="w-full max-w-xl mx-auto bg-slate-950 rounded-2xl p-4 shadow-card border border-brand-purple/20 relative">
+                    <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden flex items-center justify-center">
+                      <Image
+                        key={reviewsImages[previewReviewIndex]?.public_url || reviewsImages[0]?.public_url}
+                        src={reviewsImages[previewReviewIndex]?.public_url || reviewsImages[0]?.public_url}
+                        alt="Преглед на отзив"
+                        fill
+                        className="object-contain"
+                      />
+
+                      {reviewsImages.length >= 2 && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewReviewIndex((prev) =>
+                                prev === 0 ? reviewsImages.length - 1 : prev - 1
+                              )
+                            }
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-brand-purple shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-110"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewReviewIndex((prev) =>
+                                prev === reviewsImages.length - 1 ? 0 : prev + 1
+                              )
+                            }
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-brand-purple shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-110"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {reviewsImages.length >= 2 && (
+                      <div className="flex justify-center items-center gap-1.5 mt-3">
+                        {reviewsImages.map((_, dotIdx) => (
+                          <button
+                            key={dotIdx}
+                            type="button"
+                            onClick={() => setPreviewReviewIndex(dotIdx)}
+                            className={cn(
+                              "h-2 rounded-full transition-all cursor-pointer",
+                              previewReviewIndex === dotIdx
+                                ? "w-6 bg-brand-purple"
+                                : "w-2 bg-brand-purple/40"
+                            )}
+                          />
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
-
-              {/* Preview */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-brand-dark">Текущ отзив:</span>
-                  <span className="text-brand-purple font-bold text-[10px] bg-brand-purple/10 px-2 py-0.5 rounded-md">
-                    {reviewScreenshotUrl ? "Персонализиран" : "Фабричен"}
-                  </span>
-                </div>
-                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden border border-brand-purple/20 bg-slate-900 shadow-sm">
-                  <Image
-                    src={reviewPreview || reviewScreenshotUrl || "/images/review-screenshot.webp"}
-                    alt="Review screenshot preview"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -835,7 +1000,7 @@ export function HomePageEditor({
                           />
                         </label>
 
-                        {/* Delete photo button (available for ANY photo slot) */}
+                        {/* Delete photo button */}
                         <button
                           type="button"
                           onClick={() => handleDeleteKidsPhoto(idx, photo)}

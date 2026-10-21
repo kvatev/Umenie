@@ -46,6 +46,7 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
       heroVideoUrl: formData.heroVideoUrl !== undefined ? formData.heroVideoUrl.trim() : (current.heroVideoUrl || ""),
       heroMediaType: formData.heroMediaType ?? (current.heroMediaType || "image"),
       reviewScreenshotUrl: formData.reviewScreenshotUrl !== undefined ? formData.reviewScreenshotUrl.trim() : (current.reviewScreenshotUrl || ""),
+      reviewScreenshots: formData.reviewScreenshots ?? (current.reviewScreenshots || []),
       kidsGalleryOrder: formData.kidsGalleryOrder ?? (current.kidsGalleryOrder || []),
       scheduleFileUrl: formData.scheduleFileUrl !== undefined ? formData.scheduleFileUrl.trim() : (current.scheduleFileUrl || ""),
       scheduleFileName: formData.scheduleFileName !== undefined ? formData.scheduleFileName.trim() : (current.scheduleFileName || ""),
@@ -101,6 +102,7 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
     revalidatePath("/admin/contacts");
     revalidatePath("/admin/media");
     revalidatePath("/admin/settings");
+    revalidatePath("/admin/pages/home");
 
     return {
       success: true,
