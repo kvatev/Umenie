@@ -8,8 +8,15 @@ import {
   Clock,
   User,
   ChevronRight as ArrowRightIcon,
+  Calendar as CalendarIcon,
 } from "lucide-react";
-import { ScheduleItem, DEFAULT_SCHEDULES } from "@/lib/schedule-data";
+import {
+  ScheduleItem,
+  DEFAULT_SCHEDULES,
+  formatDateKey,
+  isEventOnDate,
+  formatDateHumanBg,
+} from "@/lib/schedule-data";
 import { BookingModal } from "./BookingModal";
 import { getActivityIcon } from "@/lib/schedule-icons";
 import { cn } from "@/lib/utils";
@@ -44,7 +51,6 @@ const WEEKDAY_NAMES_BG = [
 ];
 
 const WEEKDAY_SHORTS_BG = ["Пон", "Вто", "Сря", "Чет", "Пет", "Съб", "Нед"];
-
 
 // Category dot color for mobile calendar
 function getCategoryDotColor(category: string): string {
@@ -97,6 +103,13 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
   const todayDate = today.getDate();
   const todayMonth = today.getMonth();
   const todayYear = today.getFullYear();
+  const todayKey = formatDateKey(today);
+
+  // Year options for quick select
+  const yearOptions = useMemo(() => {
+    const y = new Date().getFullYear();
+    return [y - 1, y, y + 1, y + 2, y + 3];
+  }, []);
 
   // Navigation handlers
   const handlePrevMonth = () => {
@@ -124,22 +137,22 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
   };
 
   const handleToday = () => {
-    setCurrentDate(new Date(todayYear, todayMonth, 1));
-    setSelectedDayNumber(todayDate);
+    const now = new Date();
+    setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    setSelectedDayNumber(now.getDate());
   };
 
-  // Group schedules by day of week (1 = Mon ... 7 = Sun)
-  const schedulesByDayOfWeek = useMemo(() => {
-    const map: Record<number, ScheduleItem[]> = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] };
-    schedules.forEach((item) => {
-      if (map[item.dayOfWeek]) {
-        map[item.dayOfWeek].push(item);
-      }
-    });
-    return map;
-  }, [schedules]);
+  const handleMonthChange = (monthIdx: number) => {
+    setCurrentDate(new Date(currentYear, monthIdx, 1));
+    setSelectedDayNumber(1);
+  };
 
-  // Generate calendar grid for current month
+  const handleYearChange = (yearVal: number) => {
+    setCurrentDate(new Date(yearVal, currentMonth, 1));
+    setSelectedDayNumber(1);
+  };
+
+  // Generate calendar grid for current month (with exact Date objects and matching events)
   const calendarDays = useMemo(() => {
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
     const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
@@ -151,38 +164,89 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
 
     // Previous month overflow days
     const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
-    const prevDays: { dayNumber: number; isCurrentMonth: boolean; dayOfWeek: number; date: Date }[] = [];
+    const prevDays: {
+      dayNumber: number;
+      isCurrentMonth: boolean;
+      dayOfWeek: number;
+      date: Date;
+      dateKey: string;
+      activities: ScheduleItem[];
+    }[] = [];
+
     for (let i = startDayOfWeek - 1; i >= 1; i--) {
       const dNum = prevMonthLastDay - i + 1;
       const d = new Date(currentYear, currentMonth - 1, dNum);
       let dow = d.getDay();
       dow = dow === 0 ? 7 : dow;
-      prevDays.push({ dayNumber: dNum, isCurrentMonth: false, dayOfWeek: dow, date: d });
+      prevDays.push({
+        dayNumber: dNum,
+        isCurrentMonth: false,
+        dayOfWeek: dow,
+        date: d,
+        dateKey: formatDateKey(d),
+        activities: [],
+      });
     }
 
     // Current month days
-    const currentDays: { dayNumber: number; isCurrentMonth: boolean; dayOfWeek: number; date: Date }[] = [];
+    const currentDays: {
+      dayNumber: number;
+      isCurrentMonth: boolean;
+      dayOfWeek: number;
+      date: Date;
+      dateKey: string;
+      activities: ScheduleItem[];
+    }[] = [];
+
     for (let d = 1; d <= totalDaysInMonth; d++) {
       const dateObj = new Date(currentYear, currentMonth, d);
       let dow = dateObj.getDay();
       dow = dow === 0 ? 7 : dow;
-      currentDays.push({ dayNumber: d, isCurrentMonth: true, dayOfWeek: dow, date: dateObj });
+
+      // Filter active schedules matching this exact calendar date (handling recurrence rules & dates)
+      const dayActs = schedules
+        .filter((act) => act.isActive !== false && isEventOnDate(act, dateObj))
+        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+      currentDays.push({
+        dayNumber: d,
+        isCurrentMonth: true,
+        dayOfWeek: dow,
+        date: dateObj,
+        dateKey: formatDateKey(dateObj),
+        activities: dayActs,
+      });
     }
 
     // Next month overflow days to complete grid (up to 35 or 42 cells)
     const combinedLength = prevDays.length + currentDays.length;
     const totalCells = combinedLength > 35 ? 42 : 35;
     const nextDaysNeeded = totalCells - combinedLength;
-    const nextDays: { dayNumber: number; isCurrentMonth: boolean; dayOfWeek: number; date: Date }[] = [];
+    const nextDays: {
+      dayNumber: number;
+      isCurrentMonth: boolean;
+      dayOfWeek: number;
+      date: Date;
+      dateKey: string;
+      activities: ScheduleItem[];
+    }[] = [];
+
     for (let d = 1; d <= nextDaysNeeded; d++) {
       const dateObj = new Date(currentYear, currentMonth + 1, d);
       let dow = dateObj.getDay();
       dow = dow === 0 ? 7 : dow;
-      nextDays.push({ dayNumber: d, isCurrentMonth: false, dayOfWeek: dow, date: dateObj });
+      nextDays.push({
+        dayNumber: d,
+        isCurrentMonth: false,
+        dayOfWeek: dow,
+        date: dateObj,
+        dateKey: formatDateKey(dateObj),
+        activities: [],
+      });
     }
 
     return [...prevDays, ...currentDays, ...nextDays];
-  }, [currentYear, currentMonth]);
+  }, [currentYear, currentMonth, schedules]);
 
   // Activities for the selected day in mobile view
   const selectedDayDate = useMemo(() => {
@@ -191,12 +255,18 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
 
   let selectedDayOfWeek = selectedDayDate.getDay();
   selectedDayOfWeek = selectedDayOfWeek === 0 ? 7 : selectedDayOfWeek;
-  const mobileDayActivities = schedulesByDayOfWeek[selectedDayOfWeek] || [];
 
-  const formattedSelectedDate = `${WEEKDAY_NAMES_BG[selectedDayOfWeek - 1]}, ${selectedDayNumber} ${MONTH_NAMES[currentMonth].toLowerCase()} ${currentYear}`;
+  const mobileDayActivities = useMemo(() => {
+    return schedules
+      .filter((act) => act.isActive !== false && isEventOnDate(act, selectedDayDate))
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }, [schedules, selectedDayDate]);
 
-  const openBooking = (item: ScheduleItem, dayNum: number, dow: number) => {
-    const dateStr = `${WEEKDAY_NAMES_BG[dow - 1]}, ${dayNum} ${MONTH_NAMES[currentMonth].toLowerCase()} ${currentYear}`;
+  const formattedSelectedDate = `${WEEKDAY_NAMES_BG[selectedDayOfWeek - 1]}, ${selectedDayNumber} ${MONTH_NAMES[currentMonth].toLowerCase()} ${currentYear} г.`;
+
+  const openBooking = (item: ScheduleItem, targetDate: Date) => {
+    const dow = targetDate.getDay() === 0 ? 7 : targetDate.getDay();
+    const dateStr = `${WEEKDAY_NAMES_BG[dow - 1]}, ${targetDate.getDate()} ${MONTH_NAMES[targetDate.getMonth()].toLowerCase()} ${targetDate.getFullYear()} г.`;
     setSelectedSchedule({ item, dateStr });
   };
 
@@ -204,7 +274,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
     <div className="w-full space-y-6">
       {/* 1. CALENDAR CONTAINER CARD */}
       <div className="bg-white rounded-3xl sm:rounded-4xl shadow-card border border-brand-purple/15 p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Month & Year Navigation Header (matching mockups 1:1) */}
+        {/* Month & Year Navigation Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-purple/10 pb-5">
           <div className="flex items-center gap-2 sm:gap-3">
             <button
@@ -215,9 +285,32 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
               <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
             </button>
 
-            <h2 className="font-heading font-bold text-xl sm:text-2xl lg:text-3xl text-brand-dark min-w-[180px] sm:min-w-[200px] text-center tracking-wide">
-              {MONTH_NAMES[currentMonth]} {currentYear}
-            </h2>
+            {/* Month & Year Selectors */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <select
+                value={currentMonth}
+                onChange={(e) => handleMonthChange(Number(e.target.value))}
+                className="font-heading font-bold text-lg sm:text-2xl lg:text-3xl text-brand-dark bg-transparent border-none focus:ring-2 focus:ring-brand-purple rounded-xl cursor-pointer py-1"
+              >
+                {MONTH_NAMES.map((m, idx) => (
+                  <option key={idx} value={idx}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={currentYear}
+                onChange={(e) => handleYearChange(Number(e.target.value))}
+                className="font-heading font-bold text-lg sm:text-2xl lg:text-3xl text-brand-dark bg-transparent border-none focus:ring-2 focus:ring-brand-purple rounded-xl cursor-pointer py-1"
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <button
               onClick={handleNextMonth}
@@ -241,7 +334,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
           </div>
         </div>
 
-        {/* 2. DESKTOP FULL MONTHLY GRID (matching "График Десктоп.png" 1:1) */}
+        {/* 2. DESKTOP FULL MONTHLY GRID */}
         <div className="hidden lg:block overflow-x-auto">
           <div className="min-w-[900px] border border-brand-purple/15 rounded-2xl overflow-hidden">
             {/* Weekday Columns Header */}
@@ -259,9 +352,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
             {/* Monthly Calendar Cells Grid */}
             <div className="grid grid-cols-7 divide-x divide-y divide-brand-purple/15 bg-white">
               {calendarDays.map((cell, index) => {
-                const dayActivities = cell.isCurrentMonth
-                  ? schedulesByDayOfWeek[cell.dayOfWeek] || []
-                  : [];
+                const dayActivities = cell.activities;
                 const isToday =
                   cell.isCurrentMonth &&
                   cell.dayNumber === todayDate &&
@@ -306,7 +397,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
                       {dayActivities.map((act) => (
                         <div
                           key={act.id}
-                          onClick={() => openBooking(act, cell.dayNumber, cell.dayOfWeek)}
+                          onClick={() => openBooking(act, cell.date)}
                           className={cn(
                             "px-2 py-1 rounded-lg border text-[11px] leading-tight font-medium cursor-pointer transition-all duration-150 shadow-xs hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] flex items-center justify-between gap-1.5 group",
                             act.badgeBg,
@@ -340,7 +431,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
           </div>
         </div>
 
-        {/* 3. MOBILE MINI-CALENDAR GRID (matching "График 1 - мобилна.png" 1:1) */}
+        {/* 3. MOBILE MINI-CALENDAR GRID */}
         <div className="block lg:hidden space-y-6">
           <div className="border border-brand-purple/15 rounded-2xl p-3 bg-brand-bg/40">
             {/* Weekdays header */}
@@ -359,9 +450,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
                   cell.dayNumber === todayDate &&
                   currentMonth === todayMonth &&
                   currentYear === todayYear;
-                const activities = cell.isCurrentMonth
-                  ? schedulesByDayOfWeek[cell.dayOfWeek] || []
-                  : [];
+                const activities = cell.activities;
                 const firstAct = activities[0];
 
                 return (
@@ -407,11 +496,11 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
             </div>
           </div>
 
-          {/* Activities List for Selected Day (matching "График 1 - мобилна.png" 1:1) */}
+          {/* Activities List for Selected Day */}
           <div className="space-y-3 pt-1">
             <h3 className="font-heading font-bold text-lg text-brand-dark px-1 flex items-center gap-2">
               <span>
-                Занимания на {selectedDayNumber} {MONTH_NAMES[currentMonth].toLowerCase()} {currentYear}
+                Занимания на {selectedDayNumber} {MONTH_NAMES[currentMonth].toLowerCase()} {currentYear} г.
               </span>
               {selectedDayNumber === todayDate &&
                 currentMonth === todayMonth &&
@@ -427,7 +516,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
                 {mobileDayActivities.map((item) => (
                   <div
                     key={item.id}
-                    onClick={() => openBooking(item, selectedDayNumber, selectedDayOfWeek)}
+                    onClick={() => openBooking(item, selectedDayDate)}
                     className="p-3.5 sm:p-4 rounded-2xl bg-white border border-brand-purple/20 shadow-sm hover:border-brand-purple hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 group active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3">

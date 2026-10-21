@@ -1,16 +1,35 @@
+﻿export type RecurrenceType =
+  | "none"         // Single occurrence (on selected date) or legacy standard weekly
+  | "weekly_eoy"   // Every week on this day until end of year
+  | "weekly_count" // For N weeks (e.g., for 2 weeks, 4 weeks)
+  | "biweekly"     // Every other week (every 14 days)
+  | "custom_until"; // Every week until custom end date
+
+export interface RecurrenceRule {
+  type: RecurrenceType;
+  count?: number;        // e.g. 2, 4, 8
+  untilDate?: string;    // "YYYY-MM-DD"
+  biweeklySpan?: "eoy" | "count" | "until";
+}
+
 export interface ScheduleItem {
   id: string;
   title: string;
   category: "english" | "math" | "knitting" | "art" | "reading" | "chess" | "stem" | "study_hall";
   dayOfWeek: number; // 1 = Понеделник, 7 = Неделя
   dayName: string;
-  startTime: string;
-  endTime: string;
+  startTime: string; // "HH:mm"
+  endTime: string;   // "HH:mm"
   ageGroup: string;
   location: string;
   badgeBg: string;
   badgeText: string;
   badgeBorder: string;
+  date?: string | null;           // "YYYY-MM-DD"
+  recurrence?: RecurrenceRule | null;
+  seriesId?: string | null;       // Shared UUID for recurring series
+  capacity?: number;
+  isActive?: boolean;
 }
 
 export const DAYS_OF_WEEK = [
@@ -71,13 +90,13 @@ export const DEFAULT_SCHEDULES: ScheduleItem[] = [
   // Вторник (2)
   {
     id: "tue-1",
-    title: "Английски 3 клас",
+    title: "Английски 3-7 клас",
     category: "english",
     dayOfWeek: 2,
     dayName: "Вторник",
-    startTime: "16:00",
-    endTime: "17:00",
-    ageGroup: "3 клас",
+    startTime: "14:00",
+    endTime: "18:00",
+    ageGroup: "3-7 клас",
     location: "Славейков, блок 48, партер",
     badgeBg: "bg-blue-100",
     badgeText: "text-blue-800",
@@ -85,7 +104,7 @@ export const DEFAULT_SCHEDULES: ScheduleItem[] = [
   },
   {
     id: "tue-2",
-    title: "Шах",
+    title: "Шахмат",
     category: "chess",
     dayOfWeek: 2,
     dayName: "Вторник",
@@ -103,212 +122,72 @@ export const DEFAULT_SCHEDULES: ScheduleItem[] = [
     category: "knitting",
     dayOfWeek: 2,
     dayName: "Вторник",
-    startTime: "18:00",
+    startTime: "17:30",
     endTime: "19:30",
-    ageGroup: "6 - 10 години",
+    ageGroup: "7 - 14 години",
     location: "Славейков, блок 48, партер",
     badgeBg: "bg-pink-100",
     badgeText: "text-pink-800",
     badgeBorder: "border-pink-300",
-  },
-  {
-    id: "tue-4",
-    title: "STEM клуб",
-    category: "stem",
-    dayOfWeek: 2,
-    dayName: "Вторник",
-    startTime: "19:00",
-    endTime: "20:00",
-    ageGroup: "8 - 12 години",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-indigo-100",
-    badgeText: "text-indigo-800",
-    badgeBorder: "border-indigo-300",
   },
 
   // Сряда (3)
   {
     id: "wed-1",
-    title: "Английски 1 клас",
+    title: "Английски 2 - 8 клас",
     category: "english",
     dayOfWeek: 3,
     dayName: "Сряда",
-    startTime: "16:00",
-    endTime: "17:00",
-    ageGroup: "1 клас",
+    startTime: "14:00",
+    endTime: "18:00",
+    ageGroup: "2 - 8 клас",
     location: "Славейков, блок 48, партер",
     badgeBg: "bg-blue-100",
     badgeText: "text-blue-800",
     badgeBorder: "border-blue-300",
-  },
-  {
-    id: "wed-2",
-    title: "Математика",
-    category: "math",
-    dayOfWeek: 3,
-    dayName: "Сряда",
-    startTime: "17:00",
-    endTime: "18:00",
-    ageGroup: "3 клас",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-emerald-100",
-    badgeText: "text-emerald-800",
-    badgeBorder: "border-emerald-300",
-  },
-  {
-    id: "wed-3",
-    title: "Плетиво",
-    category: "knitting",
-    dayOfWeek: 3,
-    dayName: "Сряда",
-    startTime: "18:00",
-    endTime: "19:30",
-    ageGroup: "7 - 14 години",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-pink-100",
-    badgeText: "text-pink-800",
-    badgeBorder: "border-pink-300",
-  },
-  {
-    id: "wed-4",
-    title: "Шах",
-    category: "chess",
-    dayOfWeek: 3,
-    dayName: "Сряда",
-    startTime: "19:00",
-    endTime: "20:00",
-    ageGroup: "Всички нива",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-purple-100",
-    badgeText: "text-purple-800",
-    badgeBorder: "border-purple-300",
   },
 
   // Четвъртък (4)
   {
     id: "thu-1",
-    title: "Четене с разбиране",
-    category: "reading",
-    dayOfWeek: 4,
-    dayName: "Четвъртък",
-    startTime: "16:00",
-    endTime: "17:00",
-    ageGroup: "1 - 3 клас",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-amber-100",
-    badgeText: "text-amber-800",
-    badgeBorder: "border-amber-300",
-  },
-  {
-    id: "thu-2",
-    title: "Арт занимания",
-    category: "art",
-    dayOfWeek: 4,
-    dayName: "Четвъртък",
-    startTime: "17:00",
-    endTime: "18:30",
-    ageGroup: "6 - 10 години",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-yellow-100",
-    badgeText: "text-yellow-800",
-    badgeBorder: "border-yellow-300",
-  },
-  {
-    id: "thu-3",
-    title: "Английски 1 клас",
+    title: "Английски 2 - 8 клас",
     category: "english",
     dayOfWeek: 4,
     dayName: "Четвъртък",
-    startTime: "18:00",
-    endTime: "19:00",
-    ageGroup: "1 клас",
+    startTime: "14:00",
+    endTime: "18:00",
+    ageGroup: "2 - 8 клас",
     location: "Славейков, блок 48, партер",
     badgeBg: "bg-blue-100",
     badgeText: "text-blue-800",
     badgeBorder: "border-blue-300",
   },
-  {
-    id: "thu-4",
-    title: "Шах",
-    category: "chess",
-    dayOfWeek: 4,
-    dayName: "Четвъртък",
-    startTime: "18:30",
-    endTime: "19:30",
-    ageGroup: "7 - 14 години",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-purple-100",
-    badgeText: "text-purple-800",
-    badgeBorder: "border-purple-300",
-  },
 
   // Петък (5)
   {
     id: "fri-1",
-    title: "STEM клуб",
-    category: "stem",
+    title: "Английски 2 - 8 клас",
+    category: "english",
     dayOfWeek: 5,
     dayName: "Петък",
-    startTime: "16:00",
-    endTime: "17:30",
-    ageGroup: "8 - 12 години",
+    startTime: "14:00",
+    endTime: "18:00",
+    ageGroup: "2 - 8 клас",
     location: "Славейков, блок 48, партер",
-    badgeBg: "bg-indigo-100",
-    badgeText: "text-indigo-800",
-    badgeBorder: "border-indigo-300",
-  },
-  {
-    id: "fri-2",
-    title: "Математика",
-    category: "math",
-    dayOfWeek: 5,
-    dayName: "Петък",
-    startTime: "17:30",
-    endTime: "18:30",
-    ageGroup: "2 клас",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-emerald-100",
-    badgeText: "text-emerald-800",
-    badgeBorder: "border-emerald-300",
-  },
-  {
-    id: "fri-3",
-    title: "Творческа работилница",
-    category: "art",
-    dayOfWeek: 5,
-    dayName: "Петък",
-    startTime: "18:30",
-    endTime: "20:00",
-    ageGroup: "7 - 12 години",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-yellow-100",
-    badgeText: "text-yellow-800",
-    badgeBorder: "border-yellow-300",
+    badgeBg: "bg-blue-100",
+    badgeText: "text-blue-800",
+    badgeBorder: "border-blue-300",
   },
 
   // Събота (6)
   {
     id: "sat-1",
-    title: "Арт занимания",
-    category: "art",
-    dayOfWeek: 6,
-    dayName: "Събота",
-    startTime: "10:00",
-    endTime: "11:30",
-    ageGroup: "5 - 9 години",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-yellow-100",
-    badgeText: "text-yellow-800",
-    badgeBorder: "border-yellow-300",
-  },
-  {
-    id: "sat-2",
     title: "Плетиво",
     category: "knitting",
     dayOfWeek: 6,
     dayName: "Събота",
-    startTime: "11:30",
-    endTime: "13:00",
+    startTime: "10:30",
+    endTime: "12:30",
     ageGroup: "7 - 14 години",
     location: "Славейков, блок 48, партер",
     badgeBg: "bg-pink-100",
@@ -316,48 +195,18 @@ export const DEFAULT_SCHEDULES: ScheduleItem[] = [
     badgeBorder: "border-pink-300",
   },
   {
-    id: "sat-3",
+    id: "sat-2",
     title: "Шах",
     category: "chess",
     dayOfWeek: 6,
     dayName: "Събота",
-    startTime: "13:00",
-    endTime: "14:30",
-    ageGroup: "Всички нива",
+    startTime: "10:30",
+    endTime: "12:30",
+    ageGroup: "6 - 12 години",
     location: "Славейков, блок 48, партер",
     badgeBg: "bg-purple-100",
     badgeText: "text-purple-800",
     badgeBorder: "border-purple-300",
-  },
-  {
-    id: "sat-4",
-    title: "Английски 2 клас",
-    category: "english",
-    dayOfWeek: 6,
-    dayName: "Събота",
-    startTime: "14:30",
-    endTime: "15:30",
-    ageGroup: "2 клас",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-blue-100",
-    badgeText: "text-blue-800",
-    badgeBorder: "border-blue-300",
-  },
-
-  // Неделя (7)
-  {
-    id: "sun-1",
-    title: "Читателски клуб „Лигериа“",
-    category: "reading",
-    dayOfWeek: 7,
-    dayName: "Неделя",
-    startTime: "17:00",
-    endTime: "19:30",
-    ageGroup: "Възрастни",
-    location: "Славейков, блок 48, партер",
-    badgeBg: "bg-amber-100",
-    badgeText: "text-amber-800",
-    badgeBorder: "border-amber-300",
   },
 ];
 
@@ -393,14 +242,32 @@ export function mapRowToScheduleItem(row: {
   end_time: string;
   age_group?: string;
   location?: string;
+  date?: string | null;
+  event_date?: string | null;
+  recurrence?: RecurrenceRule | null;
+  recurrence_type?: string | null;
+  recurrence_count?: number | null;
+  recurrence_until?: string | null;
+  series_id?: string | null;
+  seriesId?: string | null;
+  capacity?: number;
+  is_active?: boolean;
 }): ScheduleItem {
   const dayName = DAYS_OF_WEEK.find((d) => d.dayNumber === row.day_of_week)?.name || "Понеделник";
   const cat = (row.category || deduceCategory(row.title)) as ScheduleItem["category"];
   const styles = CATEGORY_STYLES[cat] || { bg: "bg-brand-purple/10", text: "text-brand-purple", border: "border-brand-purple/20" };
 
-  // Format time if it has seconds (e.g., '16:00:00' -> '16:00')
   const startTime = row.start_time?.slice(0, 5) || "16:00";
   const endTime = row.end_time?.slice(0, 5) || "17:30";
+
+  let recRule: RecurrenceRule | null = row.recurrence || null;
+  if (!recRule && row.recurrence_type && row.recurrence_type !== "none") {
+    recRule = {
+      type: row.recurrence_type as RecurrenceType,
+      count: row.recurrence_count || undefined,
+      untilDate: row.recurrence_until || undefined,
+    };
+  }
 
   return {
     id: row.id,
@@ -415,6 +282,253 @@ export function mapRowToScheduleItem(row: {
     badgeBg: styles.bg,
     badgeText: styles.text,
     badgeBorder: styles.border,
+    date: row.date || row.event_date || null,
+    recurrence: recRule,
+    seriesId: row.seriesId || row.series_id || null,
+    capacity: row.capacity || 10,
+    isActive: row.is_active !== false,
   };
 }
 
+// ====================================================================
+// TIMEZONE-SAFE CALENDAR & DATE HELPERS (Local Bulgarian Time)
+// Avoids toISOString() UTC date-shift issues.
+// ====================================================================
+
+export function formatDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function parseDateKey(str: string): Date {
+  const [y, m, d] = str.split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
+
+export function getDayOfWeekNumber(date: Date): number {
+  const dow = date.getDay();
+  return dow === 0 ? 7 : dow; // Monday = 1 ... Sunday = 7
+}
+
+export function isSameDay(d1: Date, d2: Date): boolean {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+}
+
+const BG_MONTH_NAMES = [
+  "януари", "февруари", "март", "април", "май", "юни",
+  "юли", "август", "септември", "октомври", "ноември", "декември"
+];
+
+export function formatDateHumanBg(val: Date | string): string {
+  const d = typeof val === "string" ? parseDateKey(val) : val;
+  const dayName = DAYS_OF_WEEK.find((item) => item.dayNumber === getDayOfWeekNumber(d))?.name || "";
+  return `${dayName}, ${d.getDate()} ${BG_MONTH_NAMES[d.getMonth()]} ${d.getFullYear()} г.`;
+}
+
+/**
+ * Checks whether an event occurs on a specific calendar target date.
+ */
+export function isEventOnDate(
+  item: {
+    dayOfWeek?: number;
+    day_of_week?: number;
+    date?: string | null;
+    recurrence?: RecurrenceRule | null;
+    isActive?: boolean;
+    is_active?: boolean;
+  },
+  targetDate: Date
+): boolean {
+  if (item.isActive === false || item.is_active === false) return false;
+
+  const dow = item.dayOfWeek ?? item.day_of_week ?? 1;
+  const targetDateKey = formatDateKey(targetDate);
+  const targetDow = getDayOfWeekNumber(targetDate);
+
+  // 1. If it's a legacy weekly item with NO specific date anchor:
+  if (!item.date) {
+    return dow === targetDow;
+  }
+
+  // 2. Has an anchor start date
+  const anchorDate = parseDateKey(item.date);
+  const anchorDateKey = formatDateKey(anchorDate);
+
+  // If target date is before the start date, it has not started
+  if (targetDateKey < anchorDateKey) return false;
+
+  const rule = item.recurrence;
+
+  // Single occurrence (no recurrence)
+  if (!rule || rule.type === "none") {
+    return targetDateKey === anchorDateKey;
+  }
+
+  // Must match the event's day of week
+  if (targetDow !== dow) return false;
+
+  // Day difference from anchor in full days (calendar date difference, independent of time-of-day)
+  const d1 = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate()).getTime();
+  const d2 = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()).getTime();
+  const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return false;
+
+  switch (rule.type) {
+    case "weekly_eoy": {
+      // Every week until Dec 31 of anchor year
+      const anchorYear = anchorDate.getFullYear();
+      return diffDays % 7 === 0 && targetDate.getFullYear() === anchorYear;
+    }
+    case "weekly_count": {
+      // Weekly for N weeks
+      const maxCount = rule.count && rule.count > 0 ? rule.count : 1;
+      const weekIndex = diffDays / 7;
+      return diffDays % 7 === 0 && weekIndex >= 0 && weekIndex < maxCount;
+    }
+    case "biweekly": {
+      // Every other week (every 14 days)
+      if (diffDays % 14 !== 0) return false;
+      const biweekIndex = diffDays / 14;
+
+      if (rule.biweeklySpan === "count" && rule.count) {
+        return biweekIndex >= 0 && biweekIndex < rule.count;
+      }
+      if (rule.untilDate) {
+        return targetDateKey <= rule.untilDate;
+      }
+      // default biweekly: until end of anchor year
+      return targetDate.getFullYear() === anchorDate.getFullYear();
+    }
+    case "custom_until": {
+      // Every week until custom date
+      if (diffDays % 7 !== 0) return false;
+      if (!rule.untilDate) return true;
+      return targetDateKey <= rule.untilDate;
+    }
+    default:
+      return targetDateKey === anchorDateKey;
+  }
+}
+
+/**
+ * Returns all events scheduled for a specific date, sorted chronologically.
+ */
+export function getEventsForDate(events: ScheduleItem[], targetDate: Date): ScheduleItem[] {
+  return events
+    .filter((e) => isEventOnDate(e, targetDate))
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+}
+
+export function getRecurrenceBadgeText(
+  rule: RecurrenceRule | null | undefined,
+  startDateStr?: string | null
+): string {
+  if (!rule || rule.type === "none") return "Еднократно";
+  if (rule.type === "weekly_eoy") return "Всяка седмица (до края на годината)";
+  if (rule.type === "weekly_count") return `Седмично (${rule.count || 2} седмици)`;
+  if (rule.type === "biweekly") return "През седмица (на 14 дни)";
+  if (rule.type === "custom_until") return `Всяка седмица (до ${rule.untilDate || "крайна дата"})`;
+  return "Повтарящо се";
+}
+
+export function getRecurrenceHumanSummary(
+  ruleOrTitle: RecurrenceRule | null | undefined | string,
+  startDateOrStartTime?: string | null,
+  endTime?: string,
+  startDateStr?: string,
+  rule?: RecurrenceRule | null | undefined,
+  dayOfWeek?: number
+): string {
+  if (typeof ruleOrTitle !== "string") {
+    return getRecurrenceBadgeText(ruleOrTitle, startDateOrStartTime);
+  }
+
+  const title = ruleOrTitle;
+  const startTime = startDateOrStartTime || "16:00";
+  const eTime = endTime || "17:30";
+  const sDateStr = startDateStr || formatDateKey(new Date());
+  const rRule = rule;
+  const dow = dayOfWeek || 1;
+
+  const startDate = parseDateKey(sDateStr);
+  const dayName = DAYS_OF_WEEK.find((d) => d.dayNumber === dow)?.name || `Ден ${dow}`;
+  const timeFormatted = `${startTime} – ${eTime} ч.`;
+
+  if (!rRule || rRule.type === "none") {
+    return `Еднократно занятие: ${dayName}, ${startDate.getDate()} ${BG_MONTH_NAMES[startDate.getMonth()]} ${startDate.getFullYear()} г., от ${timeFormatted}`;
+  }
+
+  if (rRule.type === "weekly_eoy") {
+    const endOfYear = `31 декември ${startDate.getFullYear()} г.`;
+    return `Всяка седмица: всеки ${dayName} от ${timeFormatted}, започвайки от ${formatDateHumanBg(startDate)} до ${endOfYear}`;
+  }
+
+  if (rRule.type === "weekly_count") {
+    const count = rRule.count && rRule.count > 0 ? rRule.count : 2;
+    const finalDate = new Date(startDate);
+    finalDate.setDate(finalDate.getDate() + (count - 1) * 7);
+    return `Серия от ${count} ${count === 1 ? "занятие" : "занятия"}: всеки ${dayName} от ${timeFormatted}, от ${formatDateHumanBg(startDate)} до ${formatDateHumanBg(finalDate)}`;
+  }
+
+  if (rRule.type === "biweekly") {
+    if (rRule.biweeklySpan === "count" && rRule.count) {
+      const count = rRule.count;
+      const finalDate = new Date(startDate);
+      finalDate.setDate(finalDate.getDate() + (count - 1) * 14);
+      return `През седмица (на всеки 14 дни) за ${count} пъти: ${dayName} от ${timeFormatted}, от ${formatDateHumanBg(startDate)} до ${formatDateHumanBg(finalDate)}`;
+    }
+    if (rRule.untilDate) {
+      const untilD = parseDateKey(rRule.untilDate);
+      return `През седмица (на всеки 14 дни): ${dayName} от ${timeFormatted}, от ${formatDateHumanBg(startDate)} до ${formatDateHumanBg(untilD)}`;
+    }
+    return `През седмица (на всеки 14 дни) до края на годината: всеки ${dayName} от ${timeFormatted}, започвайки от ${formatDateHumanBg(startDate)}`;
+  }
+
+  if (rRule.type === "custom_until" && rRule.untilDate) {
+    const untilD = parseDateKey(rRule.untilDate);
+    return `Всяка седмица: всеки ${dayName} от ${timeFormatted}, от ${formatDateHumanBg(startDate)} до ${formatDateHumanBg(untilD)}`;
+  }
+
+  return `Повтарящо се занятие: всеки ${dayName} от ${timeFormatted}`;
+}
+
+export function itemToRecord(item: ScheduleItem): {
+  id: string;
+  title: string;
+  category: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  age_group: string;
+  location?: string;
+  capacity?: number;
+  is_active: boolean;
+  date?: string | null;
+  recurrence?: RecurrenceRule | null;
+  seriesId?: string | null;
+  series_id?: string | null;
+} {
+  return {
+    id: item.id,
+    title: item.title,
+    category: item.category,
+    day_of_week: item.dayOfWeek,
+    start_time: item.startTime,
+    end_time: item.endTime,
+    age_group: item.ageGroup,
+    location: item.location,
+    capacity: item.capacity,
+    is_active: item.isActive !== false,
+    date: item.date,
+    recurrence: item.recurrence,
+    seriesId: item.seriesId,
+    series_id: item.seriesId,
+  };
+}

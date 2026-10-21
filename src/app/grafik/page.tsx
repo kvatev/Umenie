@@ -7,6 +7,7 @@ import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { supabase } from "@/lib/supabase/client";
 import { DEFAULT_SCHEDULES, ScheduleItem, mapRowToScheduleItem } from "@/lib/schedule-data";
 import { getSiteSettings } from "@/lib/site-settings";
+import { getSchedulesAction } from "@/actions/admin-schedules";
 import { FileText, Download } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -43,26 +44,24 @@ export const metadata: Metadata = {
   },
 };
 
-// Revalidate every 60 seconds or on demand
+// Revalidate on demand or every 60 seconds
 export const revalidate = 60;
 
 async function getSchedules(): Promise<ScheduleItem[]> {
   try {
-    // 1. Try schedule_events table first
-    const { data: eventData, error: eventErr } = await supabase
-      .from("schedule_events")
-      .select("*")
-      .order("day_of_week", { ascending: true })
-      .order("start_time", { ascending: true });
-
-    if (!eventErr && eventData && eventData.length > 0) {
-      const activeEvents = eventData.filter((row) => row.is_active !== false);
+    const items = await getSchedulesAction();
+    if (items && items.length > 0) {
+      const activeEvents = items.filter((r) => r.isActive !== false);
       if (activeEvents.length > 0) {
-        return activeEvents.map((row) => mapRowToScheduleItem(row));
+        return activeEvents;
       }
     }
+  } catch (err) {
+    console.warn("Could not fetch schedules via getSchedulesAction:", err);
+  }
 
-    // 2. Try schedules table
+  // Fallback to direct supabase query
+  try {
     const { data, error } = await supabase
       .from("schedules")
       .select("*")
@@ -70,15 +69,14 @@ async function getSchedules(): Promise<ScheduleItem[]> {
       .order("day_of_week", { ascending: true })
       .order("start_time", { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return DEFAULT_SCHEDULES;
+    if (!error && data && data.length > 0) {
+      return data.map((row) => mapRowToScheduleItem(row));
     }
-
-    return data.map((row) => mapRowToScheduleItem(row));
   } catch (err) {
-    console.error("Error fetching schedules from Supabase:", err);
-    return DEFAULT_SCHEDULES;
+    console.error("Error fetching schedules directly from Supabase:", err);
   }
+
+  return DEFAULT_SCHEDULES;
 }
 
 export default async function SchedulePage() {
