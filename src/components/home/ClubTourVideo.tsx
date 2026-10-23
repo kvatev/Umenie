@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
-import { Play, Pause, Sparkles, Users, Home, Puzzle } from "lucide-react";
+import { Play, Pause, Users, Home, Puzzle } from "lucide-react";
 
 interface ClubTourVideoProps {
   src: string;
@@ -84,11 +84,6 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           {/* Text column - left aligned on mobile and desktop */}
           <div className="lg:col-span-6 lg:order-1 order-1 text-left space-y-5 sm:space-y-6">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-4 py-1.5 text-xs sm:text-sm font-semibold tracking-wide text-brand-purple shadow-sm border border-brand-purple/15">
-              <Sparkles className="w-4 h-4" />
-              Разходка из клуба
-            </span>
-
             <h2
               id="club-tour-heading"
               className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple leading-tight tracking-wide uppercase text-left"

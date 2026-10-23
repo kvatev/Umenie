@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
-import { Sparkles } from "lucide-react";
 
 export function WhyChooseUs() {
   const points = [
@@ -23,13 +22,6 @@ export function WhyChooseUs() {
 
       <Container size="xl" className="relative z-10">
         <div className="max-w-3xl mx-auto text-left sm:text-center space-y-5 sm:space-y-6">
-          <div className="text-left sm:text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-4 py-1.5 text-xs sm:text-sm font-semibold tracking-wide text-brand-purple shadow-sm border border-brand-purple/15">
-              <Sparkles className="w-4 h-4" />
-              Защо клуб „УМеНИе“?
-            </span>
-          </div>
-
           <h2 className="font-heading font-bold text-2xl sm:text-4xl lg:text-5xl text-brand-purple leading-tight tracking-wide uppercase text-left sm:text-center">
             ЗАЩО ДА ИЗБЕРЕТЕ<br className="hidden sm:block" /> КЛУБ „УМЕНИЕ“?
           </h2>
