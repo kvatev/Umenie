@@ -37,6 +37,8 @@ export interface ScheduleRecord {
   recurrence?: RecurrenceRule | null;
   seriesId?: string | null;
   series_id?: string | null;
+  excludedDates?: string[];
+  excluded_dates?: string[];
 }
 
 interface ScheduleModalProps {

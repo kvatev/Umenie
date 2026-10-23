@@ -40,6 +40,7 @@ import {
   isEventOnDate,
   getRecurrenceHumanSummary,
   itemToRecord,
+  getEventOccurrenceDates,
 } from "@/lib/schedule-data";
 import { getActivityIcon } from "@/lib/schedule-icons";
 import {
@@ -144,8 +145,11 @@ export function ScheduleTable({
   const [editingSchedule, setEditingSchedule] = useState<ScheduleRecord | null>(null);
   const [modalInitialDate, setModalInitialDate] = useState<string | null>(null);
 
-  // Delete confirmation dialog state (for series vs single)
+  // Delete confirmation dialog state (for series, multi-day, or single day)
   const [deleteDialogItem, setDeleteDialogItem] = useState<ScheduleRecord | null>(null);
+  const [deleteTargetDate, setDeleteTargetDate] = useState<string | null>(null);
+  const [selectedDeleteDates, setSelectedDeleteDates] = useState<string[]>([]);
+  const [showMultiDayPicker, setShowMultiDayPicker] = useState<boolean>(false);
 
   // Action / Transition states
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
@@ -312,33 +316,87 @@ export function ScheduleTable({
     });
   };
 
-  // Trigger Delete Prompt
-  const promptDelete = (item: ScheduleRecord) => {
+  // Trigger Delete Prompt (optional targetDate when initiated from day preview)
+  const promptDelete = (item: ScheduleRecord, targetDate?: string) => {
     setDeleteDialogItem(item);
+    setDeleteTargetDate(targetDate || null);
+    setSelectedDeleteDates(targetDate ? [targetDate] : []);
+    setShowMultiDayPicker(!targetDate);
   };
 
-  // Execute Delete
-  const executeDelete = async (scope: "single" | "series") => {
+  const toggleDeleteDate = (dateKey: string) => {
+    setSelectedDeleteDates((prev) =>
+      prev.includes(dateKey) ? prev.filter((d) => d !== dateKey) : [...prev, dateKey]
+    );
+  };
+
+  const selectAllDeleteDates = (allDates: string[]) => {
+    setSelectedDeleteDates([...allDates]);
+  };
+
+  const clearAllDeleteDates = () => {
+    setSelectedDeleteDates([]);
+  };
+
+  // Execute Delete (scope: "single" | "series" | "dates")
+  const executeDelete = async (
+    scope: "single" | "series" | "dates",
+    datesToDelete?: string[]
+  ) => {
     if (!deleteDialogItem) return;
     const itemToDelete = deleteDialogItem;
     setDeleteDialogItem(null);
+    setDeleteTargetDate(null);
+    setSelectedDeleteDates([]);
+    setShowMultiDayPicker(false);
     setActiveActionId(itemToDelete.id);
 
     startTransition(async () => {
-      // Optimistic delete
-      if (scope === "series" && (itemToDelete.seriesId || itemToDelete.series_id)) {
+      // 1. Optimistic delete update
+      if (scope === "series") {
         const sId = itemToDelete.seriesId || itemToDelete.series_id;
         setSchedules((prev) =>
-          prev.filter((s) => s.id !== itemToDelete.id && s.seriesId !== sId && s.series_id !== sId)
+          prev.filter(
+            (s) => s.id !== itemToDelete.id && (!sId || (s.seriesId !== sId && s.series_id !== sId))
+          )
+        );
+      } else if (scope === "dates" && datesToDelete && datesToDelete.length > 0) {
+        setSchedules((prev) =>
+          prev.map((s) => {
+            if (s.id === itemToDelete.id) {
+              const existing = s.excludedDates || s.excluded_dates || [];
+              const merged = Array.from(new Set([...existing, ...datesToDelete]));
+              return {
+                ...s,
+                excludedDates: merged,
+                excluded_dates: merged,
+              };
+            }
+            return s;
+          })
         );
       } else {
         setSchedules((prev) => prev.filter((s) => s.id !== itemToDelete.id));
       }
 
-      const res = await deleteScheduleAction(itemToDelete.id, scope);
+      // 2. Server action
+      const res = await deleteScheduleAction(itemToDelete.id, {
+        scope,
+        targetDates: datesToDelete,
+      });
+
       if (!res.success) {
         alert(res.message || "Грешка при изтриване.");
       }
+
+      // 3. Re-sync from server action for state consistency
+      try {
+        const fresh = await getSchedulesAction();
+        if (fresh && fresh.length > 0) {
+          setSchedules(fresh.map(itemToRecord));
+        }
+      } catch {}
+
       setActiveActionId(null);
     });
   };
@@ -955,9 +1013,9 @@ export function ScheduleTable({
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => promptDelete(item)}
+                                onClick={() => promptDelete(item, formatDateKey(selectedCalendarDate))}
                                 className="p-2 rounded-lg text-brand-muted hover:bg-red-100 hover:text-red-700 transition-colors cursor-pointer"
-                                title="Изтрий"
+                                title="Изтрий за този ден"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1506,84 +1564,231 @@ export function ScheduleTable({
         }}
       />
 
-      {/* 5. MODAL: DELETE CONFIRMATION DIALOG (SINGLE vs SERIES) */}
-      {deleteDialogItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-brand-purple/20 space-y-5 animate-in zoom-in-95 duration-150">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-                <Trash2 className="w-6 h-6" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-heading font-black text-lg text-brand-dark">
-                  Изтриване на занятие
-                </h3>
-                <p className="text-xs text-brand-muted mt-1">
-                  Сигурни ли сте, че искате да изтриете „<strong className="text-brand-dark">{deleteDialogItem.title}</strong>“?
-                </p>
-              </div>
-            </div>
+      {/* 5. MODAL: DELETE CONFIRMATION DIALOG (SINGLE, SPECIFIC DAYS, OR SERIES) */}
+      {deleteDialogItem && (() => {
+        const occurrences = getEventOccurrenceDates(deleteDialogItem, false);
+        const isRecurring = Boolean(
+          (deleteDialogItem.recurrence && deleteDialogItem.recurrence.type !== "none") ||
+          deleteDialogItem.seriesId ||
+          deleteDialogItem.series_id ||
+          occurrences.length > 1
+        );
+        const targetDateFormatted = deleteTargetDate ? formatDateHumanBg(deleteTargetDate) : null;
 
-            {/* Check if item belongs to a recurring series */}
-            {deleteDialogItem.seriesId || deleteDialogItem.series_id || deleteDialogItem.recurrence ? (
-              <div className="space-y-3">
-                <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-                  <span>
-                    Това занятие е част от повтаряща се серия. Изберете обхвата на изтриване:
-                  </span>
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/50 backdrop-blur-xs animate-in fade-in duration-150">
+            <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-brand-purple/20 space-y-5 animate-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+              
+              {/* Header */}
+              <div className="flex items-start gap-4 shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-6 h-6" />
                 </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-heading font-black text-lg text-brand-dark">
+                    Изтриване на занятие
+                  </h3>
+                  <p className="text-xs text-brand-muted mt-1">
+                    Сигурни ли сте, че искате да изтриете „<strong className="text-brand-dark">{deleteDialogItem.title}</strong>“?
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteDialogItem(null);
+                    setDeleteTargetDate(null);
+                    setSelectedDeleteDates([]);
+                    setShowMultiDayPicker(false);
+                  }}
+                  className="p-1 rounded-full text-brand-muted hover:text-brand-dark hover:bg-brand-bg transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => executeDelete("single")}
-                    className="w-full py-2.5 px-4 rounded-2xl border-2 border-brand-purple/30 text-brand-dark font-heading font-bold text-xs sm:text-sm hover:bg-brand-purple/10 hover:border-brand-purple transition-all text-left flex items-center justify-between cursor-pointer"
-                  >
-                    <span>Само това занятие (на тази дата)</span>
-                    <span className="text-[10px] text-brand-muted">1 занятие</span>
-                  </button>
+              {/* Recurring series options */}
+              {isRecurring ? (
+                <div className="space-y-4 overflow-y-auto pr-1 flex-1">
+                  <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                    <div>
+                      <p className="font-bold">
+                        Това занятие е част от повтаряща се серия ({occurrences.length} активни дати).
+                      </p>
+                      <p className="text-amber-800/80 mt-0.5">
+                        Можете да го изтриете само за конкретен ден, да изберете дадени дни или да изтриете цялата поредица:
+                      </p>
+                    </div>
+                  </div>
 
+                  {/* 1. Quick Action: Delete for this specific day (if opened from a specific date) */}
+                  {deleteTargetDate && (
+                    <button
+                      type="button"
+                      onClick={() => executeDelete("dates", [deleteTargetDate])}
+                      className="w-full py-3 px-4 rounded-2xl border-2 border-brand-purple/40 bg-brand-purple/5 text-brand-dark font-heading font-bold text-xs sm:text-sm hover:bg-brand-purple/15 hover:border-brand-purple transition-all text-left flex items-center justify-between cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-brand-purple/15 text-brand-purple flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-brand-dark font-black">Изтрий само за {targetDateFormatted}</div>
+                          <div className="text-[11px] text-brand-muted font-normal">
+                            Останалите {Math.max(0, occurrences.length - 1)} седмици/дни от поредицата се запазват
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-2.5 py-1 rounded-md bg-white border border-brand-purple/20 text-brand-purple shadow-xs shrink-0">
+                        1 ден
+                      </span>
+                    </button>
+                  )}
+
+                  {/* 2. Multi-Day Picker / Select Specific Days */}
+                  <div className="border border-brand-purple/15 rounded-2xl p-3.5 bg-brand-bg/40 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-brand-purple" />
+                        <span className="text-xs font-heading font-bold text-brand-dark">
+                          {deleteTargetDate ? "Или избери конкретни дни за изтриване:" : "Избери конкретни дни за изтриване:"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px]">
+                        <button
+                          type="button"
+                          onClick={() => selectAllDeleteDates(occurrences)}
+                          className="text-brand-purple hover:underline font-bold cursor-pointer"
+                        >
+                          Всички
+                        </button>
+                        <span className="text-brand-muted">|</span>
+                        <button
+                          type="button"
+                          onClick={clearAllDeleteDates}
+                          className="text-brand-muted hover:text-brand-dark cursor-pointer"
+                        >
+                          Изчисти
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Scrollable list of occurrence dates */}
+                    <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+                      {occurrences.map((dKey) => {
+                        const isSelected = selectedDeleteDates.includes(dKey);
+                        const isTarget = dKey === deleteTargetDate;
+                        return (
+                          <label
+                            key={dKey}
+                            className={cn(
+                              "flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs transition-all border",
+                              isSelected
+                                ? "bg-white border-brand-purple text-brand-dark font-bold shadow-xs"
+                                : "bg-white/70 border-brand-purple/10 text-brand-dark/80 hover:bg-white"
+                            )}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleDeleteDate(dKey)}
+                                className="w-4 h-4 rounded text-brand-purple focus:ring-brand-purple border-gray-300 cursor-pointer"
+                              />
+                              <span>{formatDateHumanBg(dKey)}</span>
+                            </div>
+                            {isTarget && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-purple/10 text-brand-purple">
+                                Избран в момента
+                              </span>
+                            )}
+                          </label>
+                        );
+                      })}
+                      {occurrences.length === 0 && (
+                        <div className="p-3 text-center text-xs text-brand-muted">
+                          Няма намерени бъдещи дати за това занятие.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action button to delete chosen dates */}
+                    <button
+                      type="button"
+                      disabled={selectedDeleteDates.length === 0}
+                      onClick={() => executeDelete("dates", selectedDeleteDates)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-brand-purple text-white font-heading font-bold text-xs hover:bg-brand-purple-dark disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all flex items-center justify-between cursor-pointer"
+                    >
+                      <span>Изтрий избраните дни ({selectedDeleteDates.length})</span>
+                      <span className="text-[10px] text-white/80 font-normal">Само маркираните</span>
+                    </button>
+                  </div>
+
+                  {/* 3. Delete Entire Series */}
                   <button
                     type="button"
                     onClick={() => executeDelete("series")}
                     className="w-full py-2.5 px-4 rounded-2xl bg-red-600 text-white font-heading font-bold text-xs sm:text-sm hover:bg-red-700 shadow-sm transition-all text-left flex items-center justify-between cursor-pointer"
                   >
-                    <span>Всички занятия от тази серия</span>
-                    <span className="text-[10px] text-white/80">Цялата серия</span>
+                    <div>
+                      <div>Изтрий цялата поредица</div>
+                      <div className="text-[10px] text-white/80 font-normal">
+                        Премахва занятието за всички дати ({occurrences.length} бр.)
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-white/90 uppercase tracking-wider font-bold">Всички дати</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteDialogItem(null);
+                      setDeleteTargetDate(null);
+                      setSelectedDeleteDates([]);
+                      setShowMultiDayPicker(false);
+                    }}
+                    className="w-full py-2 text-center text-xs font-bold text-brand-muted hover:text-brand-dark cursor-pointer transition-colors"
+                  >
+                    Отказ
                   </button>
                 </div>
+              ) : (
+                /* Non-recurring event delete */
+                <div className="space-y-4 pt-1">
+                  {deleteTargetDate && (
+                    <div className="p-3 rounded-xl bg-brand-purple/5 border border-brand-purple/10 text-xs text-brand-dark">
+                      Дата: <strong className="font-bold">{targetDateFormatted}</strong>
+                    </div>
+                  )}
 
-                <button
-                  type="button"
-                  onClick={() => setDeleteDialogItem(null)}
-                  className="w-full py-2 text-center text-xs font-bold text-brand-muted hover:text-brand-dark cursor-pointer"
-                >
-                  Отказ
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setDeleteDialogItem(null)}
-                  className="px-4 py-2.5 rounded-full border border-gray-300 text-brand-dark font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer"
-                >
-                  Отказ
-                </button>
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteDialogItem(null);
+                        setDeleteTargetDate(null);
+                        setSelectedDeleteDates([]);
+                        setShowMultiDayPicker(false);
+                      }}
+                      className="px-4 py-2.5 rounded-full border border-gray-300 text-brand-dark font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      Отказ
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => executeDelete("single")}
-                  className="px-5 py-2.5 rounded-full bg-red-600 text-white font-heading font-bold text-xs hover:bg-red-700 shadow-button transition-colors cursor-pointer"
-                >
-                  Изтрий
-                </button>
-              </div>
-            )}
+                    <button
+                      type="button"
+                      onClick={() => executeDelete("single")}
+                      className="px-5 py-2.5 rounded-full bg-red-600 text-white font-heading font-bold text-xs hover:bg-red-700 shadow-button transition-colors cursor-pointer"
+                    >
+                      Изтрий занятието
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

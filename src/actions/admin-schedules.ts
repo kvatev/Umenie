@@ -10,6 +10,7 @@ import {
   formatDateKey,
   parseDateKey,
   getDayOfWeekNumber,
+  getEventOccurrenceDates,
 } from "@/lib/schedule-data";
 import { randomUUID } from "crypto";
 
@@ -41,6 +42,8 @@ export interface ScheduleFormData {
   recurrence?: RecurrenceRule | null;
   series_id?: string | null;
   additional_days?: number[];     // Multi-day selection
+  excluded_dates?: string[];
+  excludedDates?: string[];
 }
 
 /**
@@ -369,6 +372,7 @@ export async function updateScheduleAction(
         isActive: data.is_active ?? item.isActive,
         date: data.date !== undefined ? data.date : item.date,
         recurrence: data.recurrence !== undefined ? data.recurrence : item.recurrence,
+        excludedDates: (data.excluded_dates || data.excludedDates) !== undefined ? (data.excluded_dates || data.excludedDates) : item.excludedDates,
       };
     });
 
@@ -435,16 +439,121 @@ export async function toggleScheduleActiveAction(
   }
 }
 
+export type DeleteScheduleScope = "single" | "series" | "dates";
+
+export interface DeleteScheduleOptions {
+  scope?: DeleteScheduleScope;
+  targetDate?: string;    // "YYYY-MM-DD"
+  targetDates?: string[]; // array of "YYYY-MM-DD"
+}
+
 /**
- * Delete Schedule Item (Single or Entire Series)
+ * Delete Schedule Item (Single, Specific Day / Days, or Entire Series)
  */
-export async function deleteScheduleAction(id: string, scope: "single" | "series" = "single") {
+export async function deleteScheduleAction(
+  id: string,
+  optionsOrScope: DeleteScheduleScope | DeleteScheduleOptions = "single",
+  datesParam?: string[]
+) {
   try {
+    let scope: DeleteScheduleScope = "single";
+    let targetDates: string[] = [];
+
+    if (typeof optionsOrScope === "string") {
+      scope = optionsOrScope;
+      if (datesParam && Array.isArray(datesParam)) {
+        targetDates = datesParam;
+      }
+    } else if (optionsOrScope && typeof optionsOrScope === "object") {
+      scope = optionsOrScope.scope || "single";
+      if (optionsOrScope.targetDates && Array.isArray(optionsOrScope.targetDates)) {
+        targetDates = optionsOrScope.targetDates;
+      } else if (optionsOrScope.targetDate) {
+        targetDates = [optionsOrScope.targetDate];
+      }
+    }
+
     const currentList = await getSchedulesAction();
     const target = currentList.find((item) => item.id === id);
-    const deleteAllSeries = scope === "series" && Boolean(target?.seriesId);
-    const seriesId = target?.seriesId;
 
+    if (!target) {
+      return { success: false, message: "Занятието не е намерено." };
+    }
+
+    const deleteAllSeries = scope === "series" && Boolean(target.seriesId);
+    const seriesId = target.seriesId;
+
+    // A. Specific Date(s) Deletion from a Recurring Series
+    if (scope === "dates" || targetDates.length > 0) {
+      const isRecurring = Boolean(
+        (target.recurrence && target.recurrence.type !== "none") ||
+        target.seriesId ||
+        target.date
+      );
+
+      // If it is a recurring series, exclude the dates without deleting the parent event
+      if (isRecurring) {
+        const existingExcluded = target.excludedDates || [];
+        const mergedExcluded = Array.from(new Set([...existingExcluded, ...targetDates]));
+
+        // Check if all occurrences are now excluded
+        const allOccurrences = getEventOccurrenceDates(target, true);
+        const remainingOccurrences = allOccurrences.filter((d) => !mergedExcluded.includes(d));
+
+        if (allOccurrences.length > 0 && remainingOccurrences.length === 0) {
+          // No occurrences left: delete the entire record
+          try {
+            await supabaseAdmin.from("schedule_events").delete().eq("id", id);
+          } catch {}
+          try {
+            await supabaseAdmin.from("schedules").delete().eq("id", id);
+          } catch {}
+
+          const updatedList = currentList.filter((item) => item.id !== id);
+          await saveStoredExtendedSchedules(updatedList);
+          revalidatePublicPages();
+
+          return {
+            success: true,
+            message: "Всички дати от серията бяха изтрити, занятието беше премахнато.",
+          };
+        }
+
+        // Otherwise update excluded_dates
+        try {
+          await supabaseAdmin
+            .from("schedule_events")
+            .update({ excluded_dates: mergedExcluded })
+            .eq("id", id);
+        } catch {}
+
+        const updatedList = currentList.map((item) => {
+          if (item.id === id) {
+            return {
+              ...item,
+              excludedDates: mergedExcluded,
+            };
+          }
+          return item;
+        });
+
+        await saveStoredExtendedSchedules(updatedList);
+        revalidatePublicPages();
+
+        const count = targetDates.length;
+        const msg =
+          count === 1
+            ? "Занятието за избрания ден беше изтрито успешно!"
+            : "Избраните " + count + " дни бяха изтрити успешно!";
+
+        return {
+          success: true,
+          message: msg,
+        };
+      }
+    }
+
+    // B. Full Delete (Entire Series or Single Item)
     // 1. Delete from schedule_events table
     try {
       const q = supabaseAdmin.from("schedule_events").delete();
@@ -469,7 +578,6 @@ export async function deleteScheduleAction(id: string, scope: "single" | "series
     });
 
     await saveStoredExtendedSchedules(updatedList);
-
     revalidatePublicPages();
 
     return {

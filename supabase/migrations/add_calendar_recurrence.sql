@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS public.schedule_events (
     recurrence_count INT,
     recurrence_until DATE,
     series_id UUID,
+    excluded_dates TEXT[] DEFAULT '{}',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -38,3 +39,5 @@ CREATE POLICY "Allow service role full access on schedule_events"
 CREATE INDEX IF NOT EXISTS idx_schedule_events_date ON public.schedule_events(event_date);
 CREATE INDEX IF NOT EXISTS idx_schedule_events_series ON public.schedule_events(series_id);
 CREATE INDEX IF NOT EXISTS idx_schedule_events_day ON public.schedule_events(day_of_week);
+-- Add column if table already existed without it
+ALTER TABLE public.schedule_events ADD COLUMN IF NOT EXISTS excluded_dates TEXT[] DEFAULT '{}';
