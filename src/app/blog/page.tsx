@@ -48,12 +48,6 @@ export default async function BlogPage() {
 
         <Container size="xl" className="relative z-10">
           <div className="text-left max-w-3xl space-y-4">
-            <div>
-              <span className="inline-block px-4 py-1.5 rounded-full bg-brand-purple/10 text-brand-purple font-heading font-bold text-xs uppercase tracking-widest">
-                СЪВЕТИ И ВДЪХНОВЕНИЕ
-              </span>
-            </div>
-
             <h1 className="font-heading font-extrabold text-3xl sm:text-5xl lg:text-6xl text-brand-purple uppercase tracking-wide leading-tight text-left">
               НАШИЯТ БЛОГ
             </h1>
