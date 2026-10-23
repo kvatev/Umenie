@@ -979,6 +979,12 @@ export function ScheduleTable({
                             <h4 className="font-heading font-black text-base text-brand-dark truncate">
                               {item.title}
                             </h4>
+                            {(item.titleEn || item.title_en) && (
+                              <p className="text-[11px] font-sans text-brand-purple font-medium flex items-center gap-1">
+                                <span>🇬🇧</span>
+                                <span className="truncate">{item.titleEn || item.title_en}</span>
+                              </p>
+                            )}
                             <div className="flex flex-wrap items-center gap-1.5 mt-1">
                               <span
                                 className={cn(
@@ -1239,6 +1245,12 @@ export function ScheduleTable({
                                     <h4 className="font-heading font-black text-base text-brand-dark truncate">
                                       {item.title}
                                     </h4>
+                                    {(item.titleEn || item.title_en) && (
+                                      <p className="text-[11px] font-sans text-brand-purple font-medium flex items-center gap-1">
+                                        <span>🇬🇧</span>
+                                        <span className="truncate">{item.titleEn || item.title_en}</span>
+                                      </p>
+                                    )}
                                     <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                       <span
                                         className={cn(

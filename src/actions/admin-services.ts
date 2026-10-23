@@ -59,6 +59,21 @@ async function safeUpload(
 /**
  * 1. Save or update service text and settings overrides
  */
+function revalidateServicesAndPublicPages(slug?: string) {
+  try {
+    revalidatePath("/", "layout");
+    revalidatePath("/uslugi", "page");
+    revalidatePath("/uslugi/[slug]", "page");
+    if (slug) revalidatePath(`/uslugi/${slug}`, "page");
+    revalidatePath("/za-nas", "page");
+    revalidatePath("/grafik", "page");
+    revalidatePath("/admin", "layout");
+    revalidatePath("/admin/pages/services", "page");
+    revalidatePath("/admin/pages/about", "page");
+    revalidatePath("/admin/pages/home", "page");
+  } catch (e) {}
+}
+
 export async function saveServiceContentAction(slug: string, overrideData: ServiceOverride) {
   try {
     const settings = await getSiteSettings();
@@ -77,12 +92,7 @@ export async function saveServiceContentAction(slug: string, overrideData: Servi
     });
 
     if (res.success) {
-      try {
-        revalidatePath("/uslugi");
-        revalidatePath(`/uslugi/${slug}`);
-        revalidatePath("/");
-        revalidatePath("/admin/pages/services");
-      } catch (e) {}
+      revalidateServicesAndPublicPages(slug);
     }
 
     return {
@@ -179,10 +189,7 @@ export async function uploadServiceImageAction(formData: FormData) {
       });
     }
 
-    revalidatePath("/uslugi");
-    revalidatePath(`/uslugi/${slug}`);
-    revalidatePath("/");
-    revalidatePath("/admin/pages/services");
+    revalidateServicesAndPublicPages(slug);
 
     return {
       success: true,
@@ -227,10 +234,7 @@ export async function saveSliderImageSettingAction(
       },
     });
 
-    revalidatePath("/uslugi");
-    revalidatePath(`/uslugi/${slug}`);
-    revalidatePath("/");
-    revalidatePath("/admin/pages/services");
+    revalidateServicesAndPublicPages(slug);
 
     return {
       success: true,
@@ -274,10 +278,7 @@ export async function deleteServiceSliderImageAction(slug: string, imageUrlOrPat
       }
     } catch {}
 
-    revalidatePath("/uslugi");
-    revalidatePath(`/uslugi/${slug}`);
-    revalidatePath("/");
-    revalidatePath("/admin/pages/services");
+    revalidateServicesAndPublicPages(slug);
 
     return {
       success: true,
@@ -303,11 +304,7 @@ export async function saveAboutPageContentAction(
     });
 
     if (res.success) {
-      try {
-        revalidatePath("/za-nas");
-        revalidatePath("/");
-        revalidatePath("/admin/pages/about");
-      } catch (e) {}
+      revalidateServicesAndPublicPages();
     }
 
     return {

@@ -83,7 +83,7 @@ export default async function AboutUsPage() {
   ]);
 
   const values = locale === "en"
-    ? (settings.aboutValues && settings.aboutValues.length >= 3 && settings.aboutValues.some((v) => v.titleEn || v.textEn)
+    ? (settings.aboutValues && settings.aboutValues.length >= 3
         ? settings.aboutValues.map((v, i) => ({
             title: v.titleEn?.trim() || dict.about.values[i]?.title || v.title,
             text: v.textEn?.trim() || dict.about.values[i]?.text || v.text,
@@ -94,7 +94,7 @@ export default async function AboutUsPage() {
         : DEFAULT_ABOUT_VALUES);
 
   const features = locale === "en"
-    ? (settings.aboutFeatures && settings.aboutFeatures.length >= 3 && settings.aboutFeatures.some((f) => f.titleEn || f.textEn)
+    ? (settings.aboutFeatures && settings.aboutFeatures.length >= 3
         ? settings.aboutFeatures.map((f, i) => ({
             title: f.titleEn?.trim() || dict.about.features[i]?.title || f.title,
             text: f.textEn?.trim() || dict.about.features[i]?.text || f.text,

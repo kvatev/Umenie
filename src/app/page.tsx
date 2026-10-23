@@ -175,7 +175,35 @@ export default async function HomePage() {
     console.warn("Storage assets check warning:", err);
   }
 
-  // Resolve Kids Gallery photos with priority to custom kidsGalleryOrder
+  // Resolve 6 services with admin overrides & bilingual dictionary fallback
+  const overrides = settings.servicesOverrides || {};
+  const services = SERVICES_DATA.map((srv) => {
+    const o = overrides[srv.slug];
+    const enItem = (dict.services?.items as Record<string, any>)?.[srv.slug];
+
+    const customTitle = o?.title?.trim();
+    const customShortTitle = o?.shortTitle?.trim();
+    const customIntro = o?.intro?.trim();
+
+    const customTitleEn = o?.titleEn?.trim();
+    const customShortTitleEn = o?.badgeEn?.trim() || o?.shortTitleEn?.trim();
+    const customIntroEn = o?.introNarrativeEn?.trim() || o?.introEn?.trim();
+
+    return {
+      ...srv,
+      title: customTitle || srv.title,
+      shortTitle: customShortTitle || srv.shortTitle,
+      shortDescription: customIntro || srv.shortDescription,
+      titleEn: customTitleEn || enItem?.title,
+      shortTitleEn: customShortTitleEn || enItem?.shortTitle,
+      badgeEn: customShortTitleEn || enItem?.shortTitle,
+      shortDescriptionEn: customIntroEn || enItem?.shortDescription,
+      introNarrativeEn: customIntroEn || enItem?.intro,
+      introEn: customIntroEn || enItem?.intro,
+    };
+  });
+
+    // Resolve Kids Gallery photos with priority to custom kidsGalleryOrder
   let resolvedKidsGallery: { src: string; alt: string }[] | undefined = undefined;
   if (settings.kidsGalleryOrder && settings.kidsGalleryOrder.length > 0) {
     resolvedKidsGallery = settings.kidsGalleryOrder.map((path, idx) => {
@@ -349,7 +377,7 @@ export default async function HomePage() {
       <section id="activities" className="pb-12 pt-2 sm:py-16 bg-brand-bg scroll-mt-24">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 items-stretch">
-            {SERVICES_DATA.map((service) => (
+            {services.map((service) => (
               <ServiceCard
                 key={service.slug}
                 service={service}

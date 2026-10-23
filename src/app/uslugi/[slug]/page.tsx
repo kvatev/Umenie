@@ -19,26 +19,32 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  const params = SERVICES_DATA.map((service) => ({
-    slug: service.slug,
-  }));
-  // Alias for backward compatibility
-  params.push({ slug: "chitatelski-klub" });
-  return params;
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const baseService = getServiceBySlug(slug);
   if (!baseService) return { title: "Услугата не е намерена" };
 
-  const settings = await getSiteSettings();
-  const override = settings.servicesOverrides?.[baseService.slug] || settings.servicesOverrides?.[slug] || {};
-  const service = { ...baseService, ...override };
+  const [{ locale, dict }, settings] = await Promise.all([
+    getServerDictionary(),
+    getSiteSettings(),
+  ]);
 
-  const fullTitle = `${service.title} | Клуб УМеНИе Бургас`;
-  const canonicalUrl = `https://www.umenie.net/uslugi/${service.slug}`;
+  const override = settings.servicesOverrides?.[baseService.slug] || settings.servicesOverrides?.[slug] || {};
+  const enItem = locale === "en" ? (dict.services.items as Record<string, any>)[baseService.slug] : null;
+
+  const title =
+    locale === "en"
+      ? (override.titleEn?.trim() || enItem?.title || baseService.title)
+      : (override.title?.trim() || baseService.title);
+
+  const shortDescription =
+    locale === "en"
+      ? (override.introNarrativeEn?.trim() || override.introEn?.trim() || enItem?.shortDescription || baseService.shortDescription)
+      : (override.intro?.trim() || baseService.shortDescription);
+
+  const service = { ...baseService, ...override, title, shortDescription };
+  const fullTitle = `${title} | ${locale === "en" ? "Club Umenie Burgas" : "Клуб УМеНИе Бургас"}`;
+  const canonicalUrl = `https://www.umenie.net/uslugi/${baseService.slug}`;
 
   return {
     title: fullTitle,

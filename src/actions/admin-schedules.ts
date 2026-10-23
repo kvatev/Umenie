@@ -20,13 +20,14 @@ const EXTENDED_SCHEDULE_FILE = "schedules_extended.json";
 
 function revalidatePublicPages() {
   try {
-    revalidatePath("/");
-    revalidatePath("/za-nas");
-    revalidatePath("/grafik");
-    revalidatePath("/uslugi");
-    revalidatePath("/admin/pages/schedule");
-    revalidatePath("/admin/schedule");
-    revalidatePath("/admin");
+    revalidatePath("/", "layout");
+    revalidatePath("/grafik", "page");
+    revalidatePath("/uslugi", "page");
+    revalidatePath("/uslugi/[slug]", "page");
+    revalidatePath("/za-nas", "page");
+    revalidatePath("/admin", "layout");
+    revalidatePath("/admin/pages/schedule", "page");
+    revalidatePath("/admin/schedule", "page");
   } catch {}
 }
 

@@ -262,6 +262,8 @@ export function ScheduleModal({
 
     const payload: ScheduleFormData = {
       title: title.trim(),
+      titleEn: titleEn.trim() || undefined,
+      title_en: titleEn.trim() || undefined,
       category,
       day_of_week: Number(dayOfWeek),
       start_time: startTime,

@@ -16,6 +16,19 @@ export interface ServiceData {
   seoDescription: string;
   videos?: string[];
   videoPosters?: string[];
+
+  // Optional localized / override fields
+  titleEn?: string;
+  shortTitleEn?: string;
+  badgeEn?: string;
+  shortDescriptionEn?: string;
+  introNarrativeEn?: string;
+  introEn?: string;
+  sloganPart1En?: string;
+  sloganPart2En?: string;
+  bulletsEn?: string[];
+  bulletPointsEn?: string[];
+  galleryTitleEn?: string;
 }
 
 export const SERVICES_DATA: ServiceData[] = [

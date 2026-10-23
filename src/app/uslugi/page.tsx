@@ -68,16 +68,30 @@ export default async function ServicesPage() {
         ...srv,
         title: customTitle || enItem?.title || srv.title,
         shortTitle: customShortTitle || enItem?.shortTitle || srv.shortTitle,
-        titleLines: enItem?.titleLines || [customTitle || srv.title],
+        titleLines: customTitle ? [customTitle] : (enItem?.titleLines || [srv.title]),
         shortDescription: customIntro || enItem?.shortDescription || srv.shortDescription,
+        titleEn: customTitle || enItem?.title,
+        shortTitleEn: customShortTitle || enItem?.shortTitle,
+        badgeEn: customShortTitle || enItem?.shortTitle,
+        shortDescriptionEn: customIntro || enItem?.shortDescription,
+        introNarrativeEn: customIntro || enItem?.shortDescription,
       };
     }
-    if (!o) return srv;
+    const enItem = (dict.services.items as Record<string, any>)?.[srv.slug];
+    const customTitleEn = o?.titleEn?.trim();
+    const customShortTitleEn = o?.badgeEn?.trim() || o?.shortTitleEn?.trim();
+    const customIntroEn = o?.introNarrativeEn?.trim() || o?.introEn?.trim();
+
     return {
       ...srv,
-      title: o.title || srv.title,
-      shortTitle: o.shortTitle || srv.shortTitle,
-      shortDescription: o.intro || srv.shortDescription,
+      title: o?.title?.trim() || srv.title,
+      shortTitle: o?.shortTitle?.trim() || srv.shortTitle,
+      shortDescription: o?.intro?.trim() || srv.shortDescription,
+      titleEn: customTitleEn || enItem?.title,
+      shortTitleEn: customShortTitleEn || enItem?.shortTitle,
+      badgeEn: customShortTitleEn || enItem?.shortTitle,
+      shortDescriptionEn: customIntroEn || enItem?.shortDescription,
+      introNarrativeEn: customIntroEn || enItem?.shortDescription,
     };
   });
 

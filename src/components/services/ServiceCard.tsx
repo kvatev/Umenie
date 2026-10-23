@@ -19,16 +19,24 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
 
   const enItem = (dict.services?.items as Record<string, any>)?.[service.slug];
 
+  const customEnTitle = service.titleEn?.trim();
+  const customEnShortTitle = service.badgeEn?.trim() || service.shortTitleEn?.trim();
+  const customEnDesc = service.shortDescriptionEn?.trim() || service.introNarrativeEn?.trim() || service.introEn?.trim();
+
   const title =
     locale === "en"
-      ? enItem?.title || (dict.home.services as any)[service.slug] || service.title
+      ? (customEnTitle || enItem?.title || (dict.home.services as any)?.[service.slug] || service.title)
       : service.title;
 
   const shortDescription =
-    locale === "en" ? enItem?.shortDescription || service.shortDescription : service.shortDescription;
+    locale === "en"
+      ? (customEnDesc || enItem?.shortDescription || service.shortDescription)
+      : service.shortDescription;
 
   const titleLines =
-    locale === "en" ? enItem?.titleLines || [title] : service.titleLines;
+    locale === "en"
+      ? (customEnTitle ? [customEnTitle] : enItem?.titleLines || [title])
+      : service.titleLines;
 
   if (variant === "home") {
     return (

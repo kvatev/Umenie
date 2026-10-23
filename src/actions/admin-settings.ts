@@ -107,11 +107,12 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
 
     // 4. Revalidate all cached pages that use settings or media
     try {
-      revalidatePath("/");
-      revalidatePath("/uslugi");
-      revalidatePath("/za-nas");
-      revalidatePath("/grafik");
-      revalidatePath("/admin");
+      revalidatePath("/", "layout");
+      revalidatePath("/uslugi", "page");
+      revalidatePath("/uslugi/[slug]", "page");
+      revalidatePath("/za-nas", "page");
+      revalidatePath("/grafik", "page");
+      revalidatePath("/admin", "layout");
       revalidatePath("/admin/contacts");
       revalidatePath("/admin/media");
       revalidatePath("/admin/settings");

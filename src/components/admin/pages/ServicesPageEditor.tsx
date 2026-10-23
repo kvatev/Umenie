@@ -194,6 +194,17 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
         galleryTitle: currentGalleryTitle,
         hasSlider: newVal,
         sliderImageSettings: activeOverride.sliderImageSettings,
+        // English fields & overrides
+        titleEn: currentTitleEn,
+        badgeEn: currentShortTitleEn,
+        shortTitleEn: currentShortTitleEn,
+        sloganPart1En: currentSloganPart1En,
+        sloganPart2En: currentSloganPart2En,
+        introNarrativeEn: currentIntroEn,
+        introEn: currentIntroEn,
+        bulletsEn: currentBulletsEn,
+        bulletPointsEn: currentBulletsEn,
+        galleryTitleEn: currentGalleryTitleEn,
       };
 
       const res = await saveServiceContentAction(selectedSlug, dataToSave);
