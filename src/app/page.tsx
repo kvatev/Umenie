@@ -357,13 +357,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 4. CLUB TOUR VIDEO & KIDS GALLERY ("Ето как изглежда нашият клуб" / "Нашите деца с умения") */}
+      {/* 4. CLUB TOUR VIDEO ("Как изглежда нашият клуб") */}
       <ClubTourVideo
         src="/videos/club-tour.mp4"
         poster="/videos/club-tour-poster.webp"
       />
 
-      <section className="py-12 sm:py-20 bg-brand-bg">
+      {/* 5. WEEKLY SCHEDULE BANNER ("ГРАФИКЪТ ЗА СЕДМИЦАТА" - Positioned directly under Club look) */}
+      <ScheduleBanner
+        scheduleFileUrl={settings.scheduleFileUrl}
+        scheduleFileName={settings.scheduleFileName}
+      />
+
+      {/* 6. KIDS GALLERY ("НАШИТЕ ДЕЦА С УМЕНИЯ") */}
+      <section className="py-12 sm:py-20 bg-gradient-to-b from-[#e4e1f7]/60 via-brand-bg to-brand-bg">
         <Container size="xl">
           <div className="text-left sm:text-center max-w-2xl mx-auto mb-6 sm:mb-10">
             <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase text-left sm:text-center">
@@ -379,12 +386,6 @@ export default async function HomePage() {
           />
         </Container>
       </section>
-
-      {/* 5. WEEKLY SCHEDULE BANNER ("ГРАФИКЪТ ЗА СЕДМИЦАТА" - Moved immediately AFTER Club look & Gallery!) */}
-      <ScheduleBanner
-        scheduleFileUrl={settings.scheduleFileUrl}
-        scheduleFileName={settings.scheduleFileName}
-      />
 
       {/* 6. "ЗАЩО ДА ИЗБЕРЕТЕ КЛУБ УМЕНИЕ?" (Must be positioned ABOVE Reviews section!) */}
       <WhyChooseUs />

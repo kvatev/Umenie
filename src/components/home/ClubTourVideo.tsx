@@ -74,7 +74,7 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
     <section
       id="club-tour"
       aria-labelledby="club-tour-heading"
-      className="relative py-14 sm:py-20 lg:py-24 overflow-hidden bg-gradient-to-b from-brand-bg via-[#e9e7fa] to-brand-bg"
+      className="relative pt-12 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 lg:pb-20 overflow-hidden bg-gradient-to-b from-brand-bg via-[#eceafc] to-[#e4e1f7]"
     >
       {/* Soft ambient glows */}
       <div className="pointer-events-none absolute -top-24 -left-24 w-72 h-72 rounded-full bg-brand-purple/20 blur-3xl" />
@@ -137,7 +137,7 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
                 <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
               </div>
               <div
-                className="pointer-events-none absolute -bottom-8 -right-12 w-20 h-20 sm:w-24 sm:h-24 opacity-35"
+                className="pointer-events-none absolute -bottom-6 -right-6 sm:-bottom-8 sm:-right-10 w-20 h-20 sm:w-24 sm:h-24 opacity-35"
                 style={{ transform: "rotate(22deg)" }}
               >
                 <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
