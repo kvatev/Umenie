@@ -342,96 +342,124 @@ export function formatDateHumanBg(val: Date | string): string {
 }
 
 /**
+ * Safely calculates calendar day difference (targetDate - startDate)
+ * using UTC to completely avoid DST / timezone shifts.
+ */
+export function getDaysDifference(startDateStr: string, targetDateStr: string): number {
+  const [sy, sm, sd] = startDateStr.split("-").map(Number);
+  const [ty, tm, td] = targetDateStr.split("-").map(Number);
+  const startUTC = Date.UTC(sy, sm - 1, sd);
+  const targetUTC = Date.UTC(ty, tm - 1, td);
+  return Math.round((targetUTC - startUTC) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Adds an exact number of calendar days to a YYYY-MM-DD date key in UTC.
+ */
+export function addDaysToDateKey(dateKey: string, daysToAdd: number): string {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const dateUTC = new Date(Date.UTC(y, m - 1, d + daysToAdd));
+  const resY = dateUTC.getUTCFullYear();
+  const resM = String(dateUTC.getUTCMonth() + 1).padStart(2, "0");
+  const resD = String(dateUTC.getUTCDate()).padStart(2, "0");
+  return `${resY}-${resM}-${resD}`;
+}
+
+/**
  * Checks whether an event occurs on a specific calendar target date.
+ * Strict Filtering Rule:
+ * 1. Never render before startDate (diffDays < 0).
+ * 2. Respect untilDate.
+ * 3. Exact recurrence intervals:
+ *    - "none": diffDays === 0
+ *    - "weekly", "weekly_eoy", "custom_until": diffDays % 7 === 0
+ *    - "biweekly": diffDays >= 0 && diffDays % 14 === 0 (Strictly hidden on Day 7, Day 21, Day 35!)
+ *    - "weekly_count": diffDays >= 0 && diffDays % 7 === 0 && (diffDays / 7) < count
  */
 export function isEventOnDate(
   item: {
     dayOfWeek?: number;
     day_of_week?: number;
     date?: string | null;
+    startDate?: string | null;
+    event_date?: string | null;
     recurrence?: RecurrenceRule | null;
+    recurrence_type?: string | null;
+    recurrenceCount?: number | null;
+    recurrence_count?: number | null;
+    untilDate?: string | null;
+    recurrence_until?: string | null;
     isActive?: boolean;
     is_active?: boolean;
     excludedDates?: string[];
     excluded_dates?: string[];
   },
-  targetDate: Date
+  targetDate: Date | string
 ): boolean {
   if (item.isActive === false || item.is_active === false) return false;
 
-  const targetDateKey = formatDateKey(targetDate);
-  const excluded = item.excludedDates || (item as any).excluded_dates;
-  if (Array.isArray(excluded) && excluded.includes(targetDateKey)) {
+  const targetDateStr = typeof targetDate === "string" ? targetDate : formatDateKey(targetDate);
+  const excluded = item.excludedDates || item.excluded_dates;
+  if (Array.isArray(excluded) && excluded.includes(targetDateStr)) {
     return false;
   }
 
-  const dow = item.dayOfWeek ?? item.day_of_week ?? 1;
-  const targetDow = getDayOfWeekNumber(targetDate);
+  const startDateStr = item.startDate || item.date || item.event_date;
 
-  // 1. If it's a legacy weekly item with NO specific date anchor:
-  if (!item.date) {
-    return dow === targetDow;
-  }
+  // 1. If the event has a startDate (or event_date):
+  if (startDateStr) {
+    const diffDays = getDaysDifference(startDateStr, targetDateStr);
 
-  // 2. Has an anchor start date
-  const anchorDate = parseDateKey(item.date);
-  const anchorDateKey = formatDateKey(anchorDate);
+    // RULE A — NEVER RENDER BEFORE START DATE:
+    if (diffDays < 0) return false;
 
-  // If target date is before the start date, it has not started
-  if (targetDateKey < anchorDateKey) return false;
-
-  const rule = item.recurrence;
-
-  // Single occurrence (no recurrence)
-  if (!rule || rule.type === "none") {
-    return targetDateKey === anchorDateKey;
-  }
-
-  // Must match the event's day of week
-  if (targetDow !== dow) return false;
-
-  // Day difference from anchor in full days (calendar date difference, independent of time-of-day)
-  const d1 = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate()).getTime();
-  const d2 = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()).getTime();
-  const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) return false;
-
-  switch (rule.type) {
-    case "weekly_eoy": {
-      // Every week until Dec 31 of anchor year
-      const anchorYear = anchorDate.getFullYear();
-      return diffDays % 7 === 0 && targetDate.getFullYear() === anchorYear;
+    // RULE B — RESPECT END DATE (untilDate):
+    const untilDate = item.recurrence?.untilDate || item.untilDate || item.recurrence_until;
+    if (untilDate && getDaysDifference(untilDate, targetDateStr) > 0) {
+      return false;
     }
-    case "weekly_count": {
-      // Weekly for N weeks
-      const maxCount = rule.count && rule.count > 0 ? rule.count : 1;
-      const weekIndex = diffDays / 7;
-      return diffDays % 7 === 0 && weekIndex >= 0 && weekIndex < maxCount;
+
+    // RULE C — EXACT RECURRENCE INTERVALS:
+    const recType = item.recurrence?.type || item.recurrence_type || "none";
+
+    // Single occurrence (no recurrence)
+    if (recType === "none" || !recType) {
+      return diffDays === 0;
     }
-    case "biweekly": {
-      // Every other week (every 14 days)
+
+    // Weekly
+    if (recType === "weekly" || recType === "weekly_eoy" || recType === "custom_until") {
+      return diffDays % 7 === 0;
+    }
+
+    // Biweekly (През седмица / на всеки 2 седмици / 14 дни):
+    // Return diffDays >= 0 && diffDays % 14 === 0!
+    if (recType === "biweekly") {
       if (diffDays % 14 !== 0) return false;
       const biweekIndex = diffDays / 14;
+      const count = item.recurrence?.count || item.recurrenceCount || item.recurrence_count;
+      if (item.recurrence?.biweeklySpan === "count" && count) {
+        return biweekIndex >= 0 && biweekIndex < count;
+      }
+      return true;
+    }
 
-      if (rule.biweeklySpan === "count" && rule.count) {
-        return biweekIndex >= 0 && biweekIndex < rule.count;
-      }
-      if (rule.untilDate) {
-        return targetDateKey <= rule.untilDate;
-      }
-      // default biweekly: until end of anchor year
-      return targetDate.getFullYear() === anchorDate.getFullYear();
+    // Weekly count: repeat for N weeks (e.g. only for 2 weeks)
+    if (recType === "weekly_count") {
+      const maxCount = item.recurrence?.count || item.recurrenceCount || item.recurrence_count || 2;
+      return diffDays % 7 === 0 && (diffDays / 7) < maxCount;
     }
-    case "custom_until": {
-      // Every week until custom date
-      if (diffDays % 7 !== 0) return false;
-      if (!rule.untilDate) return true;
-      return targetDateKey <= rule.untilDate;
-    }
-    default:
-      return targetDateKey === anchorDateKey;
+
+    return diffDays === 0;
   }
+
+  // 2. Legacy baseline templates with NO start date: match by day of week
+  const dow = item.dayOfWeek ?? item.day_of_week ?? 1;
+  const [ty, tm, td] = targetDateStr.split("-").map(Number);
+  const targetDateObj = new Date(Date.UTC(ty, tm - 1, td));
+  const targetDow = targetDateObj.getUTCDay() === 0 ? 7 : targetDateObj.getUTCDay();
+
+  return dow === targetDow;
 }
 
 /**
@@ -448,6 +476,8 @@ export function isEventOnDate(
 export function getEventOccurrenceDates(
   item: {
     date?: string | null;
+    startDate?: string | null;
+    event_date?: string | null;
     recurrence?: RecurrenceRule | null;
     dayOfWeek?: number;
     day_of_week?: number;
@@ -460,7 +490,8 @@ export function getEventOccurrenceDates(
   const dates: string[] = [];
   const excluded = new Set(item.excludedDates || item.excluded_dates || []);
 
-  if (!item.date) {
+  const startDateStr = item.startDate || item.date || (item as any).event_date;
+  if (!startDateStr) {
     const dow = item.dayOfWeek ?? item.day_of_week ?? 1;
     const now = new Date();
     const currentDow = getDayOfWeekNumber(now);
@@ -480,7 +511,7 @@ export function getEventOccurrenceDates(
     return dates;
   }
 
-  const anchorDate = parseDateKey(item.date);
+  const anchorDate = parseDateKey(startDateStr);
   const rule = item.recurrence;
 
   if (!rule || rule.type === "none") {

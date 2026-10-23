@@ -5,8 +5,8 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
 import { SiteSettings, DEFAULT_SETTINGS, normalizePhoneNumber } from "@/lib/types/site-settings";
 
-const BUCKET_NAME = "site-assets";
 const FILE_NAME = "settings.json";
+const OVERRIDES_FILE = "settings/site-overrides.json";
 
 export async function getSiteSettingsAction(): Promise<SiteSettings> {
   return await getSiteSettings();
@@ -60,20 +60,20 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
     const jsonString = JSON.stringify(updatedSettings, null, 2);
     const buffer = Buffer.from(jsonString, "utf-8");
 
-    // 0. Save to local data/site-settings.json (zero-downtime offline & development fallback)
+    // 1. Sync to Supabase Postgres settings table (key-value store, primary)
     try {
-      const fsModule = await import("fs");
-      const pathModule = await import("path");
-      const dataDir = pathModule.join(process.cwd(), "data");
-      if (!fsModule.existsSync(dataDir)) {
-        fsModule.mkdirSync(dataDir, { recursive: true });
-      }
-      fsModule.writeFileSync(pathModule.join(dataDir, "site-settings.json"), jsonString, "utf8");
-    } catch (fsErr) {
-      console.warn("Could not write local site-settings.json:", fsErr);
+      await supabaseAdmin
+        .from("settings")
+        .upsert({
+          key: "site_settings",
+          value: updatedSettings,
+          updated_at: new Date().toISOString(),
+        });
+    } catch (dbErr) {
+      console.warn("Could not upsert to settings table:", dbErr);
     }
 
-    // 1. Sync to site_settings table (schema requirement 1)
+    // 2. Sync to site_settings table if present
     try {
       await supabaseAdmin
         .from("site_settings")
@@ -85,30 +85,27 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
           settings_json: updatedSettings,
           updated_at: new Date().toISOString(),
         });
-    } catch (dbErr) {
-      console.warn("Could not upsert to site_settings table (will continue with storage):", dbErr);
+    } catch {}
+
+    // 3. Sync to Supabase Storage (site-media and site-assets) with cacheControl: "0"
+    const buckets = ["site-media", "site-assets"];
+    const files = [FILE_NAME, OVERRIDES_FILE];
+
+    for (const b of buckets) {
+      for (const f of files) {
+        try {
+          await supabaseAdmin.storage
+            .from(b)
+            .upload(f, buffer, {
+              contentType: "application/json",
+              upsert: true,
+              cacheControl: "0",
+            });
+        } catch {}
+      }
     }
 
-    // 2. Sync to site-media storage bucket (primary) and site-assets (backup)
-    try {
-      await supabaseAdmin.storage
-        .from("site-media")
-        .upload(FILE_NAME, buffer, {
-          contentType: "application/json",
-          upsert: true,
-        });
-    } catch {}
-
-    try {
-      await supabaseAdmin.storage
-        .from("site-assets")
-        .upload(FILE_NAME, buffer, {
-          contentType: "application/json",
-          upsert: true,
-        });
-    } catch {}
-
-    // 3. Revalidate all cached pages that use settings or media
+    // 4. Revalidate all cached pages that use settings or media
     try {
       revalidatePath("/");
       revalidatePath("/uslugi");
@@ -119,6 +116,8 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
       revalidatePath("/admin/media");
       revalidatePath("/admin/settings");
       revalidatePath("/admin/pages/home");
+      revalidatePath("/admin/pages/services");
+      revalidatePath("/admin/pages/about");
     } catch (e) {
       // Ignore if called outside an active Next.js request context
     }

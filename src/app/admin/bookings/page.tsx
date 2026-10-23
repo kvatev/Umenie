@@ -3,11 +3,12 @@ import { Metadata } from "next";
 import { BookingsTable, BookingRecord } from "@/components/admin/BookingsTable";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Заявки за записване | Административен панел",
 };
-
-export const dynamic = "force-dynamic";
 
 export default async function AdminBookingsPage() {
   let bookings: BookingRecord[] = [];

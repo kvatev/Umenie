@@ -5,11 +5,12 @@ import { AdminSecuritySettings } from "@/components/admin/AdminSecuritySettings"
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Основни настройки | Административен панел",
 };
-
-export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
   const targetEmail = "admin@umenie.net";

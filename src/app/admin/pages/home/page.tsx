@@ -4,11 +4,12 @@ import { HomePageEditor } from "@/components/admin/pages/HomePageEditor";
 import { getSiteSettings } from "@/lib/site-settings";
 import { listMediaFolderAction, listReviewsImagesAction } from "@/actions/admin-media";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Редактор на Начална страница | Административен панел",
 };
-
-export const dynamic = "force-dynamic";
 
 export default async function AdminHomePageEditorPage() {
   const [settings, kidsRes, reviewsRes] = await Promise.all([

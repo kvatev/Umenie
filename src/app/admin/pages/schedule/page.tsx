@@ -6,11 +6,12 @@ import { getSchedulesAction } from "@/actions/admin-schedules";
 import { getSiteSettings } from "@/lib/site-settings";
 import { itemToRecord } from "@/lib/schedule-data";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Календар и График | Административен панел",
 };
-
-export const dynamic = "force-dynamic";
 
 export default async function AdminPagesSchedulePage() {
   const [settings, scheduleItems] = await Promise.all([

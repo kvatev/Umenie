@@ -8,6 +8,9 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { listReviewsImagesAction } from "@/actions/admin-media";
 import { getServerDictionary } from "@/lib/i18n/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "За нас – Мисия, Ценности и Екип | Образователен клуб УМеНИе",
   description:
@@ -41,8 +44,6 @@ export const metadata: Metadata = {
     images: ["https://www.umenie.net/og-image.jpg"],
   },
 };
-
-export const revalidate = 60;
 
 const DEFAULT_ABOUT_VALUES = [
   {

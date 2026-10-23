@@ -8,6 +8,9 @@ import { getBlogPosts } from "@/lib/blog-service";
 import { SITE_CONFIG } from "@/lib/constants";
 import { getServerDictionary } from "@/lib/i18n/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Блог и полезни статии | Образователен клуб „УМеНИе“ Бургас",
   description:
@@ -23,7 +26,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 60; // ISR cache revalidation
+
 
 export default async function BlogPage() {
   const [{ locale, dict }, posts] = await Promise.all([

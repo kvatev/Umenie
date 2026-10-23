@@ -158,6 +158,26 @@ export function ScheduleTable({
   const today = useMemo(() => new Date(), []);
   const todayKey = formatDateKey(today);
 
+    // Active week calculation for snippet view (strict date & recurrence math)
+  const currentWeekDays = useMemo(() => {
+    const base = new Date(selectedCalendarDate || today);
+    const baseDow = base.getDay() === 0 ? 7 : base.getDay();
+    const monday = new Date(base);
+    monday.setDate(base.getDate() - (baseDow - 1));
+
+    return DAYS_OF_WEEK.map((day, idx) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + idx);
+      const dateKey = formatDateKey(d);
+      return {
+        ...day,
+        dateObj: d,
+        dateKey,
+        formattedDate: `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}`,
+      };
+    });
+  }, [selectedCalendarDate, today]);
+
   const currentYear = currentNavDate.getFullYear();
   const currentMonth = currentNavDate.getMonth();
 
@@ -1065,8 +1085,8 @@ export function ScheduleTable({
               Всички дни ({schedules.length})
             </button>
 
-            {DAYS_OF_WEEK.map((day) => {
-              const count = schedules.filter((s) => s.day_of_week === day.dayNumber).length;
+            {currentWeekDays.map((day) => {
+              const count = schedules.filter((s) => isEventOnDate(s, day.dateKey)).length;
               const isSelected = activeDayFilter === day.dayNumber;
 
               return (
@@ -1080,7 +1100,7 @@ export function ScheduleTable({
                       : "bg-white text-brand-dark/80 hover:bg-brand-purple/10 border border-brand-purple/15"
                   )}
                 >
-                  <span>{day.shortName}</span>
+                  <span>{day.shortName} ({day.formattedDate})</span>
                   <span className="text-[10px] opacity-75">({count})</span>
                 </button>
               );
@@ -1088,18 +1108,57 @@ export function ScheduleTable({
           </div>
 
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-brand-purple/15 space-y-6">
-            <div className="flex items-center gap-2.5 pb-3 border-b border-brand-purple/10">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <h3 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
-                Седмичен преглед: Как занятията се разпределят по дни
-              </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-brand-purple/10">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h3 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
+                  Седмичен преглед: {currentWeekDays[0].formattedDate} – {currentWeekDays[6].formattedDate}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCalendarDate((prev) => {
+                      const d = new Date(prev || today);
+                      d.setDate(d.getDate() - 7);
+                      return d;
+                    });
+                  }}
+                  className="px-2.5 py-1 text-xs rounded-lg border border-brand-purple/20 hover:bg-brand-purple/10 text-brand-purple font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Предишна</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCalendarDate(new Date())}
+                  className="px-2.5 py-1 text-xs rounded-lg bg-brand-purple/10 hover:bg-brand-purple/20 text-brand-purple font-bold cursor-pointer"
+                >
+                  Тази седмица
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCalendarDate((prev) => {
+                      const d = new Date(prev || today);
+                      d.setDate(d.getDate() + 7);
+                      return d;
+                    });
+                  }}
+                  className="px-2.5 py-1 text-xs rounded-lg border border-brand-purple/20 hover:bg-brand-purple/10 text-brand-purple font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Следваща</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             <div className="rounded-3xl border border-brand-purple/20 bg-brand-bg p-4 sm:p-6 shadow-inner space-y-6">
-              {DAYS_OF_WEEK.filter((d) => activeDayFilter === 0 || d.dayNumber === activeDayFilter).map(
+              {currentWeekDays.filter((d) => activeDayFilter === 0 || d.dayNumber === activeDayFilter).map(
                 (day) => {
                   const daySchedules = schedules
-                    .filter((s) => s.day_of_week === day.dayNumber)
+                    .filter((s) => isEventOnDate(s, day.dateKey))
                     .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
                   if (activeDayFilter === 0 && daySchedules.length === 0) return null;
@@ -1108,7 +1167,7 @@ export function ScheduleTable({
                     <div key={day.dayNumber} className="space-y-3">
                       <div className="flex items-center gap-2">
                         <span className="px-3 py-1 rounded-full bg-brand-purple text-white text-xs font-heading font-bold uppercase tracking-wider">
-                          {day.name}
+                          {day.name} ({day.formattedDate})
                         </span>
                         <span className="text-xs text-brand-muted">
                           ({daySchedules.length} {daySchedules.length === 1 ? "занятие" : "занятия"})

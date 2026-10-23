@@ -20,6 +20,9 @@ import { SITE_CONFIG } from "@/lib/constants";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fullBlogArticlesEn } from "@/lib/i18n";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -71,7 +74,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export const revalidate = 60; // ISR cache revalidation
+
 
 export default async function BlogPostDetailPage({ params }: PageProps) {
   const { slug } = await params;

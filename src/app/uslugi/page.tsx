@@ -11,6 +11,9 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { Calendar } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Услуги и занимания за деца | Образователен клуб УМеНИе Бургас",
   description:
@@ -44,8 +47,6 @@ export const metadata: Metadata = {
     images: ["https://www.umenie.net/og-image.jpg"],
   },
 };
-
-export const revalidate = 60;
 
 export default async function ServicesPage() {
   const [{ locale, dict }, settings] = await Promise.all([

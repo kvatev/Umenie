@@ -20,7 +20,10 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { listReviewsImagesAction } from "@/actions/admin-media";
 
-export const revalidate = 60; // revalidate on demand or every 60s
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+
 
 export const metadata: Metadata = {
   title: "Образователен клуб „УМеНИе“ – Начало | Бургас",

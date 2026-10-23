@@ -11,6 +11,9 @@ import { getSchedulesAction } from "@/actions/admin-schedules";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { FileText, Download } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Седмичен график и записване | Образователен клуб УМеНИе",
   description:
@@ -46,8 +49,6 @@ export const metadata: Metadata = {
 };
 
 // Revalidate on demand or every 60 seconds
-export const revalidate = 60;
-
 async function getSchedules(): Promise<ScheduleItem[]> {
   try {
     const items = await getSchedulesAction();

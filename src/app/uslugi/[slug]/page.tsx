@@ -12,6 +12,9 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { ArrowRight, Video } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

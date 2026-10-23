@@ -19,6 +19,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getActivityIcon } from "@/lib/schedule-icons";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface BookingItem {
   id: string;
