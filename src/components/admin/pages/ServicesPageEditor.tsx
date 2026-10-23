@@ -468,7 +468,7 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
           <div className="space-y-2.5">
             {currentBullets.map((bullet, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                <BulletBulbIcon className="text-brand-purple w-5 h-5 shrink-0" />
+                <BulletBulbIcon className="w-5 h-5 shrink-0" />
                 <input
                   type="text"
                   value={bullet}

@@ -197,7 +197,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             <ul className="space-y-3 sm:space-y-4 text-sm sm:text-base leading-relaxed text-white/95">
               {service.bulletPoints.map((bullet, idx) => (
                 <li key={idx} className="flex items-start gap-3">
-                  <BulletBulbIcon className="text-white drop-shadow-sm mt-0.5" />
+                  <BulletBulbIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 mt-0.5" />
                   <span className="text-white/95 leading-snug">
                     {renderHighlightedText(bullet)}
                   </span>

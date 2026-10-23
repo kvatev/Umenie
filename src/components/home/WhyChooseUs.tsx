@@ -1,3 +1,4 @@
+import { BulletBulbIcon } from "@/components/common/BulletBulbIcon";
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -37,7 +38,7 @@ export function WhyChooseUs() {
                 className="bg-white/85 backdrop-blur-sm rounded-2xl p-5 border border-brand-purple/15 shadow-sm hover:shadow-card transition-all"
               >
                 <div className="flex items-center gap-2 font-heading font-bold text-brand-purple text-base mb-1.5">
-                  <span className="w-2 h-2 rounded-full bg-brand-purple" />
+                  <BulletBulbIcon className="w-5 h-5 shrink-0" />
                   <h4>{p.title}</h4>
                 </div>
                 <p className="text-brand-dark/80 text-xs sm:text-sm leading-relaxed">

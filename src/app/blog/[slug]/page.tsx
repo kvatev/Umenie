@@ -198,7 +198,7 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
                       <ul key={idx} className="space-y-2.5 my-4">
                         {items.map((item, itemIdx) => (
                           <li key={itemIdx} className="flex items-start gap-3">
-                            <BulletBulbIcon className="text-brand-purple mt-1 w-5 h-5 shrink-0" />
+                            <BulletBulbIcon className="w-5 h-5 shrink-0 mt-1" />
                             <span>{item.replace(/^-\s+/, "")}</span>
                           </li>
                         ))}
