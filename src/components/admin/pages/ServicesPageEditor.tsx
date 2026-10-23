@@ -19,7 +19,10 @@ import {
   ZoomIn,
   Maximize2,
   Eye,
+  Sparkles,
 } from "lucide-react";
+import { BulgarianFlagSvg, UkFlagSvg } from "@/components/common/LanguageSwitcher";
+import { servicesDict } from "@/lib/i18n/dictionaries/services";
 import { SERVICES_DATA, ServiceData } from "@/lib/services-data";
 import { ServiceOverride, SiteSettings, SlideViewSetting } from "@/lib/types/site-settings";
 import {
@@ -38,6 +41,8 @@ interface ServicesPageEditorProps {
 
 export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps) {
   const [selectedSlug, setSelectedSlug] = useState<string>("urotsi-i-kursove");
+  const [editorLocale, setEditorLocale] = useState<"bg" | "en">("bg");
+  const [isAutoTranslating, setIsAutoTranslating] = useState(false);
   const [overrides, setOverrides] = useState<Record<string, ServiceOverride>>(
     initialSettings.servicesOverrides || {}
   );
@@ -75,6 +80,20 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
   const currentGalleryTitle = activeOverride.galleryTitle ?? baseService.galleryTitle;
   const currentHasSlider = activeOverride.hasSlider !== undefined ? activeOverride.hasSlider : baseService.hasSlider;
   const currentSliderImageSettings = activeOverride.sliderImageSettings || {};
+  // English dictionary fallback & active overrides
+  const baseEnItem = (servicesDict.en.items as Record<string, any>)[selectedSlug];
+  const currentTitleEn = activeOverride.titleEn ?? baseEnItem?.title ?? baseService.title;
+  const currentShortTitleEn = activeOverride.badgeEn ?? activeOverride.shortTitleEn ?? baseEnItem?.shortTitle ?? baseService.shortTitle;
+  const currentSloganPart1En = activeOverride.sloganPart1En ?? baseEnItem?.sloganPart1 ?? baseService.sloganPart1;
+  const currentSloganPart2En = activeOverride.sloganPart2En ?? baseEnItem?.sloganPart2 ?? baseService.sloganPart2;
+  const currentIntroEn = activeOverride.introNarrativeEn ?? activeOverride.introEn ?? baseEnItem?.intro ?? baseService.intro;
+  const currentBulletsEn: string[] = (activeOverride.bulletsEn && activeOverride.bulletsEn.length > 0)
+    ? activeOverride.bulletsEn
+    : (activeOverride.bulletPointsEn && activeOverride.bulletPointsEn.length > 0)
+      ? activeOverride.bulletPointsEn
+      : (baseEnItem?.bulletPoints ?? baseService.bulletPoints);
+  const currentGalleryTitleEn = activeOverride.galleryTitleEn ?? baseEnItem?.galleryTitle ?? baseService.galleryTitle;
+
 
   const updateCurrentOverride = (partial: Partial<ServiceOverride>) => {
     setOverrides((prev) => ({
@@ -140,6 +159,17 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
         galleryTitle: currentGalleryTitle,
         hasSlider: currentHasSlider,
         sliderImageSettings: activeOverride.sliderImageSettings,
+        // English fields & overrides
+        titleEn: currentTitleEn,
+        badgeEn: currentShortTitleEn,
+        shortTitleEn: currentShortTitleEn,
+        sloganPart1En: currentSloganPart1En,
+        sloganPart2En: currentSloganPart2En,
+        introNarrativeEn: currentIntroEn,
+        introEn: currentIntroEn,
+        bulletsEn: currentBulletsEn,
+        bulletPointsEn: currentBulletsEn,
+        galleryTitleEn: currentGalleryTitleEn,
       };
 
       const res = await saveServiceContentAction(selectedSlug, dataToSave);
@@ -252,6 +282,91 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
     const updated = currentBullets.filter((_, i) => i !== index);
     updateCurrentOverride({ bulletPoints: updated });
   };
+  const handleAutoTranslateService = async () => {
+    setIsAutoTranslating(true);
+    setStatusMessage(null);
+    try {
+      const textsToTranslate = [
+        currentTitle,
+        currentShortTitle,
+        currentSloganPart1,
+        currentSloganPart2,
+        currentIntro,
+        currentGalleryTitle,
+        ...currentBullets,
+      ];
+
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texts: textsToTranslate, from: "bg", to: "en" }),
+      });
+
+      const data = await res.json();
+      if (data.success && Array.isArray(data.translations) && data.translations.length >= 6) {
+        const [
+          tTitle,
+          tShortTitle,
+          tSlogan1,
+          tSlogan2,
+          tIntro,
+          tGallery,
+          ...tBullets
+        ] = data.translations;
+
+        updateCurrentOverride({
+          titleEn: tTitle,
+          badgeEn: tShortTitle,
+          shortTitleEn: tShortTitle,
+          sloganPart1En: tSlogan1,
+          sloganPart2En: tSlogan2,
+          introNarrativeEn: tIntro,
+          introEn: tIntro,
+          galleryTitleEn: tGallery,
+          bulletsEn: tBullets,
+          bulletPointsEn: tBullets,
+        });
+
+        setEditorLocale("en");
+        setStatusMessage({
+          type: "success",
+          text: "Текстовете за „" + baseService.shortTitle + "“ бяха преведени автоматично на английски! Можете да ги редактирате.",
+        });
+      } else {
+        setStatusMessage({
+          type: "error",
+          text: data.message || "Грешка при автоматичния превод.",
+        });
+      }
+    } catch (err) {
+      console.error("Auto translate service failed:", err);
+      setStatusMessage({
+        type: "error",
+        text: "Възникна мрежова грешка при превода.",
+      });
+    } finally {
+      setIsAutoTranslating(false);
+    }
+  };
+
+  const handleBulletChangeEn = (index: number, value: string) => {
+    const updated = [...currentBulletsEn];
+    updated[index] = value;
+    updateCurrentOverride({ bulletsEn: updated, bulletPointsEn: updated });
+  };
+
+  const handleAddBulletEn = () => {
+    updateCurrentOverride({
+      bulletsEn: [...currentBulletsEn, "New highlight bullet point..."],
+      bulletPointsEn: [...currentBulletsEn, "New highlight bullet point..."],
+    });
+  };
+
+  const handleRemoveBulletEn = (index: number) => {
+    const updated = currentBulletsEn.filter((_: string, i: number) => i !== index);
+    updateCurrentOverride({ bulletsEn: updated, bulletPointsEn: updated });
+  };
+
 
   return (
     <div className="space-y-6">
@@ -355,136 +470,293 @@ export function ServicesPageEditor({ initialSettings }: ServicesPageEditorProps)
 
       {/* Editor Content for Selected Service */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-card border border-brand-purple/15 space-y-8">
-        {/* Section 1: Texts & Slogans */}
-        <div className="space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-brand-purple/10">
-            <div>
-              <h2 className="font-heading font-bold text-lg text-brand-dark">
-                1. Текстове и Слогани ({baseService.shortTitle})
-              </h2>
-              <p className="text-xs text-brand-muted">
-                Тези текстове се визуализират в горната виолетова карта на страницата на услугата.
-              </p>
-            </div>
+        {/* Bilingual Language Switcher & Auto-Translate Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-2xl bg-brand-bg/80 border border-brand-purple/20">
+          <div className="inline-flex items-center rounded-xl bg-white p-1 border border-brand-purple/15 shadow-xs">
+            <button
+              type="button"
+              onClick={() => setEditorLocale("bg")}
+              className={cn(
+                "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-heading font-bold transition-all cursor-pointer",
+                editorLocale === "bg"
+                  ? "bg-[#887ed8] text-white shadow-sm"
+                  : "text-slate-600 hover:text-[#887ed8]"
+              )}
+            >
+              <BulgarianFlagSvg className="w-4 h-2.5" />
+              <span>🇧🇬 Български текст</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditorLocale("en")}
+              className={cn(
+                "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-heading font-bold transition-all cursor-pointer",
+                editorLocale === "en"
+                  ? "bg-[#887ed8] text-white shadow-sm"
+                  : "text-slate-600 hover:text-[#887ed8]"
+              )}
+            >
+              <UkFlagSvg className="w-4 h-2.5" />
+              <span>🇬🇧 Английски превод (EN)</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleAutoTranslateService}
+              disabled={isAutoTranslating || isPending}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-heading font-bold text-xs shadow-sm hover:from-purple-700 hover:to-indigo-700 transition-all cursor-pointer disabled:opacity-50"
+            >
+              {isAutoTranslating ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              )}
+              <span>✨ Преведи автоматично от Български</span>
+            </button>
+
             <button
               type="button"
               onClick={handleSaveTextChanges}
               disabled={isPending}
-              className="px-5 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs uppercase tracking-wider shadow-button hover:bg-brand-purple-hover transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-brand-purple text-white font-heading font-bold text-xs uppercase tracking-wider shadow-button hover:bg-brand-purple-hover transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              <span>Запази промените</span>
+              {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              <span>Запази всички</span>
             </button>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Section 1: Texts & Slogans */}
+        <div className="space-y-5">
+          <div className="flex items-center justify-between pb-3 border-b border-brand-purple/10">
             <div>
-              <label className="block text-xs font-bold text-brand-dark mb-1">
-                Главно заглавие (Title)
-              </label>
-              <input
-                type="text"
-                value={currentTitle}
-                onChange={(e) => updateCurrentOverride({ title: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs font-heading font-bold text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-brand-dark mb-1">
-                Кратко заглавие (Badge)
-              </label>
-              <input
-                type="text"
-                value={currentShortTitle}
-                onChange={(e) => updateCurrentOverride({ shortTitle: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
-              />
+              <h2 className="font-heading font-bold text-lg text-brand-dark flex items-center gap-2">
+                <span>1. Текстове и Слогани ({baseService.shortTitle})</span>
+                <span className={cn(
+                  "text-xs px-2.5 py-0.5 rounded-full font-bold",
+                  editorLocale === "bg" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"
+                )}>
+                  {editorLocale === "bg" ? "🇧🇬 Българска версия" : "🇬🇧 Английска версия"}
+                </span>
+              </h2>
+              <p className="text-xs text-brand-muted">
+                {editorLocale === "bg"
+                  ? "Редактирайте официалния български текст за услугата."
+                  : "Редактирайте ръчно английския превод (или използвайте бутона за автоматичен превод горе)."}
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-brand-dark mb-1">
-                Слоган - Част 1 (Горе)
-              </label>
-              <input
-                type="text"
-                value={currentSloganPart1}
-                onChange={(e) => updateCurrentOverride({ sloganPart1: e.target.value })}
-                placeholder="напр. Днес е урок."
-                className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
-              />
-            </div>
+          {editorLocale === "bg" ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark mb-1">
+                    Главно заглавие (Title BG)
+                  </label>
+                  <input
+                    type="text"
+                    value={currentTitle}
+                    onChange={(e) => updateCurrentOverride({ title: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs font-heading font-bold text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                </div>
 
-            <div>
-              <label className="block text-xs font-bold text-brand-dark mb-1">
-                Слоган - Част 2 (Удебелен акцент)
-              </label>
-              <input
-                type="text"
-                value={currentSloganPart2}
-                onChange={(e) => updateCurrentOverride({ sloganPart2: e.target.value })}
-                placeholder="напр. Утре е увереността..."
-                className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs font-bold text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
-              />
-            </div>
-          </div>
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark mb-1">
+                    Кратко заглавие / Бадж (Badge BG)
+                  </label>
+                  <input
+                    type="text"
+                    value={currentShortTitle}
+                    onChange={(e) => updateCurrentOverride({ shortTitle: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                </div>
+              </div>
 
-          <div>
-            <label className="block text-xs font-bold text-brand-dark mb-1">
-              Въвеждащ текст (Intro Narrative)
-            </label>
-            <textarea
-              rows={3}
-              value={currentIntro}
-              onChange={(e) => updateCurrentOverride({ intro: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none leading-relaxed"
-            />
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark mb-1">
+                    Слоган - Част 1 (Горе)
+                  </label>
+                  <input
+                    type="text"
+                    value={currentSloganPart1}
+                    onChange={(e) => updateCurrentOverride({ sloganPart1: e.target.value })}
+                    placeholder="напр. Днес е урок."
+                    className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark mb-1">
+                    Слоган - Част 2 (Удебелен акцент)
+                  </label>
+                  <input
+                    type="text"
+                    value={currentSloganPart2}
+                    onChange={(e) => updateCurrentOverride({ sloganPart2: e.target.value })}
+                    placeholder="напр. Утре е увереността..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs font-bold text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-brand-dark mb-1">
+                  Въвеждащ текст (Intro Narrative BG)
+                </label>
+                <textarea
+                  rows={3}
+                  value={currentIntro}
+                  onChange={(e) => updateCurrentOverride({ intro: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none leading-relaxed"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark mb-1">
+                    Главно заглавие на английски (Title EN)
+                  </label>
+                  <input
+                    type="text"
+                    value={currentTitleEn}
+                    onChange={(e) => updateCurrentOverride({ titleEn: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs font-heading font-bold text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark mb-1">
+                    Кратко заглавие на английски (Badge EN)
+                  </label>
+                  <input
+                    type="text"
+                    value={currentShortTitleEn}
+                    onChange={(e) => updateCurrentOverride({ badgeEn: e.target.value, shortTitleEn: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark mb-1">
+                    Слоган - Част 1 на английски (Slogan Part 1 EN)
+                  </label>
+                  <input
+                    type="text"
+                    value={currentSloganPart1En}
+                    onChange={(e) => updateCurrentOverride({ sloganPart1En: e.target.value })}
+                    placeholder="e.g. Today is a lesson."
+                    className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark mb-1">
+                    Слоган - Част 2 на английски (Slogan Part 2 EN)
+                  </label>
+                  <input
+                    type="text"
+                    value={currentSloganPart2En}
+                    onChange={(e) => updateCurrentOverride({ sloganPart2En: e.target.value })}
+                    placeholder="e.g. Tomorrow is confidence..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs font-bold text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-brand-dark mb-1">
+                  Въвеждащ текст на английски (Intro Narrative EN)
+                </label>
+                <textarea
+                  rows={3}
+                  value={currentIntroEn}
+                  onChange={(e) => updateCurrentOverride({ introNarrativeEn: e.target.value, introEn: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none leading-relaxed"
+                />
+              </div>
+            </>
+          )}
         </div>
 
         {/* Section 2: Bullet Points */}
         <div className="space-y-4 pt-4 border-t border-brand-purple/10">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-heading font-bold text-base text-brand-dark">
-                2. Акцентни точки с крушка (Bullet Points)
+              <h3 className="font-heading font-bold text-base text-brand-dark flex items-center gap-2">
+                <span>2. Акцентни точки с крушка (Bullet Points)</span>
+                <span className={cn(
+                  "text-xs px-2.5 py-0.5 rounded-full font-bold",
+                  editorLocale === "bg" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"
+                )}>
+                  {editorLocale === "bg" ? "🇧🇬 Български" : "🇬🇧 Английски"}
+                </span>
               </h3>
               <p className="text-xs text-brand-muted">
-                Използвайте **текст** за удебеляване на ключови думи (напр. **малки групи**).
+                Използвайте **текст** за удебеляване на ключови думи (напр. **малки групи** или **small groups**).
               </p>
             </div>
             <button
               type="button"
-              onClick={handleAddBullet}
+              onClick={editorLocale === "bg" ? handleAddBullet : handleAddBulletEn}
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all text-xs font-bold cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Добави булет</span>
+              <span>Добави булет ({editorLocale === "bg" ? "BG" : "EN"})</span>
             </button>
           </div>
 
           <div className="space-y-2.5">
-            {currentBullets.map((bullet, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <BulletBulbIcon className="w-5 h-5 shrink-0" />
-                <input
-                  type="text"
-                  value={bullet}
-                  onChange={(e) => handleBulletChange(idx, e.target.value)}
-                  className="flex-1 px-3.5 py-2 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveBullet(idx)}
-                  className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                  title="Премахни"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+            {editorLocale === "bg" ? (
+              currentBullets.map((bullet, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <BulletBulbIcon className="w-5 h-5 shrink-0" />
+                  <input
+                    type="text"
+                    value={bullet}
+                    onChange={(e) => handleBulletChange(idx, e.target.value)}
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveBullet(idx)}
+                    className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                    title="Премахни"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))
+            ) : (
+              currentBulletsEn.map((bullet: string, idx: number) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <BulletBulbIcon className="w-5 h-5 shrink-0" />
+                  <input
+                    type="text"
+                    value={bullet}
+                    onChange={(e) => handleBulletChangeEn(idx, e.target.value)}
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveBulletEn(idx)}
+                    className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                    title="Премахни"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

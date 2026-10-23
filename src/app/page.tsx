@@ -234,7 +234,7 @@ export default async function HomePage() {
         <Container size="xl" className="relative z-10">
           <div className="max-w-xl text-white space-y-4 sm:space-y-6 text-left">
             <h1 className="font-heading font-bold text-2xl xs:text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide drop-shadow-md text-white text-left">
-              {dict.home.hero.title}
+              {locale === "en" ? (settings.heroTitleEn?.trim() || dict.home.hero.title) : dict.home.hero.title}
             </h1>
             <div className="pt-2 flex justify-start">
               <Link

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { X, Loader2, Calendar, Clock, AlertCircle, Info, Check, Plus } from "lucide-react";
+import { X, Loader2, Calendar, Clock, AlertCircle, Info, Check, Plus, Sparkles } from "lucide-react";
 import {
   DAYS_OF_WEEK,
   RecurrenceRule,
@@ -25,6 +25,8 @@ import {
 export interface ScheduleRecord {
   id: string;
   title: string;
+  title_en?: string;
+  titleEn?: string;
   category: string;
   day_of_week: number;
   start_time: string;
@@ -73,6 +75,8 @@ export function ScheduleModal({
 
   // Form states
   const [title, setTitle] = useState("");
+  const [titleEn, setTitleEn] = useState("");
+  const [isTranslatingTitle, setIsTranslatingTitle] = useState(false);
   const [category, setCategory] = useState("art");
   const [startDateStr, setStartDateStr] = useState<string>(() => formatDateKey(new Date()));
   const [dayOfWeek, setDayOfWeek] = useState<number>(1);
@@ -102,6 +106,7 @@ export function ScheduleModal({
 
     if (scheduleToEdit) {
       setTitle(scheduleToEdit.title);
+      setTitleEn(scheduleToEdit.titleEn || scheduleToEdit.title_en || "");
       setCategory(scheduleToEdit.category);
       setDayOfWeek(scheduleToEdit.day_of_week);
       setStartTime(scheduleToEdit.start_time.slice(0, 5));
@@ -222,6 +227,27 @@ export function ScheduleModal({
   }, [title, startTime, endTime, startDateStr, currentRecurrenceRule, dayOfWeek]);
 
   if (!isOpen) return null;
+
+
+  const handleAutoTranslateTitle = async () => {
+    if (!title.trim()) return;
+    setIsTranslatingTitle(true);
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: title }),
+      });
+      const data = await res.json();
+      if (data.success && data.text) {
+        setTitleEn(data.text);
+      }
+    } catch (err) {
+      console.error("Auto translate schedule title failed:", err);
+    } finally {
+      setIsTranslatingTitle(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -356,7 +382,7 @@ export function ScheduleModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
-                Заглавие на занятието *
+                Заглавие на занятието (BG) *
               </label>
               <input
                 type="text"

@@ -25,6 +25,7 @@ import {
 import { saveAboutPageContentAction } from "@/actions/admin-services";
 import { AboutTextItem, SiteSettings } from "@/lib/types/site-settings";
 import { cn } from "@/lib/utils";
+import { BulgarianFlagSvg, UkFlagSvg } from "@/components/common/LanguageSwitcher";
 
 interface AboutPageEditorProps {
   initialSettings: SiteSettings;
@@ -36,6 +37,8 @@ export function AboutPageEditor({
   initialReviewsImages,
 }: AboutPageEditorProps) {
   const [isPending, startTransition] = useTransition();
+  const [editorLocale, setEditorLocale] = useState<"bg" | "en">("bg");
+  const [isAutoTranslating, setIsAutoTranslating] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -141,6 +144,63 @@ export function AboutPageEditor({
         setStatusMessage({ type: "success", text: "Подредбата на отзивите е запазена!" });
       }
     });
+  };
+
+
+  const handleAutoTranslateAbout = async () => {
+    setIsAutoTranslating(true);
+    setStatusMessage(null);
+    try {
+      const textsToTranslate: string[] = [];
+      values.forEach((v) => {
+        textsToTranslate.push(v.title);
+        textsToTranslate.push(v.text);
+      });
+      features.forEach((f) => {
+        textsToTranslate.push(f.title);
+        textsToTranslate.push(f.text);
+      });
+
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texts: textsToTranslate, from: "bg", to: "en" }),
+      });
+
+      const data = await res.json();
+      if (data.success && Array.isArray(data.translations) && data.translations.length >= 12) {
+        const tr = data.translations;
+        const newValues = values.map((v, i) => ({
+          ...v,
+          titleEn: tr[i * 2] || v.titleEn,
+          textEn: tr[i * 2 + 1] || v.textEn,
+        }));
+        const offset = values.length * 2;
+        const newFeatures = features.map((f, i) => ({
+          ...f,
+          titleEn: tr[offset + i * 2] || f.titleEn,
+          textEn: tr[offset + i * 2 + 1] || f.textEn,
+        }));
+
+        setValues(newValues);
+        setFeatures(newFeatures);
+        setEditorLocale("en");
+        setStatusMessage({
+          type: "success",
+          text: "Текстовете за „За нас“ бяха преведени автоматично на английски! Можете да ги прегледате и редактирате.",
+        });
+      } else {
+        setStatusMessage({
+          type: "error",
+          text: data.message || "Грешка при автоматичния превод.",
+        });
+      }
+    } catch (err) {
+      console.error("Auto translate about exception:", err);
+      setStatusMessage({ type: "error", text: "Мрежова грешка при превода." });
+    } finally {
+      setIsAutoTranslating(false);
+    }
   };
 
   // --- TEXTS HANDLERS ---
@@ -291,6 +351,64 @@ export function AboutPageEditor({
         )}
       </div>
 
+      {/* Bilingual Language Switcher & Auto-Translate Bar */}
+      <div className="bg-white p-4 rounded-3xl shadow-card border border-brand-purple/15 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="inline-flex items-center rounded-xl bg-brand-bg p-1 border border-brand-purple/15 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setEditorLocale("bg")}
+            className={cn(
+              "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-heading font-bold transition-all cursor-pointer",
+              editorLocale === "bg"
+                ? "bg-[#887ed8] text-white shadow-sm"
+                : "text-slate-600 hover:text-[#887ed8]"
+            )}
+          >
+            <BulgarianFlagSvg className="w-4 h-2.5" />
+            <span>🇧🇬 Български текст</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditorLocale("en")}
+            className={cn(
+              "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-heading font-bold transition-all cursor-pointer",
+              editorLocale === "en"
+                ? "bg-[#887ed8] text-white shadow-sm"
+                : "text-slate-600 hover:text-[#887ed8]"
+            )}
+          >
+            <UkFlagSvg className="w-4 h-2.5" />
+            <span>🇬🇧 Английски превод (EN)</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleAutoTranslateAbout}
+            disabled={isAutoTranslating || isPending}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-heading font-bold text-xs shadow-sm hover:from-purple-700 hover:to-indigo-700 transition-all cursor-pointer disabled:opacity-50"
+          >
+            {isAutoTranslating ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            )}
+            <span>✨ Преведи автоматично от Български</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSaveTexts}
+            disabled={isPending}
+            className="px-5 py-2.5 rounded-xl bg-brand-purple text-white font-heading font-bold text-xs uppercase tracking-wider shadow-button hover:bg-brand-purple-hover transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span>Запази всички текстове</span>
+          </button>
+        </div>
+      </div>
+
       {/* ============================================================ */}
       {/* SECTION 2: 3 MAIN VALUES ("ЗАЩО ДА ИЗБЕРЕТЕ УМЕНИЕ?") */}
       {/* ============================================================ */}
@@ -328,14 +446,18 @@ export function AboutPageEditor({
 
               <div>
                 <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Заглавие
+                  {editorLocale === "bg" ? "Заглавие (BG)" : "Заглавие на английски (Title EN)"}
                 </label>
                 <input
                   type="text"
-                  value={val.title}
+                  value={editorLocale === "bg" ? val.title : (val.titleEn || "")}
                   onChange={(e) => {
                     const updated = [...values];
-                    updated[idx] = { ...updated[idx], title: e.target.value };
+                    if (editorLocale === "bg") {
+                      updated[idx] = { ...updated[idx], title: e.target.value };
+                    } else {
+                      updated[idx] = { ...updated[idx], titleEn: e.target.value };
+                    }
                     setValues(updated);
                   }}
                   className="w-full px-3.5 py-2 rounded-xl border border-brand-purple/20 text-xs font-heading font-bold text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
@@ -344,14 +466,18 @@ export function AboutPageEditor({
 
               <div>
                 <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Описание
+                  {editorLocale === "bg" ? "Описание (BG)" : "Описание на английски (Description EN)"}
                 </label>
                 <textarea
                   rows={4}
-                  value={val.text}
+                  value={editorLocale === "bg" ? val.text : (val.textEn || "")}
                   onChange={(e) => {
                     const updated = [...values];
-                    updated[idx] = { ...updated[idx], text: e.target.value };
+                    if (editorLocale === "bg") {
+                      updated[idx] = { ...updated[idx], text: e.target.value };
+                    } else {
+                      updated[idx] = { ...updated[idx], textEn: e.target.value };
+                    }
                     setValues(updated);
                   }}
                   className="w-full px-3.5 py-2 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none leading-relaxed"
@@ -399,14 +525,18 @@ export function AboutPageEditor({
 
               <div>
                 <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Заглавие
+                  {editorLocale === "bg" ? "Заглавие (BG)" : "Заглавие на английски (Title EN)"}
                 </label>
                 <input
                   type="text"
-                  value={feat.title}
+                  value={editorLocale === "bg" ? feat.title : (feat.titleEn || "")}
                   onChange={(e) => {
                     const updated = [...features];
-                    updated[idx] = { ...updated[idx], title: e.target.value };
+                    if (editorLocale === "bg") {
+                      updated[idx] = { ...updated[idx], title: e.target.value };
+                    } else {
+                      updated[idx] = { ...updated[idx], titleEn: e.target.value };
+                    }
                     setFeatures(updated);
                   }}
                   className="w-full px-3.5 py-2 rounded-xl border border-brand-purple/20 text-xs font-heading font-bold text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
@@ -415,14 +545,18 @@ export function AboutPageEditor({
 
               <div>
                 <label className="block text-xs font-bold text-brand-dark mb-1">
-                  Описание
+                  {editorLocale === "bg" ? "Описание (BG)" : "Описание на английски (Description EN)"}
                 </label>
                 <textarea
                   rows={4}
-                  value={feat.text}
+                  value={editorLocale === "bg" ? feat.text : (feat.textEn || "")}
                   onChange={(e) => {
                     const updated = [...features];
-                    updated[idx] = { ...updated[idx], text: e.target.value };
+                    if (editorLocale === "bg") {
+                      updated[idx] = { ...updated[idx], text: e.target.value };
+                    } else {
+                      updated[idx] = { ...updated[idx], textEn: e.target.value };
+                    }
                     setFeatures(updated);
                   }}
                   className="w-full px-3.5 py-2 rounded-xl border border-brand-purple/20 text-xs text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none leading-relaxed"

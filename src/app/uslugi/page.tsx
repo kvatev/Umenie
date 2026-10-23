@@ -56,19 +56,21 @@ export default async function ServicesPage() {
   const overrides = settings.servicesOverrides || {};
 
   const services = SERVICES_DATA.map((srv) => {
+    const o = overrides[srv.slug];
     if (locale === "en") {
       const enItem = (dict.services.items as Record<string, any>)[srv.slug];
-      if (enItem) {
-        return {
-          ...srv,
-          title: enItem.title,
-          shortTitle: enItem.shortTitle,
-          titleLines: enItem.titleLines,
-          shortDescription: enItem.shortDescription,
-        };
-      }
+      const customTitle = o?.titleEn?.trim();
+      const customShortTitle = o?.badgeEn?.trim() || o?.shortTitleEn?.trim();
+      const customIntro = o?.introNarrativeEn?.trim() || o?.introEn?.trim();
+
+      return {
+        ...srv,
+        title: customTitle || enItem?.title || srv.title,
+        shortTitle: customShortTitle || enItem?.shortTitle || srv.shortTitle,
+        titleLines: enItem?.titleLines || [customTitle || srv.title],
+        shortDescription: customIntro || enItem?.shortDescription || srv.shortDescription,
+      };
     }
-    const o = overrides[srv.slug];
     if (!o) return srv;
     return {
       ...srv,

@@ -97,15 +97,38 @@ export default async function ServiceDetailPage({ params }: PageProps) {
 
   const service = {
     ...baseService,
-    title: enItem ? enItem.title : (override.title || baseService.title),
-    shortTitle: enItem ? enItem.shortTitle : (override.shortTitle || baseService.shortTitle),
-    sloganPart1: enItem ? enItem.sloganPart1 : (override.sloganPart1 || baseService.sloganPart1),
-    sloganPart2: enItem ? enItem.sloganPart2 : (override.sloganPart2 || baseService.sloganPart2),
-    intro: enItem ? enItem.intro : (override.intro || baseService.intro),
-    bulletPoints: enItem
-      ? enItem.bulletPoints
-      : (override.bulletPoints && override.bulletPoints.length > 0 ? override.bulletPoints : baseService.bulletPoints),
-    galleryTitle: enItem ? enItem.galleryTitle : (override.galleryTitle || baseService.galleryTitle),
+    title:
+      locale === "en"
+        ? (override.titleEn?.trim() || enItem?.title || baseService.title)
+        : (override.title?.trim() || baseService.title),
+    shortTitle:
+      locale === "en"
+        ? (override.badgeEn?.trim() || override.shortTitleEn?.trim() || enItem?.shortTitle || baseService.shortTitle)
+        : (override.shortTitle?.trim() || baseService.shortTitle),
+    sloganPart1:
+      locale === "en"
+        ? (override.sloganPart1En?.trim() || enItem?.sloganPart1 || baseService.sloganPart1)
+        : (override.sloganPart1?.trim() || baseService.sloganPart1),
+    sloganPart2:
+      locale === "en"
+        ? (override.sloganPart2En?.trim() || enItem?.sloganPart2 || baseService.sloganPart2)
+        : (override.sloganPart2?.trim() || baseService.sloganPart2),
+    intro:
+      locale === "en"
+        ? (override.introNarrativeEn?.trim() || override.introEn?.trim() || enItem?.intro || baseService.intro)
+        : (override.intro?.trim() || baseService.intro),
+    bulletPoints:
+      locale === "en"
+        ? ((override.bulletsEn && override.bulletsEn.length > 0)
+            ? override.bulletsEn
+            : (override.bulletPointsEn && override.bulletPointsEn.length > 0)
+              ? override.bulletPointsEn
+              : enItem?.bulletPoints || baseService.bulletPoints)
+        : (override.bulletPoints && override.bulletPoints.length > 0 ? override.bulletPoints : baseService.bulletPoints),
+    galleryTitle:
+      locale === "en"
+        ? (override.galleryTitleEn?.trim() || enItem?.galleryTitle || baseService.galleryTitle)
+        : (override.galleryTitle?.trim() || baseService.galleryTitle),
     pageImages: [
       override.pageImages?.[0] || baseService.pageImages[0],
       override.pageImages?.[1] || baseService.pageImages[1] || baseService.pageImages[0],

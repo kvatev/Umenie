@@ -15,6 +15,8 @@ export interface RecurrenceRule {
 export interface ScheduleItem {
   id: string;
   title: string;
+  titleEn?: string;
+  title_en?: string;
   category: "english" | "math" | "knitting" | "art" | "reading" | "chess" | "stem" | "study_hall";
   dayOfWeek: number; // 1 = Понеделник, 7 = Неделя
   dayName: string;
@@ -237,6 +239,8 @@ export function deduceCategory(title: string): ScheduleItem["category"] {
 export function mapRowToScheduleItem(row: {
   id: string;
   title: string;
+  title_en?: string | null;
+  titleEn?: string | null;
   category?: string;
   day_of_week: number;
   start_time: string;
@@ -275,6 +279,8 @@ export function mapRowToScheduleItem(row: {
   return {
     id: row.id,
     title: row.title,
+    titleEn: row.title_en || row.titleEn || undefined,
+    title_en: row.title_en || row.titleEn || undefined,
     category: cat,
     dayOfWeek: row.day_of_week,
     dayName,
@@ -666,6 +672,8 @@ export function getRecurrenceHumanSummary(
 export function itemToRecord(item: ScheduleItem): {
   id: string;
   title: string;
+  title_en?: string;
+  titleEn?: string;
   category: string;
   day_of_week: number;
   start_time: string;
@@ -684,6 +692,8 @@ export function itemToRecord(item: ScheduleItem): {
   return {
     id: item.id,
     title: item.title,
+    title_en: item.titleEn || item.title_en || undefined,
+    titleEn: item.titleEn || item.title_en || undefined,
     category: item.category,
     day_of_week: item.dayOfWeek,
     start_time: item.startTime,

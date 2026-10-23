@@ -39,6 +39,7 @@ import {
   StorageMediaItem,
 } from "@/actions/admin-media";
 import { cn } from "@/lib/utils";
+import { BulgarianFlagSvg, UkFlagSvg } from "@/components/common/LanguageSwitcher";
 
 interface HomePageEditorProps {
   initialHeroUrl: string | null;
@@ -48,6 +49,7 @@ interface HomePageEditorProps {
   initialReviewsImages?: ReviewImageRecord[];
   initialKidsGallery: StorageMediaItem[];
   initialKidsGalleryOrder?: string[];
+  initialHeroTitleEn?: string;
 }
 
 const DEFAULT_KIDS_PHOTOS = [
@@ -68,6 +70,7 @@ export function HomePageEditor({
   initialReviewsImages = [],
   initialKidsGallery,
   initialKidsGalleryOrder = [],
+  initialHeroTitleEn = "",
 }: HomePageEditorProps) {
   const [activeSubTab, setActiveSubTab] = useState<"hero" | "reviews" | "kids">("hero");
   const [isPending, startTransition] = useTransition();
@@ -79,6 +82,58 @@ export function HomePageEditor({
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [heroMessage, setHeroMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+
+  // Hero bilingual text state
+  const [heroTitleEn, setHeroTitleEn] = useState<string>(initialHeroTitleEn || "EDUCATIONAL CLUB UMENIE");
+  const [heroTextLocale, setHeroTextLocale] = useState<"bg" | "en">("bg");
+  const [isTranslatingHeroText, setIsTranslatingHeroText] = useState(false);
+
+  const handleAutoTranslateHeroText = async () => {
+    setIsTranslatingHeroText(true);
+    setHeroMessage(null);
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: "ОБРАЗОВАТЕЛЕН КЛУБ УМЕНИЕ", from: "bg", to: "en" }),
+      });
+      const data = await res.json();
+      if (data.success && data.text) {
+        setHeroTitleEn(data.text);
+        setHeroTextLocale("en");
+        setHeroMessage({
+          type: "success",
+          text: "Заглавието на началния банер беше преведено успешно на английски!",
+        });
+      }
+    } catch (err) {
+      console.error("Auto translate hero text exception:", err);
+    } finally {
+      setIsTranslatingHeroText(false);
+    }
+  };
+
+  const handleSaveHeroTexts = () => {
+    setHeroMessage(null);
+    startTransition(async () => {
+      const { updateSiteSettingsAction } = await import("@/actions/admin-settings");
+      const res = await updateSiteSettingsAction({
+        heroTitleEn: heroTitleEn.trim(),
+      });
+      if (res.success) {
+        setHeroMessage({
+          type: "success",
+          text: "Текстовете на началния банер бяха запазени успешно на живо!",
+        });
+      } else {
+        setHeroMessage({
+          type: "error",
+          text: res.message || "Грешка при запазване.",
+        });
+      }
+    });
+  };
 
   // 2. REVIEWS SCREENSHOTS & CAROUSEL STATE
   const [reviewsImages, setReviewsImages] = useState<ReviewImageRecord[]>(initialReviewsImages);
@@ -611,6 +666,112 @@ export function HomePageEditor({
               </div>
             )}
           </div>
+          {/* Hero Bilingual Texts Card */}
+          <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-card border border-brand-purple/15 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-brand-purple/10">
+              <div>
+                <h3 className="font-heading font-bold text-lg text-brand-dark flex items-center gap-2">
+                  <span>Текстове на началния банер (Hero Title)</span>
+                  <span className={cn(
+                    "text-xs px-2.5 py-0.5 rounded-full font-bold",
+                    heroTextLocale === "bg" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"
+                  )}>
+                    {heroTextLocale === "bg" ? "🇧🇬 Български" : "🇬🇧 Английски"}
+                  </span>
+                </h3>
+                <p className="text-xs text-brand-muted mt-0.5">
+                  Редактирайте главното заглавие върху банера на български и английски език.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAutoTranslateHeroText}
+                  disabled={isTranslatingHeroText || isPending}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-heading font-bold text-xs shadow-sm hover:from-purple-700 hover:to-indigo-700 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isTranslatingHeroText ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  )}
+                  <span>✨ Преведи автоматично</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveHeroTexts}
+                  disabled={isPending}
+                  className="px-5 py-2 rounded-xl bg-brand-purple text-white font-heading font-bold text-xs uppercase tracking-wider shadow-button hover:bg-brand-purple-hover transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  <span>Запази текст</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Language Switcher Bar */}
+            <div className="inline-flex items-center rounded-xl bg-brand-bg p-1 border border-brand-purple/15 shadow-xs">
+              <button
+                type="button"
+                onClick={() => setHeroTextLocale("bg")}
+                className={cn(
+                  "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-heading font-bold transition-all cursor-pointer",
+                  heroTextLocale === "bg"
+                    ? "bg-[#887ed8] text-white shadow-sm"
+                    : "text-slate-600 hover:text-[#887ed8]"
+                )}
+              >
+                <BulgarianFlagSvg className="w-4 h-2.5" />
+                <span>🇧🇬 Български текст</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setHeroTextLocale("en")}
+                className={cn(
+                  "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-heading font-bold transition-all cursor-pointer",
+                  heroTextLocale === "en"
+                    ? "bg-[#887ed8] text-white shadow-sm"
+                    : "text-slate-600 hover:text-[#887ed8]"
+                )}
+              >
+                <UkFlagSvg className="w-4 h-2.5" />
+                <span>🇬🇧 Английски превод (EN)</span>
+              </button>
+            </div>
+
+            {heroTextLocale === "bg" ? (
+              <div>
+                <label className="block text-xs font-bold text-brand-dark mb-1">
+                  Заглавие върху банера (BG)
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value="ОБРАЗОВАТЕЛЕН КЛУБ УМЕНИЕ"
+                  className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs font-heading font-bold text-brand-dark bg-slate-50 cursor-not-allowed"
+                />
+                <span className="text-[11px] text-brand-muted mt-1 inline-block">
+                  Основното заглавие на български е официалното име на клуба.
+                </span>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-bold text-brand-dark mb-1">
+                  Заглавие върху банера на английски (Title EN)
+                </label>
+                <input
+                  type="text"
+                  value={heroTitleEn}
+                  onChange={(e) => setHeroTitleEn(e.target.value)}
+                  placeholder="e.g. EDUCATIONAL CLUB UMENIE"
+                  className="w-full px-4 py-2.5 rounded-xl border border-brand-purple/20 text-xs font-heading font-bold text-brand-dark focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                />
+              </div>
+            )}
+          </div>
+
         </div>
       )}
 

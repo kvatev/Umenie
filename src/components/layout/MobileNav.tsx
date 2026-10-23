@@ -94,7 +94,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
       {/* Backdrop overlay */}
       <div
         className={cn(
-          "fixed inset-0 z-[9998] bg-brand-dark/50 backdrop-blur-sm transition-opacity duration-300 md:hidden",
+          "fixed inset-0 z-[9998] bg-brand-dark/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -104,7 +104,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
       {/* Drawer panel */}
       <aside
         className={cn(
-          "fixed top-0 right-0 bottom-0 z-[9999] w-[85%] max-w-sm h-full max-h-[100dvh] overflow-y-auto bg-[#f1f2f6] shadow-2xl flex flex-col p-6 transition-transform duration-300 ease-out md:hidden border-l border-brand-purple/20",
+          "fixed top-0 right-0 bottom-0 z-[9999] w-[85%] max-w-sm h-full max-h-[100dvh] overflow-y-auto bg-[#f1f2f6] shadow-2xl flex flex-col p-6 transition-transform duration-300 ease-out lg:hidden border-l border-brand-purple/20",
           isOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"
         )}
         aria-label={dict.common.nav.mobileMenuLabel}

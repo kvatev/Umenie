@@ -45,6 +45,8 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
       heroBannerUrl: formData.heroBannerUrl !== undefined ? formData.heroBannerUrl.trim() : (current.heroBannerUrl || ""),
       heroVideoUrl: formData.heroVideoUrl !== undefined ? formData.heroVideoUrl.trim() : (current.heroVideoUrl || ""),
       heroMediaType: formData.heroMediaType ?? (current.heroMediaType || "image"),
+      heroTitleEn: formData.heroTitleEn !== undefined ? formData.heroTitleEn.trim() : (current.heroTitleEn || ""),
+      heroSubtitleEn: formData.heroSubtitleEn !== undefined ? formData.heroSubtitleEn.trim() : (current.heroSubtitleEn || ""),
       reviewScreenshotUrl: formData.reviewScreenshotUrl !== undefined ? formData.reviewScreenshotUrl.trim() : (current.reviewScreenshotUrl || ""),
       reviewScreenshots: formData.reviewScreenshots ?? (current.reviewScreenshots || []),
       kidsGalleryOrder: formData.kidsGalleryOrder ?? (current.kidsGalleryOrder || []),

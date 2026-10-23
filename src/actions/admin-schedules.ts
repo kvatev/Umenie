@@ -30,6 +30,8 @@ function revalidatePublicPages() {
 
 export interface ScheduleFormData {
   title: string;
+  title_en?: string;
+  titleEn?: string;
   category: string;
   day_of_week: number;
   start_time: string;
@@ -229,6 +231,7 @@ export async function createScheduleAction(data: ScheduleFormData) {
         await supabaseAdmin.from("schedule_events").insert({
           id: newId,
           title: data.title,
+          title_en: data.title_en || data.titleEn || null,
           category: data.category,
           day_of_week: dow,
           start_time: data.start_time,
@@ -263,6 +266,8 @@ export async function createScheduleAction(data: ScheduleFormData) {
       const newItem = mapRowToScheduleItem({
         id: newId,
         title: data.title,
+        title_en: data.title_en || data.titleEn || null,
+        titleEn: data.title_en || data.titleEn || null,
         category: data.category,
         day_of_week: dow,
         start_time: data.start_time,
@@ -328,6 +333,7 @@ export async function updateScheduleAction(
         recurrence_count: data.recurrence?.count || null,
         recurrence_until: data.recurrence?.untilDate || null,
       };
+      if (data.title_en !== undefined || data.titleEn !== undefined) updatePayload.title_en = data.title_en ?? data.titleEn ?? null;
       if (data.day_of_week !== undefined) updatePayload.day_of_week = data.day_of_week;
       if (data.date !== undefined) updatePayload.event_date = data.date;
 
@@ -362,6 +368,8 @@ export async function updateScheduleAction(
       return {
         ...item,
         title: data.title ?? item.title,
+        titleEn: (data.titleEn !== undefined ? data.titleEn : (data.title_en !== undefined ? data.title_en : item.titleEn)),
+        title_en: (data.title_en !== undefined ? data.title_en : (data.titleEn !== undefined ? data.titleEn : item.title_en)),
         category: (data.category ?? item.category) as ScheduleItem["category"],
         dayOfWeek: data.day_of_week ?? item.dayOfWeek,
         startTime: data.start_time ? data.start_time.slice(0, 5) : item.startTime,

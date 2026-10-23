@@ -3,6 +3,8 @@ import { SITE_CONFIG } from "@/lib/constants";
 export interface AboutTextItem {
   title: string;
   text: string;
+  titleEn?: string;
+  textEn?: string;
 }
 
 export interface SlideViewSetting {
@@ -26,6 +28,18 @@ export interface ServiceOverride {
   videos?: string[];
   videoPosters?: string[];
   showVideos?: boolean;
+
+  // English translations & manual overrides
+  titleEn?: string;
+  badgeEn?: string;
+  shortTitleEn?: string;
+  sloganPart1En?: string;
+  sloganPart2En?: string;
+  introNarrativeEn?: string;
+  introEn?: string;
+  bulletsEn?: string[];
+  bulletPointsEn?: string[];
+  galleryTitleEn?: string;
 }
 
 export interface SiteSettings {
@@ -44,6 +58,9 @@ export interface SiteSettings {
   heroBannerUrl?: string;
   heroVideoUrl?: string;
   heroMediaType?: "image" | "video";
+  // Hero texts in English
+  heroTitleEn?: string;
+  heroSubtitleEn?: string;
   // Review Screenshot setting (single or multiple)
   reviewScreenshotUrl?: string;
   reviewScreenshots?: string[];
@@ -74,6 +91,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   heroBannerUrl: "",
   heroVideoUrl: "",
   heroMediaType: "image",
+  heroTitleEn: "",
+  heroSubtitleEn: "",
   reviewScreenshotUrl: "",
   reviewScreenshots: [],
   kidsGalleryOrder: [],
@@ -83,28 +102,40 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       title: "УМЕНИЯ ОТВЪД УРОЦИТЕ",
       text: "Децата развиват умения отвъд уроците, които ще носят цял живот – увереност, отговорност, работа в екип и критично мислене.",
+      titleEn: "SKILLS BEYOND LESSONS",
+      textEn: "Children develop lifelong skills beyond lessons – confidence, responsibility, teamwork, and critical thinking.",
     },
     {
       title: "СРЕДА, БЛИЗКА ДО ДОМА",
       text: "Място, където всяко дете се чувства прието и спокойно да бъде себе си, а уважението, добротата и отношението към другите са част от всеки ден.",
+      titleEn: "A HOME-LIKE ENVIRONMENT",
+      textEn: "A place where every child feels accepted and at ease to be themselves, where respect, kindness, and empathy are practiced daily.",
     },
     {
       title: "ИНДИВИДУАЛЕН ПОДХОД",
       text: "В малки групи всяко дете получава лично внимание и подкрепа, защото започваме от неговото ниво и го издигаме нагоре.",
+      titleEn: "INDIVIDUAL APPROACH",
+      textEn: "In small groups, each child receives personal attention and support, meeting them right at their level and elevating them.",
     },
   ],
   aboutFeatures: [
     {
       title: "БЕЗ ЕКРАНИ",
       text: "Екраните остават настрана, за да има място за знание, мечти и истински приятелства.",
+      titleEn: "SCREEN-FREE",
+      textEn: "Screens are set aside to make room for knowledge, imagination, and genuine friendships.",
     },
     {
       title: "УЧЕНЕ ЧРЕЗ ПРАКТИКА",
       text: "Знанията влизат в действие чрез задачи, игри и практика, вместо да остават само на хартия.",
+      titleEn: "LEARNING THROUGH PRACTICE",
+      textEn: "Knowledge comes alive through hands-on tasks, games, and practice, rather than staying only on paper.",
     },
     {
       title: "РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА",
       text: "Регулярната обратна връзка ви държи близо до напредъка, интересите и нуждите на детето.",
+      titleEn: "PARENTS ARE PART OF THE JOURNEY",
+      textEn: "Regular open feedback keeps you closely connected to your child's progress, passions, and needs.",
     },
   ],
   servicesOverrides: {},

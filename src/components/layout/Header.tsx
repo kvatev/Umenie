@@ -88,26 +88,33 @@ export function Header({ initialSettings }: HeaderProps) {
       {/* Main navigation bar (stays sticky at top when scrolling) */}
       <header className="sticky top-0 z-40 w-full bg-[#f1f2f6]/95 backdrop-blur-md border-b border-brand-purple/15 shadow-sm transition-all duration-200">
         <Container size="xl" className="flex items-center justify-between h-20 md:h-24">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="relative flex items-center h-16 w-48 sm:h-20 sm:w-60 md:w-64 focus:outline-none group"
-            aria-label={dict.common.nav.home}
-          >
-            <Image
-              src="/images/logo.webp"
-              alt={dict.common.siteName}
-              fill
-              className="object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-              sizes="(max-width: 640px) 192px, 256px"
-              priority
-            />
-          </Link>
+          {/* Top-Left side: Desktop Language Switcher (Far-Left) + Logo */}
+          <div className="flex items-center gap-4 xl:gap-6">
+            <div className="hidden lg:flex items-center shrink-0">
+              <LanguageSwitcher size="md" />
+            </div>
 
-          {/* Desktop Navigation Links */}
+            {/* Logo */}
+            <Link
+              href="/"
+              className="relative flex items-center h-16 w-48 sm:h-20 sm:w-56 lg:w-60 xl:w-64 focus:outline-none group"
+              aria-label={dict.common.nav.home}
+            >
+              <Image
+                src="/images/logo.webp"
+                alt={dict.common.siteName}
+                fill
+                className="object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+                sizes="(max-width: 640px) 192px, 256px"
+                priority
+              />
+            </Link>
+          </div>
+
+          {/* Desktop Navigation Links (>= lg) */}
           <nav
             aria-label={dict.common.nav.ariaNav}
-            className="hidden md:flex items-center gap-1 lg:gap-3"
+            className="hidden lg:flex items-center gap-1 xl:gap-3"
           >
             {localizedNavLinks.map((link) => {
               const isActive =
@@ -120,7 +127,7 @@ export function Header({ initialSettings }: HeaderProps) {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "relative px-4 py-2 rounded-full font-heading text-sm lg:text-base font-bold transition-all duration-200 tracking-wide",
+                    "relative px-3.5 xl:px-4 py-2 rounded-full font-heading text-sm xl:text-base font-bold transition-all duration-200 tracking-wide",
                     isActive
                       ? "text-brand-purple bg-brand-purple/10"
                       : "text-brand-dark hover:text-brand-purple hover:bg-brand-purple/5"
@@ -135,9 +142,8 @@ export function Header({ initialSettings }: HeaderProps) {
             })}
           </nav>
 
-          {/* Desktop Right CTA: Language Switcher + Phone */}
-          <div className="hidden md:flex items-center gap-3">
-            <LanguageSwitcher size="md" />
+          {/* Desktop Right CTA: Phone (Language Switcher moved to top-left) */}
+          <div className="hidden lg:flex items-center gap-3">
             <a
               href={`tel:${phoneRaw}`}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-sm shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-[0.98]"
@@ -147,8 +153,8 @@ export function Header({ initialSettings }: HeaderProps) {
             </a>
           </div>
 
-          {/* Mobile Right Controls: Language Switcher + Hamburger Button */}
-          <div className="flex md:hidden items-center gap-2">
+          {/* Mobile (< lg) Right Controls: Language Switcher directly next to Hamburger Menu */}
+          <div className="flex lg:hidden items-center gap-2.5">
             <LanguageSwitcher size="sm" />
             <button
               type="button"
