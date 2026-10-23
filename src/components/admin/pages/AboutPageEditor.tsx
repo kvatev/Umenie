@@ -389,12 +389,10 @@ export function AboutPageEditor({
             disabled={isAutoTranslating || isPending}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-heading font-bold text-xs shadow-sm hover:from-purple-700 hover:to-indigo-700 transition-all cursor-pointer disabled:opacity-50"
           >
-            {isAutoTranslating ? (
+            {isAutoTranslating && (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             )}
-            <span>✨ Преведи автоматично от Български</span>
+            <span>Преведи автоматично от Български</span>
           </button>
 
           <button

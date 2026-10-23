@@ -14,7 +14,6 @@ import {
   BookOpen,
   Settings,
   ExternalLink,
-  Sparkles,
 } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getActivityIcon } from "@/lib/schedule-icons";

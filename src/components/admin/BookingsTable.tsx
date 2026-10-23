@@ -15,7 +15,6 @@ import {
   Clock,
   Loader2,
   Calendar,
-  Sparkles,
   ExternalLink,
   ChevronDown,
   ChevronUp,

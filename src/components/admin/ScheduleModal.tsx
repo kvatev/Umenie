@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { X, Loader2, Calendar, Clock, AlertCircle, Info, Check, Plus, Sparkles } from "lucide-react";
+import { X, Loader2, Calendar, Clock, AlertCircle, Info, Check, Plus } from "lucide-react";
 import {
   DAYS_OF_WEEK,
   RecurrenceRule,
