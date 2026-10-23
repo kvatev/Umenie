@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { MessageSquare, Send, CheckCircle2, User, Loader2 } from "lucide-react";
+import { MessageSquare, Send, CheckCircle2, Loader2 } from "lucide-react";
 import { BlogComment } from "@/lib/types/blog";
 import { submitPublicCommentAction } from "@/actions/admin-blog";
+import { useLanguage } from "@/lib/i18n";
 
 interface CommentSectionProps {
   postSlug: string;
@@ -11,6 +12,9 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ postSlug, initialComments }: CommentSectionProps) {
+  const { dict, locale } = useLanguage();
+  const c = dict.blog.commentsSection;
+
   const [comments, setComments] = useState<BlogComment[]>(initialComments);
   const [authorName, setAuthorName] = useState("");
   const [authorEmail, setAuthorEmail] = useState("");
@@ -22,7 +26,7 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!authorName.trim() || !content.trim()) {
-      setErrorMessage("Моля, въведете вашето име и коментар.");
+      setErrorMessage(c.errorValidation);
       return;
     }
 
@@ -43,7 +47,7 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
         setSuccessMessage(true);
         setTimeout(() => setSuccessMessage(false), 6000);
       } else {
-        setErrorMessage(res.error || "Грешка при изпращането.");
+        setErrorMessage(res.error || (locale === "en" ? "Error submitting comment." : "Грешка при изпращането."));
       }
     });
   };
@@ -53,20 +57,20 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
       <div className="flex items-center gap-2.5 mb-8">
         <MessageSquare className="w-6 h-6 text-brand-purple" />
         <h2 className="font-heading font-bold text-2xl sm:text-3xl text-brand-dark">
-          Коментари ({comments.length})
+          {c.title} ({comments.length})
         </h2>
       </div>
 
       {/* Comment Submission Form */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 md:p-10 shadow-card border border-brand-purple/15 mb-10">
         <h3 className="font-heading font-bold text-lg sm:text-xl text-brand-purple mb-4">
-          Оставете вашия коментар или въпрос
+          {c.formHeading}
         </h3>
 
         {successMessage && (
           <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3 text-sm font-medium">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <span>Благодарим ви! Вашият коментар беше публикуван успешно.</span>
+            <span>{c.successMsg}</span>
           </div>
         )}
 
@@ -80,7 +84,7 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="comment-author" className="block text-xs font-bold text-brand-dark mb-1.5 uppercase tracking-wide">
-                Вашето име *
+                {c.authorLabel}
               </label>
               <input
                 id="comment-author"
@@ -88,21 +92,21 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
                 required
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
-                placeholder="напр. Мария Иванова"
+                placeholder={c.authorPlaceholder}
                 className="w-full px-4 py-2.5 rounded-2xl bg-[#f1f2f6] border border-brand-purple/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:bg-white transition-all"
               />
             </div>
 
             <div>
               <label htmlFor="comment-email" className="block text-xs font-bold text-brand-dark mb-1.5 uppercase tracking-wide">
-                Имейл (няма да бъде видим публично)
+                {c.emailLabel}
               </label>
               <input
                 id="comment-email"
                 type="email"
                 value={authorEmail}
                 onChange={(e) => setAuthorEmail(e.target.value)}
-                placeholder="maria@example.com"
+                placeholder={c.emailPlaceholder}
                 className="w-full px-4 py-2.5 rounded-2xl bg-[#f1f2f6] border border-brand-purple/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:bg-white transition-all"
               />
             </div>
@@ -110,7 +114,7 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
 
           <div>
             <label htmlFor="comment-content" className="block text-xs font-bold text-brand-dark mb-1.5 uppercase tracking-wide">
-              Коментар *
+              {c.contentLabel}
             </label>
             <textarea
               id="comment-content"
@@ -118,7 +122,7 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
               rows={4}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Споделете вашето мнение или задайте въпрос към екипа на УМеНИе..."
+              placeholder={c.contentPlaceholder}
               className="w-full px-4 py-3 rounded-2xl bg-[#f1f2f6] border border-brand-purple/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:bg-white transition-all resize-y"
             />
           </div>
@@ -132,12 +136,12 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
               {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Изпращане...</span>
+                  <span>{c.submittingBtn}</span>
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  <span>Публикувай коментар</span>
+                  <span>{c.submitBtn}</span>
                 </>
               )}
             </button>
@@ -149,13 +153,16 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
       {comments.length > 0 ? (
         <div className="space-y-4">
           {comments.map((comment) => {
-            const commentDate = new Date(comment.createdAt).toLocaleDateString("bg-BG", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+            const commentDate = new Date(comment.createdAt).toLocaleDateString(
+              locale === "en" ? "en-US" : "bg-BG",
+              {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            );
 
             return (
               <div
@@ -188,7 +195,7 @@ export function CommentSection({ postSlug, initialComments }: CommentSectionProp
       ) : (
         <div className="text-center py-10 bg-white/50 rounded-3xl border border-brand-purple/10">
           <p className="text-brand-muted text-sm font-medium">
-            Все още няма коментари към тази статия. Бъдете първият, който ще сподели мнение!
+            {c.emptyMsg}
           </p>
         </div>
       )}

@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase/client";
 import { DEFAULT_SCHEDULES, ScheduleItem, mapRowToScheduleItem } from "@/lib/schedule-data";
 import { getSiteSettings } from "@/lib/site-settings";
 import { getSchedulesAction } from "@/actions/admin-schedules";
+import { getServerDictionary } from "@/lib/i18n/server";
 import { FileText, Download } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -80,14 +81,15 @@ async function getSchedules(): Promise<ScheduleItem[]> {
 }
 
 export default async function SchedulePage() {
-  const [schedules, settings] = await Promise.all([
+  const [{ locale, dict }, schedules, settings] = await Promise.all([
+    getServerDictionary(),
     getSchedules(),
     getSiteSettings(),
   ]);
 
   return (
     <div className="w-full bg-[#f1f2f6] text-brand-dark overflow-x-hidden pt-8 sm:pt-14 pb-4 space-y-10 sm:space-y-14">
-      {/* 1. Page Header (matching "График Десктоп.png" & "График 1 - мобилна.png" 1:1) */}
+      {/* 1. Page Header */}
       <Container size="xl" className="relative">
         {/* Decorative bulb top-right matching mobile mockup */}
         <div
@@ -98,10 +100,10 @@ export default async function SchedulePage() {
 
         <div className="text-left max-w-3xl space-y-3 sm:space-y-4 relative z-10">
           <h1 className="font-heading font-bold text-3xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide uppercase leading-tight text-left">
-            НАШИЯТ ГРАФИК
+            {dict.schedule.pageTitle}
           </h1>
           <p className="text-brand-dark/85 text-sm sm:text-lg md:text-xl font-sans max-w-2xl font-normal text-left">
-            Разгледайте предстоящите занимания и изберете какви умения ще развие вашето дете.
+            {dict.schedule.pageSubtitle}
           </p>
 
           {/* Download Official Schedule File Banner if uploaded in Admin */}
@@ -114,7 +116,7 @@ export default async function SchedulePage() {
                 className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm uppercase tracking-wider shadow-button hover:bg-brand-purple-hover hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 <FileText className="w-4 h-4 shrink-0" />
-                <span>Свали актуалния график (PDF / Снимка)</span>
+                <span>{dict.schedule.downloadSchedule}</span>
                 <Download className="w-4 h-4 shrink-0 ml-1" />
               </a>
             </div>

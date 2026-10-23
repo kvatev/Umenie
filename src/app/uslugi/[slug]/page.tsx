@@ -9,6 +9,7 @@ import { ServiceSlider } from "@/components/services/ServiceSlider";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { BulletBulbIcon } from "@/components/common/BulletBulbIcon";
 import { getSiteSettings } from "@/lib/site-settings";
+import { getServerDictionary } from "@/lib/i18n/server";
 import { ArrowRight, Video } from "lucide-react";
 
 interface PageProps {
@@ -86,23 +87,30 @@ export default async function ServiceDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const settings = await getSiteSettings();
+  const [{ locale, dict }, settings] = await Promise.all([
+    getServerDictionary(),
+    getSiteSettings(),
+  ]);
+
   const override = settings.servicesOverrides?.[baseService.slug] || settings.servicesOverrides?.[slug] || {};
+  const enItem = locale === "en" ? (dict.services.items as Record<string, any>)[baseService.slug] : null;
 
   const service = {
     ...baseService,
-    title: override.title || baseService.title,
-    shortTitle: override.shortTitle || baseService.shortTitle,
-    sloganPart1: override.sloganPart1 || baseService.sloganPart1,
-    sloganPart2: override.sloganPart2 || baseService.sloganPart2,
-    intro: override.intro || baseService.intro,
-    bulletPoints: override.bulletPoints && override.bulletPoints.length > 0 ? override.bulletPoints : baseService.bulletPoints,
+    title: enItem ? enItem.title : (override.title || baseService.title),
+    shortTitle: enItem ? enItem.shortTitle : (override.shortTitle || baseService.shortTitle),
+    sloganPart1: enItem ? enItem.sloganPart1 : (override.sloganPart1 || baseService.sloganPart1),
+    sloganPart2: enItem ? enItem.sloganPart2 : (override.sloganPart2 || baseService.sloganPart2),
+    intro: enItem ? enItem.intro : (override.intro || baseService.intro),
+    bulletPoints: enItem
+      ? enItem.bulletPoints
+      : (override.bulletPoints && override.bulletPoints.length > 0 ? override.bulletPoints : baseService.bulletPoints),
+    galleryTitle: enItem ? enItem.galleryTitle : (override.galleryTitle || baseService.galleryTitle),
     pageImages: [
       override.pageImages?.[0] || baseService.pageImages[0],
       override.pageImages?.[1] || baseService.pageImages[1] || baseService.pageImages[0],
     ],
     sliderImages: override.sliderImages && override.sliderImages.length > 0 ? override.sliderImages : baseService.sliderImages,
-    galleryTitle: override.galleryTitle || baseService.galleryTitle,
     hasSlider: override.hasSlider !== undefined ? override.hasSlider : baseService.hasSlider,
     sliderImageSettings: override.sliderImageSettings || {},
     videos: override.videos && override.videos.length > 0 ? override.videos : baseService.videos,
@@ -114,13 +122,16 @@ export default async function ServiceDetailPage({ params }: PageProps) {
       {/* Service Header: Breadcrumbs & Title */}
       <div className="pt-2 sm:pt-4 mb-6 sm:mb-8">
         <Container size="xl">
-          <nav aria-label="Хлебни трохи" className="inline-flex items-center gap-2 text-xs font-bold text-brand-purple uppercase tracking-wider mb-4 sm:mb-6">
+          <nav
+            aria-label={dict.services.breadcrumbs.ariaLabel}
+            className="inline-flex items-center gap-2 text-xs font-bold text-brand-purple uppercase tracking-wider mb-4 sm:mb-6"
+          >
             <Link href="/" className="hover:underline">
-              Начало
+              {dict.common.nav.home}
             </Link>
             <span>/</span>
             <Link href="/uslugi" className="hover:underline">
-              Услуги
+              {dict.common.nav.services}
             </Link>
             <span>/</span>
             <span className="text-brand-purple/70">{service.shortTitle}</span>
@@ -195,7 +206,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
           {/* BLOCK 4 (Bottom Right): Purple Features & Booking Card */}
           <div className="order-3 lg:order-4 bg-[#887ed8] text-white p-6 sm:p-8 rounded-3xl shadow-md flex flex-col justify-between gap-6">
             <ul className="space-y-3 sm:space-y-4 text-sm sm:text-base leading-relaxed text-white/95">
-              {service.bulletPoints.map((bullet, idx) => (
+              {service.bulletPoints.map((bullet: string, idx: number) => (
                 <li key={idx} className="flex items-start gap-3">
                   <BulletBulbIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 mt-0.5" />
                   <span className="text-white/95 leading-snug">
@@ -210,7 +221,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                 href="/grafik"
                 className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-[#887ed8] font-heading font-bold text-sm sm:text-base shadow-xl hover:bg-[#ede9fe] transition-all transform hover:scale-[1.02] active:scale-[0.98] uppercase cursor-pointer"
               >
-                <span>ВИЖТЕ ГРАФИКА</span>
+                <span>{dict.services.viewSchedule}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -225,19 +236,22 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             <div className="max-w-2xl mx-auto text-center mb-8 sm:mb-12 space-y-2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-purple/10 text-brand-purple font-heading font-bold text-xs uppercase tracking-wider">
                 <Video className="w-3.5 h-3.5" />
-                ВИДЕА ОТ ЗАНИМАНИЯТА
+                {dict.services.videoShowcase.badge}
               </span>
               <h2 className="font-heading font-extrabold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase">
-                ВИЖТЕ УМЕНИЕТО В ДЕЙСТВИЕ
+                {dict.services.videoShowcase.title}
               </h2>
               <p className="text-brand-muted text-xs sm:text-base max-w-xl mx-auto">
-                Реални кадри от творческия процес и занятията по {service.shortTitle.toLowerCase()} в образователен клуб „УМеНИе“.
+                {locale === "en"
+                  ? `${dict.services.videoShowcase.descPrefix} ${service.shortTitle.toLowerCase()} ${dict.services.videoShowcase.descClub}`
+                  : `Реални кадри от творческия процес и занятията по ${service.shortTitle.toLowerCase()} в образователен клуб „УМеНИе“`}
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto items-stretch">
               {service.videos.map((vidSrc, vidIdx) => {
                 const posterSrc = service.videoPosters?.[vidIdx];
+                const card = dict.services.videoShowcase.cards[vidIdx] || dict.services.videoShowcase.cards[0];
                 return (
                   <div
                     key={vidIdx}
@@ -255,14 +269,10 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                     </div>
                     <div className="p-5 text-left space-y-1.5 mt-auto bg-white border-t border-brand-purple/10">
                       <h4 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
-                        {vidIdx === 0
-                          ? "Учим първите бримки"
-                          : "Резултатът от търпението"}
+                        {card.title}
                       </h4>
                       <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">
-                        {vidIdx === 0
-                          ? "Индивидуално внимание, спокойна атмосфера и усвояване на основните техники в малка група."
-                          : "Сръчност, креативност и истинска гордост от създаденото със собствените ръце."}
+                        {card.desc}
                       </p>
                     </div>
                   </div>

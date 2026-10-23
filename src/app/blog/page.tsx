@@ -6,6 +6,7 @@ import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { BlogListClient } from "@/components/blog/BlogListClient";
 import { getBlogPosts } from "@/lib/blog-service";
 import { SITE_CONFIG } from "@/lib/constants";
+import { getServerDictionary } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   title: "Блог и полезни статии | Образователен клуб „УМеНИе“ Бургас",
@@ -25,7 +26,10 @@ export const metadata: Metadata = {
 export const revalidate = 60; // ISR cache revalidation
 
 export default async function BlogPage() {
-  const posts = await getBlogPosts();
+  const [{ locale, dict }, posts] = await Promise.all([
+    getServerDictionary(),
+    getBlogPosts(),
+  ]);
 
   return (
     <div className="w-full bg-[#f1f2f6] text-brand-dark min-h-screen">
@@ -49,11 +53,11 @@ export default async function BlogPage() {
         <Container size="xl" className="relative z-10">
           <div className="text-left max-w-3xl space-y-4">
             <h1 className="font-heading font-extrabold text-3xl sm:text-5xl lg:text-6xl text-brand-purple uppercase tracking-wide leading-tight text-left">
-              НАШИЯТ БЛОГ
+              {dict.blog.pageTitle}
             </h1>
 
             <p className="text-brand-dark/85 text-base sm:text-lg md:text-xl font-sans max-w-2xl font-normal leading-relaxed text-left">
-              Практически съвети за родители, детско развитие, учене с лекота и моменти от ежедневието в нашия клуб в Бургас.
+              {dict.blog.pageSubtitle}
             </p>
           </div>
         </Container>

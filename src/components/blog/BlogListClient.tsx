@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { Search, X, BookOpen, Sparkles } from "lucide-react";
 import { BlogPost, BlogCategory } from "@/lib/types/blog";
 import { BlogCard } from "./BlogCard";
+import { useLanguage, fullBlogArticlesEn } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface BlogListClientProps {
@@ -19,25 +20,47 @@ const CATEGORIES: BlogCategory[] = [
 ];
 
 export function BlogListClient({ initialPosts }: BlogListClientProps) {
+  const { dict, locale } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<BlogCategory>("Всички");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const localizedPosts = useMemo(() => {
+    return initialPosts.map((post) => {
+      if (locale === "en") {
+        const enArticle = fullBlogArticlesEn[post.slug];
+        const enPost = (dict.blogPosts as Record<string, any>)?.[post.slug];
+        return {
+          ...post,
+          title: enArticle?.title || enPost?.title || post.title,
+          excerpt: enArticle?.excerpt || enPost?.excerpt || post.excerpt,
+          category: (enArticle?.category || enPost?.category || post.category) as BlogCategory,
+          readTime: enArticle?.readTime || enPost?.readTime || post.readTime,
+        };
+      }
+      return post;
+    });
+  }, [initialPosts, locale, dict.blogPosts]);
+
   const filteredPosts = useMemo(() => {
-    return initialPosts.filter((post) => {
+    return localizedPosts.filter((post) => {
+      const originalPost = initialPosts.find((p) => p.id === post.id);
+      const originalCat = originalPost ? originalPost.category : post.category;
+
       const matchesCategory =
-        selectedCategory === "Всички" || post.category === selectedCategory;
+        selectedCategory === "Всички" ||
+        originalCat === selectedCategory ||
+        post.category === selectedCategory;
 
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
         post.title.toLowerCase().includes(q) ||
         post.excerpt.toLowerCase().includes(q) ||
-        post.content.toLowerCase().includes(q) ||
         post.category.toLowerCase().includes(q);
 
       return matchesCategory && matchesSearch;
     });
-  }, [initialPosts, selectedCategory, searchQuery]);
+  }, [localizedPosts, initialPosts, selectedCategory, searchQuery]);
 
   const featuredPost = useMemo(() => {
     if (selectedCategory !== "Всички" || searchQuery.trim()) return null;
@@ -56,6 +79,9 @@ export function BlogListClient({ initialPosts }: BlogListClientProps) {
     setSearchQuery("");
   };
 
+  const currentCategoryLabel =
+    (dict.blog.categories as Record<string, string>)[selectedCategory] || selectedCategory;
+
   return (
     <div className="space-y-10 sm:space-y-12">
       {/* Search & Category Filter Controls */}
@@ -67,14 +93,14 @@ export function BlogListClient({ initialPosts }: BlogListClientProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Търсене на статия по ключова дума..."
+            placeholder={dict.blog.searchPlaceholder}
             className="w-full pl-12 pr-10 py-3 rounded-full bg-[#f1f2f6] border border-brand-purple/20 text-brand-dark text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-brand-purple focus:bg-white transition-all placeholder:text-brand-muted"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-purple p-1"
-              aria-label="Изчисти търсенето"
+              aria-label={dict.blog.clearSearchAria}
             >
               <X className="w-4 h-4" />
             </button>
@@ -85,6 +111,7 @@ export function BlogListClient({ initialPosts }: BlogListClientProps) {
         <div className="flex items-center justify-center gap-2 sm:gap-2.5 flex-wrap pt-2">
           {CATEGORIES.map((cat) => {
             const isSelected = selectedCategory === cat;
+            const label = (dict.blog.categories as Record<string, string>)[cat] || cat;
             return (
               <button
                 key={cat}
@@ -96,7 +123,7 @@ export function BlogListClient({ initialPosts }: BlogListClientProps) {
                     : "bg-[#f1f2f6] text-brand-dark/80 hover:bg-brand-purple/15 hover:text-brand-purple"
                 )}
               >
-                {cat}
+                {label}
               </button>
             );
           })}
@@ -105,10 +132,10 @@ export function BlogListClient({ initialPosts }: BlogListClientProps) {
 
       {/* Featured Article (when viewing all without search) */}
       {featuredPost && (
-        <section aria-label="Препоръчана статия">
+        <section aria-label={dict.blog.featuredBadge}>
           <div className="flex items-center gap-2 mb-4 text-xs font-heading font-bold text-brand-purple uppercase tracking-wider">
             <Sparkles className="w-4 h-4" />
-            <span>Препоръчана статия</span>
+            <span>{dict.blog.featuredBadge}</span>
           </div>
           <BlogCard post={featuredPost} featured={true} />
         </section>
@@ -128,19 +155,22 @@ export function BlogListClient({ initialPosts }: BlogListClientProps) {
             <BookOpen className="w-8 h-8" />
           </div>
           <h3 className="font-heading font-bold text-xl sm:text-2xl text-brand-dark">
-            Няма намерени статии
+            {dict.blog.emptyTitle}
           </h3>
           <p className="text-brand-muted text-sm leading-relaxed">
-            Не открихме статии, отговарящи на вашето търсене{" "}
-            {searchQuery && <span className="font-semibold text-brand-purple">„{searchQuery}“</span>} в категория{" "}
-            <span className="font-semibold text-brand-purple">„{selectedCategory}“</span>.
+            {dict.blog.emptyDescPre}
+            {searchQuery && (
+              <span className="font-semibold text-brand-purple">„{searchQuery}“</span>
+            )}
+            {dict.blog.emptyDescCategory}
+            <span className="font-semibold text-brand-purple">„{currentCategoryLabel}“</span>.
           </p>
           <div className="pt-2">
             <button
               onClick={clearFilters}
-              className="px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs uppercase tracking-wide hover:bg-brand-purple-hover transition-all"
+              className="px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs uppercase tracking-wide hover:bg-brand-purple-hover transition-all cursor-pointer"
             >
-              Покажи всички статии
+              {dict.blog.showAllBtn}
             </button>
           </div>
         </div>

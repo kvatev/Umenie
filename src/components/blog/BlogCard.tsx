@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Clock, MessageSquare, ArrowRight, Calendar } from "lucide-react";
 import { BlogPost } from "@/lib/types/blog";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, fullBlogArticlesEn } from "@/lib/i18n";
 
 interface BlogCardProps {
   post: BlogPost;
@@ -14,6 +14,15 @@ interface BlogCardProps {
 
 export function BlogCard({ post, featured = false }: BlogCardProps) {
   const { dict, locale } = useLanguage();
+
+  const enArticle = locale === "en" ? fullBlogArticlesEn[post.slug] : null;
+  const enPost = locale === "en" ? (dict.blogPosts as Record<string, any>)?.[post.slug] : null;
+
+  const title = enArticle?.title || enPost?.title || post.title;
+  const excerpt = enArticle?.excerpt || enPost?.excerpt || post.excerpt;
+  const categoryRaw = enArticle?.category || enPost?.category || post.category;
+  const category = (dict.blog?.categories as Record<string, string>)?.[categoryRaw] || categoryRaw;
+  const readTime = enArticle?.readTime || enPost?.readTime || post.readTime;
 
   const formattedDate = new Date(post.publishedAt).toLocaleDateString(
     locale === "en" ? "en-US" : "bg-BG",
@@ -32,7 +41,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
           <div className="lg:col-span-7 relative min-h-[260px] sm:min-h-[340px] lg:min-h-[420px] overflow-hidden">
             <Image
               src={post.coverImage || "/images/banner/1.webp"}
-              alt={post.title}
+              alt={title}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 1024px) 100vw, 65vw"
@@ -40,7 +49,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
             />
             <div className="absolute top-4 left-4 z-10">
               <span className="bg-[#887ed8] text-white font-heading font-bold text-xs uppercase px-3.5 py-1.5 rounded-full shadow-md tracking-wider">
-                {post.category}
+                {category}
               </span>
             </div>
           </div>
@@ -56,7 +65,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
                 <span>•</span>
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-brand-purple" />
-                  <span>{post.readTime}</span>
+                  <span>{readTime}</span>
                 </span>
                 {typeof post.commentsCount === "number" && post.commentsCount > 0 && (
                   <>
@@ -71,12 +80,12 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
 
               <h3 className="font-heading font-bold text-xl sm:text-2xl lg:text-3xl text-brand-dark group-hover:text-brand-purple transition-colors leading-snug">
                 <Link href={`/blog/${post.slug}`} className="focus:outline-none">
-                  {post.title}
+                  {title}
                 </Link>
               </h3>
 
               <p className="text-brand-dark/80 text-sm sm:text-base leading-relaxed line-clamp-3 sm:line-clamp-4">
-                {post.excerpt}
+                {excerpt}
               </p>
             </div>
 
@@ -101,14 +110,14 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
       <div className="relative aspect-[16/10] w-full overflow-hidden">
         <Image
           src={post.coverImage || "/images/banner/1.webp"}
-          alt={post.title}
+          alt={title}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
         <div className="absolute top-3.5 left-3.5 z-10">
           <span className="bg-white/95 text-brand-purple font-heading font-bold text-[11px] uppercase px-3 py-1 rounded-full shadow-sm tracking-wide backdrop-blur-sm">
-            {post.category}
+            {category}
           </span>
         </div>
       </div>
@@ -125,7 +134,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
             <span>•</span>
             <span className="inline-flex items-center gap-1">
               <Clock className="w-3 h-3 text-brand-purple" />
-              <span>{post.readTime}</span>
+              <span>{readTime}</span>
             </span>
             {typeof post.commentsCount === "number" && post.commentsCount > 0 && (
               <>
@@ -141,13 +150,13 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
           {/* Title */}
           <h3 className="font-heading font-bold text-lg sm:text-xl text-brand-dark group-hover:text-brand-purple transition-colors leading-snug line-clamp-2">
             <Link href={`/blog/${post.slug}`} className="focus:outline-none">
-              {post.title}
+              {title}
             </Link>
           </h3>
 
           {/* Excerpt */}
           <p className="text-brand-dark/75 text-xs sm:text-sm leading-relaxed line-clamp-3">
-            {post.excerpt}
+            {excerpt}
           </p>
         </div>
 

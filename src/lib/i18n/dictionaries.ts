@@ -1,3 +1,8 @@
+import { servicesDict } from "./dictionaries/services";
+import { scheduleDict } from "./dictionaries/schedule";
+import { bookingDict } from "./dictionaries/booking";
+import { blogDict, fullBlogArticlesEn } from "./dictionaries/blog";
+import { legalDict } from "./dictionaries/legal";
 export const DICTIONARY = {
   bg: {
     common: {
@@ -223,6 +228,11 @@ export const DICTIONARY = {
         readTime: "4 мин четене",
       },
     },
+    services: servicesDict.bg,
+    schedule: scheduleDict.bg,
+    booking: bookingDict.bg,
+    blog: blogDict.bg,
+    legal: legalDict.bg,
   },
 
   en: {
@@ -486,7 +496,14 @@ export const DICTIONARY = {
         readTime: "4 min read",
       },
     },
+    services: servicesDict.en,
+    schedule: scheduleDict.en,
+    booking: bookingDict.en,
+    blog: blogDict.en,
+    legal: legalDict.en,
   },
 } as const;
 
 export type Dictionary = typeof DICTIONARY.bg;
+
+export { fullBlogArticlesEn };

@@ -8,6 +8,7 @@ import { SERVICES_DATA } from "@/lib/services-data";
 import { ServiceCard } from "@/components/services/ServiceCard";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { getSiteSettings } from "@/lib/site-settings";
+import { getServerDictionary } from "@/lib/i18n/server";
 import { Calendar } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -47,10 +48,26 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 export default async function ServicesPage() {
-  const settings = await getSiteSettings();
+  const [{ locale, dict }, settings] = await Promise.all([
+    getServerDictionary(),
+    getSiteSettings(),
+  ]);
+
   const overrides = settings.servicesOverrides || {};
 
   const services = SERVICES_DATA.map((srv) => {
+    if (locale === "en") {
+      const enItem = (dict.services.items as Record<string, any>)[srv.slug];
+      if (enItem) {
+        return {
+          ...srv,
+          title: enItem.title,
+          shortTitle: enItem.shortTitle,
+          titleLines: enItem.titleLines,
+          shortDescription: enItem.shortDescription,
+        };
+      }
+    }
     const o = overrides[srv.slug];
     if (!o) return srv;
     return {
@@ -68,7 +85,7 @@ export default async function ServicesPage() {
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-12 sm:mb-16 relative">
           <div className="flex items-center justify-center gap-3">
             <h1 className="font-heading font-bold text-4xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide">
-              УСЛУГИ
+              {dict.services.title}
             </h1>
             <div className="relative w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rotate-6 shrink-0 -mt-2">
               <Image
@@ -81,7 +98,7 @@ export default async function ServicesPage() {
             </div>
           </div>
           <p className="text-brand-dark text-base sm:text-xl font-medium">
-            Изберете занимание, за да научите повече.
+            {dict.services.subtitle}
           </p>
         </div>
 
@@ -101,7 +118,7 @@ export default async function ServicesPage() {
           <Link href="/grafik">
             <Button size="lg" className="text-base sm:text-lg shadow-xl px-10 py-4">
               <Calendar className="w-5 h-5 mr-2" />
-              ВИЖТЕ ГРАФИКА
+              {dict.services.viewSchedule}
             </Button>
           </Link>
         </div>

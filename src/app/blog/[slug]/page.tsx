@@ -6,9 +6,7 @@ import { notFound } from "next/navigation";
 import {
   Calendar,
   Clock,
-  MessageSquare,
   ArrowLeft,
-  Share2,
   CalendarDays,
   Sparkles,
 } from "lucide-react";
@@ -19,6 +17,8 @@ import { CommentSection } from "@/components/blog/CommentSection";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { getBlogPostBySlug, getBlogPosts, getBlogComments } from "@/lib/blog-service";
 import { SITE_CONFIG } from "@/lib/constants";
+import { getServerDictionary } from "@/lib/i18n/server";
+import { fullBlogArticlesEn } from "@/lib/i18n";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -81,36 +81,59 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const [allPosts, comments] = await Promise.all([
+  const [{ locale, dict }, allPosts, comments] = await Promise.all([
+    getServerDictionary(),
     getBlogPosts({ limit: 4 }),
     getBlogComments({ postSlug: post.slug }),
   ]);
 
+  const enArticle = locale === "en" ? fullBlogArticlesEn[post.slug] : null;
+  const enPost = locale === "en" ? (dict.blogPosts as Record<string, any>)?.[post.slug] : null;
+
+  const displayPost = {
+    ...post,
+    title: enArticle?.title || enPost?.title || post.title,
+    excerpt: enArticle?.excerpt || enPost?.excerpt || post.excerpt,
+    category:
+      enArticle?.category ||
+      enPost?.category ||
+      (dict.blog?.categories as Record<string, string>)?.[post.category] ||
+      post.category,
+    readTime: enArticle?.readTime || enPost?.readTime || post.readTime,
+    content: enArticle?.content || post.content,
+  };
+
   // Related posts (excluding current)
   const relatedPosts = allPosts.filter((p) => p.slug !== post.slug).slice(0, 3);
 
-  const formattedDate = new Date(post.publishedAt).toLocaleDateString("bg-BG", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const formattedDate = new Date(post.publishedAt).toLocaleDateString(
+    locale === "en" ? "en-US" : "bg-BG",
+    {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }
+  );
 
   return (
     <div className="w-full bg-[#f1f2f6] text-brand-dark min-h-screen">
       {/* Breadcrumbs */}
       <div className="pt-24 sm:pt-28 pb-4">
         <Container size="xl">
-          <nav aria-label="Хлебни трохи" className="inline-flex items-center gap-2 text-xs font-bold text-brand-purple uppercase tracking-wider flex-wrap">
+          <nav
+            aria-label={dict.services.breadcrumbs.ariaLabel}
+            className="inline-flex items-center gap-2 text-xs font-bold text-brand-purple uppercase tracking-wider flex-wrap"
+          >
             <Link href="/" className="hover:underline">
-              Начало
+              {dict.common.nav.home}
             </Link>
             <span>/</span>
             <Link href="/blog" className="hover:underline">
-              Блог
+              {dict.common.nav.blog}
             </Link>
             <span>/</span>
             <span className="text-brand-purple/70 truncate max-w-xs sm:max-w-md">
-              {post.title}
+              {displayPost.title}
             </span>
           </nav>
         </Container>
@@ -124,7 +147,7 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
             <div className="space-y-4">
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="bg-[#887ed8] text-white font-heading font-bold text-xs uppercase px-3.5 py-1.5 rounded-full shadow-sm tracking-wider">
-                  {post.category}
+                  {displayPost.category}
                 </span>
 
                 <div className="flex items-center gap-2 text-xs font-semibold text-brand-muted">
@@ -135,17 +158,17 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
                   <span>•</span>
                   <span className="inline-flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5 text-brand-purple" />
-                    <span>{post.readTime}</span>
+                    <span>{displayPost.readTime}</span>
                   </span>
                 </div>
               </div>
 
               <h1 className="font-heading font-extrabold text-2xl sm:text-4xl lg:text-5xl text-brand-purple leading-tight">
-                {post.title}
+                {displayPost.title}
               </h1>
 
               <p className="text-base sm:text-xl text-brand-dark/85 font-medium leading-relaxed max-w-3xl">
-                {post.excerpt}
+                {displayPost.excerpt}
               </p>
             </div>
 
@@ -153,7 +176,7 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
             <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-3xl sm:rounded-4xl overflow-hidden shadow-2xl border-4 border-white bg-white">
               <Image
                 src={post.coverImage || "/images/banner/1.webp"}
-                alt={post.title}
+                alt={displayPost.title}
                 fill
                 priority
                 className="object-cover"
@@ -164,7 +187,7 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
             {/* Content Body */}
             <div className="bg-white rounded-3xl sm:rounded-4xl p-6 sm:p-10 md:p-14 shadow-card border border-brand-purple/15">
               <div className="prose prose-lg max-w-none space-y-6 text-brand-dark/90 leading-relaxed font-normal text-base sm:text-lg">
-                {post.content.split("\n\n").map((paragraph, idx) => {
+                {displayPost.content.split("\n\n").map((paragraph, idx) => {
                   const trimmed = paragraph.trim();
 
                   // Heading 3
@@ -225,7 +248,7 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
                       {post.author}
                     </p>
                     <p className="text-xs text-brand-muted">
-                      Образователен клуб „УМеНИе“ Бургас
+                      {dict.blog.authorOrg}
                     </p>
                   </div>
                 </div>
@@ -235,7 +258,7 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
                   className="inline-flex items-center gap-2 text-xs sm:text-sm font-heading font-bold text-brand-purple hover:text-brand-purple-dark transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span>Към всички статии</span>
+                  <span>{dict.blog.backToAll}</span>
                 </Link>
               </div>
             </div>
@@ -245,13 +268,13 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
               <div className="space-y-2 text-center md:text-left">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Развийте уменията на вашето дете</span>
+                  <span>{dict.blog.cta.badge}</span>
                 </div>
                 <h3 className="font-heading font-bold text-2xl sm:text-3xl">
-                  Искате ли вашето дете да учи с радост и увереност?
+                  {dict.blog.cta.title}
                 </h3>
                 <p className="text-white/90 text-sm sm:text-base max-w-xl">
-                  Заповядайте на пробни занимания в клуб „УМеНИе“ в Бургас – ж.к. Славейков, бл. 48 партер.
+                  {dict.blog.cta.desc}
                 </p>
               </div>
 
@@ -261,12 +284,12 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
                   className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-white text-[#887ed8] font-heading font-bold text-sm sm:text-base shadow-xl hover:bg-[#ede9fe] transition-all transform hover:scale-[1.03] active:scale-95 uppercase tracking-wide"
                 >
                   <CalendarDays className="w-5 h-5" />
-                  <span>ВИЖТЕ ГРАФИКА</span>
+                  <span>{dict.blog.cta.btn}</span>
                 </Link>
               </div>
             </div>
 
-            {/* Comment Section ("където всъщност се коментират неща") */}
+            {/* Comment Section */}
             <CommentSection
               postSlug={post.slug}
               initialComments={comments}
@@ -281,10 +304,10 @@ export default async function BlogPostDetailPage({ params }: PageProps) {
           <Container size="xl">
             <div className="mb-8 text-center sm:text-left">
               <h2 className="font-heading font-bold text-2xl sm:text-3xl text-brand-dark">
-                Още полезни статии
+                {dict.blog.relatedTitle}
               </h2>
               <p className="text-brand-muted text-sm mt-1">
-                Продължете да четете практични съвети от клуба
+                {dict.blog.relatedSubtitle}
               </p>
             </div>
 

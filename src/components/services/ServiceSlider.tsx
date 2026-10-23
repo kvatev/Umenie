@@ -3,25 +3,21 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-import { SlideViewSetting } from "@/lib/types/site-settings";
+import { useLanguage } from "@/lib/i18n";
 
 interface ServiceSliderProps {
   images: string[];
-  title?: string;
-  imageSettings?: Record<string, SlideViewSetting>;
+  title: string;
+  imageSettings?: Record<string, { fit?: "contain" | "cover"; position?: string; scale?: number }>;
 }
 
-export function ServiceSlider({
-  images,
-  title = "НАДНИКНЕТЕ В ЗАНИМАНИЯТА",
-  imageSettings = {},
-}: ServiceSliderProps) {
+export function ServiceSlider({ images, title, imageSettings = {} }: ServiceSliderProps) {
+  const { locale, dict } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [inView, setInView] = useState(false);
-  const [mounted, setMounted] = useState<Set<number>>(() => new Set());
-  const sectionRef = useRef<HTMLElement | null>(null);
+  const [mounted, setMounted] = useState<Set<number>>(new Set([0, 1]));
+  const sectionRef = useRef<HTMLElement>(null);
   const touchStartX = useRef<number | null>(null);
 
   const nextSlide = useCallback(() => {
@@ -66,6 +62,10 @@ export function ServiceSlider({
   }, [isPaused, inView, images.length, nextSlide]);
 
   if (!images || images.length === 0) return null;
+
+  const prevPhotoAria = dict.services?.slider?.prevPhoto || "Предишна снимка";
+  const nextPhotoAria = dict.services?.slider?.nextPhoto || "Следваща снимка";
+  const photoWord = dict.services?.slider?.photo || "Снимка";
 
   return (
     <section ref={sectionRef} className="py-10 sm:py-16">
@@ -147,7 +147,7 @@ export function ServiceSlider({
                         <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
                           <Image
                             src={imgSrc}
-                            alt={`${title} - снимка ${idx + 1}`}
+                            alt={`${title} - ${photoWord.toLowerCase()} ${idx + 1}`}
                             fill
                             quality={92}
                             loading="lazy"
@@ -175,7 +175,7 @@ export function ServiceSlider({
             <>
               <button
                 onClick={prevSlide}
-                aria-label="Предишна снимка"
+                aria-label={prevPhotoAria}
                 className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2.5 sm:p-3 rounded-full bg-white/90 text-brand-purple hover:bg-brand-purple hover:text-white shadow-lg backdrop-blur-sm transition-all transform hover:scale-110 active:scale-95 cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -183,7 +183,7 @@ export function ServiceSlider({
 
               <button
                 onClick={nextSlide}
-                aria-label="Следваща снимка"
+                aria-label={nextPhotoAria}
                 className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2.5 sm:p-3 rounded-full bg-white/90 text-brand-purple hover:bg-brand-purple hover:text-white shadow-lg backdrop-blur-sm transition-all transform hover:scale-110 active:scale-95 cursor-pointer"
               >
                 <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -199,7 +199,7 @@ export function ServiceSlider({
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                aria-label={`Снимка ${idx + 1}`}
+                aria-label={`${photoWord} ${idx + 1}`}
                 className={`transition-all duration-300 rounded-full cursor-pointer ${
                   idx === currentIndex
                     ? "w-8 h-2.5 bg-brand-purple"

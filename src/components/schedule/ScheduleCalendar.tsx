@@ -15,42 +15,15 @@ import {
   DEFAULT_SCHEDULES,
   formatDateKey,
   isEventOnDate,
-  formatDateHumanBg,
 } from "@/lib/schedule-data";
 import { BookingModal } from "./BookingModal";
 import { getActivityIcon } from "@/lib/schedule-icons";
+import { useLanguage, translateScheduleEvent } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface ScheduleCalendarProps {
   initialSchedules?: ScheduleItem[];
 }
-
-const MONTH_NAMES = [
-  "Януари",
-  "Февруари",
-  "Март",
-  "Април",
-  "Май",
-  "Юни",
-  "Юли",
-  "Август",
-  "Септември",
-  "Октомври",
-  "Ноември",
-  "Декември",
-];
-
-const WEEKDAY_NAMES_BG = [
-  "Понеделник",
-  "Вторник",
-  "Сряда",
-  "Четвъртък",
-  "Петък",
-  "Събота",
-  "Неделя",
-];
-
-const WEEKDAY_SHORTS_BG = ["Пон", "Вто", "Сря", "Чет", "Пет", "Съб", "Нед"];
 
 // Category dot color for mobile calendar
 function getCategoryDotColor(category: string): string {
@@ -75,8 +48,17 @@ function getCategoryDotColor(category: string): string {
 }
 
 export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
-  const schedules =
+  const { dict, locale } = useLanguage();
+  const rawSchedules =
     initialSchedules && initialSchedules.length > 0 ? initialSchedules : DEFAULT_SCHEDULES;
+
+  const schedules = useMemo(() => {
+    return rawSchedules.map((item) => translateScheduleEvent(item, locale));
+  }, [rawSchedules, locale]);
+
+  const MONTH_NAMES = dict.schedule.months;
+  const WEEKDAY_NAMES = dict.schedule.weekdays;
+  const WEEKDAY_SHORTS = dict.schedule.weekdayShorts;
 
   // Track today's live date
   const [today, setToday] = useState(() => new Date());
@@ -103,7 +85,6 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
   const todayDate = today.getDate();
   const todayMonth = today.getMonth();
   const todayYear = today.getFullYear();
-  const todayKey = formatDateKey(today);
 
   // Year options for quick select
   const yearOptions = useMemo(() => {
@@ -152,17 +133,15 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
     setSelectedDayNumber(1);
   };
 
-  // Generate calendar grid for current month (with exact Date objects and matching events)
+  // Generate calendar grid for current month
   const calendarDays = useMemo(() => {
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
     const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
     const totalDaysInMonth = lastDayOfMonth.getDate();
 
-    // 0 = Sunday, 1 = Monday ... convert to Monday = 1 ... Sunday = 7
     let startDayOfWeek = firstDayOfMonth.getDay();
     startDayOfWeek = startDayOfWeek === 0 ? 7 : startDayOfWeek;
 
-    // Previous month overflow days
     const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
     const prevDays: {
       dayNumber: number;
@@ -188,7 +167,6 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
       });
     }
 
-    // Current month days
     const currentDays: {
       dayNumber: number;
       isCurrentMonth: boolean;
@@ -203,7 +181,6 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
       let dow = dateObj.getDay();
       dow = dow === 0 ? 7 : dow;
 
-      // Filter active schedules matching this exact calendar date (handling recurrence rules & dates)
       const dayActs = schedules
         .filter((act) => act.isActive !== false && isEventOnDate(act, dateObj))
         .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -218,7 +195,6 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
       });
     }
 
-    // Next month overflow days to complete grid (up to 35 or 42 cells)
     const combinedLength = prevDays.length + currentDays.length;
     const totalCells = combinedLength > 35 ? 42 : 35;
     const nextDaysNeeded = totalCells - combinedLength;
@@ -248,13 +224,9 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
     return [...prevDays, ...currentDays, ...nextDays];
   }, [currentYear, currentMonth, schedules]);
 
-  // Activities for the selected day in mobile view
   const selectedDayDate = useMemo(() => {
     return new Date(currentYear, currentMonth, selectedDayNumber);
   }, [currentYear, currentMonth, selectedDayNumber]);
-
-  let selectedDayOfWeek = selectedDayDate.getDay();
-  selectedDayOfWeek = selectedDayOfWeek === 0 ? 7 : selectedDayOfWeek;
 
   const mobileDayActivities = useMemo(() => {
     return schedules
@@ -262,11 +234,12 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
       .sort((a, b) => a.startTime.localeCompare(b.startTime));
   }, [schedules, selectedDayDate]);
 
-  const formattedSelectedDate = `${WEEKDAY_NAMES_BG[selectedDayOfWeek - 1]}, ${selectedDayNumber} ${MONTH_NAMES[currentMonth].toLowerCase()} ${currentYear} г.`;
-
   const openBooking = (item: ScheduleItem, targetDate: Date) => {
     const dow = targetDate.getDay() === 0 ? 7 : targetDate.getDay();
-    const dateStr = `${WEEKDAY_NAMES_BG[dow - 1]}, ${targetDate.getDate()} ${MONTH_NAMES[targetDate.getMonth()].toLowerCase()} ${targetDate.getFullYear()} г.`;
+    const dateStr =
+      locale === "en"
+        ? `${WEEKDAY_NAMES[dow - 1]}, ${MONTH_NAMES[targetDate.getMonth()]} ${targetDate.getDate()}, ${targetDate.getFullYear()}`
+        : `${WEEKDAY_NAMES[dow - 1]}, ${targetDate.getDate()} ${MONTH_NAMES[targetDate.getMonth()].toLowerCase()} ${targetDate.getFullYear()} г.`;
     setSelectedSchedule({ item, dateStr });
   };
 
@@ -279,7 +252,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handlePrevMonth}
-              aria-label="Предишен месец"
+              aria-label={dict.schedule.prevMonthAria}
               className="p-2 sm:p-2.5 rounded-full bg-brand-bg hover:bg-brand-purple/15 text-brand-purple transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
               <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
@@ -292,7 +265,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
                 onChange={(e) => handleMonthChange(Number(e.target.value))}
                 className="font-heading font-bold text-lg sm:text-2xl lg:text-3xl text-brand-dark bg-transparent border-none focus:ring-2 focus:ring-brand-purple rounded-xl cursor-pointer py-1"
               >
-                {MONTH_NAMES.map((m, idx) => (
+                {MONTH_NAMES.map((m: string, idx: number) => (
                   <option key={idx} value={idx}>
                     {m}
                   </option>
@@ -314,7 +287,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
 
             <button
               onClick={handleNextMonth}
-              aria-label="Следващ месец"
+              aria-label={dict.schedule.nextMonthAria}
               className="p-2 sm:p-2.5 rounded-full bg-brand-bg hover:bg-brand-purple/15 text-brand-purple transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
               <ChevronRight className="w-5 h-5 stroke-[2.5]" />
@@ -323,14 +296,14 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
             <button
               onClick={handleToday}
               className="ml-1 sm:ml-2 px-3 py-1.5 rounded-full text-xs font-heading font-bold border border-brand-purple/20 text-brand-purple hover:bg-brand-purple/10 active:scale-95 transition-all cursor-pointer"
-              title="Към днешна дата"
+              title={dict.schedule.todayTitle}
             >
-              Днес
+              {dict.schedule.today}
             </button>
           </div>
 
           <div className="hidden sm:inline-flex items-center gap-2 text-xs font-semibold text-brand-purple bg-brand-purple/10 px-3.5 py-1.5 rounded-full">
-            <span>💡 Изберете занимание от календара за бързо записване</span>
+            <span>{dict.schedule.calendarHint}</span>
           </div>
         </div>
 
@@ -339,7 +312,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
           <div className="min-w-[900px] border border-brand-purple/15 rounded-2xl overflow-hidden">
             {/* Weekday Columns Header */}
             <div className="grid grid-cols-7 bg-brand-bg/80 border-b border-brand-purple/15">
-              {WEEKDAY_NAMES_BG.map((dayName, idx) => (
+              {WEEKDAY_NAMES.map((dayName: string, idx: number) => (
                 <div
                   key={idx}
                   className="py-3 text-center font-heading font-bold text-xs uppercase tracking-wider text-brand-purple border-r last:border-r-0 border-brand-purple/15"
@@ -387,7 +360,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
                       </span>
                       {isToday && (
                         <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-brand-purple bg-brand-purple/15 px-2 py-0.5 rounded-full">
-                          Днес
+                          {dict.schedule.today}
                         </span>
                       )}
                     </div>
@@ -436,7 +409,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
           <div className="border border-brand-purple/15 rounded-2xl p-3 bg-brand-bg/40">
             {/* Weekdays header */}
             <div className="grid grid-cols-7 text-center font-heading font-bold text-xs text-brand-purple pb-2 border-b border-brand-purple/10">
-              {WEEKDAY_SHORTS_BG.map((sh, idx) => (
+              {WEEKDAY_SHORTS.map((sh: string, idx: number) => (
                 <div key={idx}>{sh}</div>
               ))}
             </div>
@@ -500,13 +473,15 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
           <div className="space-y-3 pt-1">
             <h3 className="font-heading font-bold text-lg text-brand-dark px-1 flex items-center gap-2">
               <span>
-                Занимания на {selectedDayNumber} {MONTH_NAMES[currentMonth].toLowerCase()} {currentYear} г.
+                {locale === "en"
+                  ? `${dict.schedule.mobileActivitiesForDayPrefix} ${MONTH_NAMES[currentMonth]} ${selectedDayNumber}, ${currentYear}`
+                  : `${dict.schedule.mobileActivitiesForDayPrefix} ${selectedDayNumber} ${MONTH_NAMES[currentMonth].toLowerCase()} ${currentYear} ${dict.schedule.mobileActivitiesForDaySuffix}`}
               </span>
               {selectedDayNumber === todayDate &&
                 currentMonth === todayMonth &&
                 currentYear === todayYear && (
                   <span className="text-[11px] font-heading font-bold uppercase tracking-wider text-brand-purple bg-brand-purple/15 px-2 py-0.5 rounded-full">
-                    Днес
+                    {dict.schedule.today}
                   </span>
                 )}
             </h3>
@@ -551,7 +526,7 @@ export function ScheduleCalendar({ initialSchedules }: ScheduleCalendarProps) {
               </div>
             ) : (
               <div className="p-6 rounded-2xl bg-brand-bg text-center text-brand-muted text-xs sm:text-sm">
-                Няма планирани групови занимания за този ден.
+                {dict.schedule.emptyDay}
               </div>
             )}
           </div>

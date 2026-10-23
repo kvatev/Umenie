@@ -17,10 +17,18 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
   const [isRevealed, setIsRevealed] = useState(false);
   const { dict, locale } = useLanguage();
 
+  const enItem = (dict.services?.items as Record<string, any>)?.[service.slug];
+
   const title =
-    locale === "en" && (dict.home.services as any)[service.slug]
-      ? (dict.home.services as any)[service.slug]
+    locale === "en"
+      ? enItem?.title || (dict.home.services as any)[service.slug] || service.title
       : service.title;
+
+  const shortDescription =
+    locale === "en" ? enItem?.shortDescription || service.shortDescription : service.shortDescription;
+
+  const titleLines =
+    locale === "en" ? enItem?.titleLines || [title] : service.titleLines;
 
   if (variant === "home") {
     return (
@@ -82,8 +90,8 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
         }`}
       >
         <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2">
-          {locale !== "en" && service.titleLines && service.titleLines.length > 0 ? (
-            service.titleLines.map((line, idx) => (
+          {titleLines && titleLines.length > 0 ? (
+            titleLines.map((line: string, idx: number) => (
               <span
                 key={idx}
                 className="font-heading font-extrabold text-base sm:text-xl md:text-2xl lg:text-3xl text-amber-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-wide uppercase leading-tight"
@@ -120,7 +128,7 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
 
         {/* Middle Area: Short Description */}
         <p className="text-[11px] sm:text-xs md:text-sm text-white/95 leading-relaxed font-sans line-clamp-4 sm:line-clamp-5 my-auto">
-          {service.shortDescription}
+          {shortDescription}
         </p>
 
         {/* Bottom Pinned Button */}
@@ -130,7 +138,9 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
             onClick={(e) => e.stopPropagation()}
             className="w-full bg-[#887ed8] hover:bg-[#776dc7] text-white rounded-xl sm:rounded-2xl py-2 px-2.5 sm:px-3 flex items-center justify-between text-[11px] sm:text-xs md:text-sm font-bold tracking-wider uppercase transition-all shadow-md active:scale-95"
           >
-            <span className="truncate">{dict.home.services.learnMore}</span>
+            <span className="truncate">
+              {dict.services?.learnMore || dict.home.services.learnMore}
+            </span>
             <span className="shrink-0 ml-1 text-sm sm:text-base">→</span>
           </Link>
         </div>
