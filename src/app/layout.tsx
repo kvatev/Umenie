@@ -5,11 +5,13 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ConditionalFooter } from "@/components/layout/ConditionalFooter";
 import { SITE_CONFIG } from "@/lib/constants";
+import { LanguageProvider } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/i18n/server";
 
 const headingFont = Comfortaa({
   subsets: ["latin", "cyrillic"],
   variable: "--font-heading",
-  weight: ["600", "700"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -128,13 +130,15 @@ const jsonLd = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getServerLocale();
+
   return (
-    <html lang="bg" className={`${bodyFont.variable} ${headingFont.variable}`}>
+    <html lang={locale} className={`${bodyFont.variable} ${headingFont.variable}`}>
       <head>
         <script
           type="application/ld+json"
@@ -142,11 +146,13 @@ export default function RootLayout({
         />
       </head>
       <body className={`${bodyFont.variable} ${headingFont.variable} font-sans bg-[#f1f2f6] text-slate-800 antialiased overflow-x-hidden min-h-screen flex flex-col selection:bg-brand-purple selection:text-white`}>
-        <Header />
-        <main className="flex-1 w-full">{children}</main>
-        <ConditionalFooter>
-          <Footer />
-        </ConditionalFooter>
+        <LanguageProvider initialLocale={locale}>
+          <Header />
+          <main className="flex-1 w-full">{children}</main>
+          <ConditionalFooter>
+            <Footer />
+          </ConditionalFooter>
+        </LanguageProvider>
       </body>
     </html>
   );

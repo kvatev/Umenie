@@ -1,15 +1,15 @@
-import { BulletBulbIcon } from "@/components/common/BulletBulbIcon";
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
+import { BulletBulbIcon } from "@/components/common/BulletBulbIcon";
+import { useLanguage } from "@/lib/i18n";
 
 export function WhyChooseUs() {
-  const points = [
-    { title: "Малки групи", desc: "Всяко дете получава лично внимание и индивидуално темпо на обучение." },
-    { title: "Без екрани", desc: "Фокус върху реални преживявания, творчество, четене и игри на живо." },
-    { title: "Домашен уют", desc: "Светла и спокойна среда, в която децата се чувстват приети, спокойни и уверени." },
-  ];
+  const { dict } = useLanguage();
+  const points = dict.home.whyChooseUs.points;
 
   return (
     <section className="py-12 sm:py-20 bg-brand-bg relative overflow-hidden">
@@ -24,11 +24,11 @@ export function WhyChooseUs() {
       <Container size="xl" className="relative z-10">
         <div className="max-w-4xl text-left space-y-5 sm:space-y-6">
           <h2 className="font-heading font-bold text-2xl sm:text-4xl lg:text-5xl text-brand-purple leading-tight tracking-wide uppercase text-left">
-            ЗАЩО ДА ИЗБЕРЕТЕ<br className="hidden sm:block" /> КЛУБ „УМЕНИЕ“?
+            {dict.home.whyChooseUs.titleLine1}<br className="hidden sm:block" /> {dict.home.whyChooseUs.titleLine2}
           </h2>
 
           <p className="text-brand-dark/90 text-base sm:text-xl leading-relaxed max-w-2xl text-left font-normal">
-            В малки групи всяко дете получава лично внимание и подкрепа. Ние учим децата чрез практика, без екрани и в среда, близка до домашния уют.
+            {dict.home.whyChooseUs.description}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-left">
@@ -53,7 +53,7 @@ export function WhyChooseUs() {
               href="/za-nas"
               className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base tracking-wider uppercase shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-95 cursor-pointer"
             >
-              НАУЧЕТЕ ПОВЕЧЕ
+              {dict.home.whyChooseUs.button}
             </Link>
           </div>
         </div>

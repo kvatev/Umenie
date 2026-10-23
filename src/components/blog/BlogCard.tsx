@@ -1,9 +1,11 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Clock, MessageSquare, ArrowRight, Calendar } from "lucide-react";
 import { BlogPost } from "@/lib/types/blog";
-import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 interface BlogCardProps {
   post: BlogPost;
@@ -11,11 +13,16 @@ interface BlogCardProps {
 }
 
 export function BlogCard({ post, featured = false }: BlogCardProps) {
-  const formattedDate = new Date(post.publishedAt).toLocaleDateString("bg-BG", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const { dict, locale } = useLanguage();
+
+  const formattedDate = new Date(post.publishedAt).toLocaleDateString(
+    locale === "en" ? "en-US" : "bg-BG",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }
+  );
 
   if (featured) {
     return (
@@ -56,7 +63,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
                     <span>•</span>
                     <span className="inline-flex items-center gap-1.5">
                       <MessageSquare className="w-3.5 h-3.5 text-brand-purple" />
-                      <span>{post.commentsCount} коментара</span>
+                      <span>{post.commentsCount} {dict.home.blog.commentsText}</span>
                     </span>
                   </>
                 )}
@@ -78,7 +85,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
                 href={`/blog/${post.slug}`}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm hover:bg-brand-purple-hover transition-all transform hover:scale-[1.02] active:scale-95 shadow-button"
               >
-                <span>ПРОЧЕТЕТЕ СТАТИЯТА</span>
+                <span>{dict.home.blog.readArticle}</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
@@ -144,7 +151,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
           </p>
         </div>
 
-        {/* Read More Link (pinned to bottom with mt-auto) */}
+        {/* Read More Link */}
         <div className="pt-3 border-t border-brand-purple/10 flex items-center justify-between mt-auto">
           <span className="text-xs font-semibold text-brand-muted truncate max-w-[120px]">
             {post.author}
@@ -153,7 +160,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
             href={`/blog/${post.slug}`}
             className="inline-flex items-center gap-1.5 text-xs font-heading font-bold text-brand-purple hover:text-brand-purple-dark transition-colors group/link"
           >
-            <span>Прочети повече</span>
+            <span>{dict.home.blog.readMore}</span>
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/link:translate-x-1" />
           </Link>
         </div>

@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
-  Globe,
-  MoreHorizontal,
   ThumbsUp,
   Heart,
-  Maximize2,
+  Globe,
+  MoreHorizontal,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 export interface SocialReview {
   id: string;
@@ -90,188 +90,122 @@ interface ParentReviewsCarouselProps {
   reviewImages?: ParentReviewImage[];
 }
 
-export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentReviewsCarouselProps) {
-  const reviews = useMemo(() => {
-    const list: SocialReview[] = [];
-    const effectiveScreenshot = screenshotUrl || "/images/review-screenshot.webp";
-
-    // 1. Ensure main review screenshot is present front-and-center (with fallback to /images/review-screenshot.webp)
-    if (effectiveScreenshot) {
-      list.push({
-        id: "review-screenshot",
-        name: "Родител в УМеНИе",
-        date: "Актуален отзив",
-        avatarBg: "bg-purple-200 text-purple-800",
-        avatarText: "УМ",
-        image: effectiveScreenshot,
-        text: "Оригинален отзив от родител в клуб УМеНИе.",
-        likesCount: 48,
-        commentsCount: 7,
-      });
-    }
-
-    // 2. If uploaded review screenshots exist from reviews_images
-    if (reviewImages && reviewImages.length > 0) {
-      reviewImages.forEach((img, idx) => {
-        if (img.public_url !== effectiveScreenshot) {
-          list.push({
-            id: img.id || `uploaded-review-${idx}`,
-            name: `Родител в УМеНИе #${idx + 1}`,
-            date: "Актуален отзив",
-            avatarBg: "bg-purple-200 text-purple-800",
-            avatarText: "УМ",
-            image: img.public_url,
-            text: "Оригинален отзив от доволен родител в клуб УМеНИе.",
-            likesCount: 30 + ((idx * 7) % 25),
-            commentsCount: 2 + ((idx * 2) % 6),
-          });
-        }
-      });
-    }
-
-    // 3. Append default social reviews so carousel remains lively and rich
-    list.push(...DEFAULT_REVIEWS);
-
-    return list;
-  }, [screenshotUrl, reviewImages]);
-
+export function ParentReviewsCarousel({
+  screenshotUrl,
+  reviewImages = [],
+}: ParentReviewsCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const { dict, locale } = useLanguage();
 
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
+  // If dynamic images are supplied via Supabase Media Manager, prioritize them
+  const reviews: SocialReview[] = useMemo(() => {
+    if (reviewImages && reviewImages.length > 0) {
+      return reviewImages.map((img, idx) => ({
+        id: img.id,
+        name: `${dict.about.reviewsHeading} ${idx + 1}`,
+        date: "",
+        avatarBg: "bg-purple-200 text-purple-800",
+        avatarText: `О${idx + 1}`,
+        image: img.public_url,
+        text: "",
+        likesCount: 20 + idx * 3,
+      }));
+    }
+
+    if (locale === "en" && (dict.about as any).reviews) {
+      const enReviewsList = (dict.about as any).reviews;
+      return DEFAULT_REVIEWS.map((r, i) => {
+        const trans = enReviewsList[i];
+        if (trans) {
+          return {
+            ...r,
+            name: trans.name,
+            date: trans.date,
+            avatarText: trans.avatarText,
+            text: trans.text,
+          };
+        }
+        return r;
+      });
+    }
+
+    return DEFAULT_REVIEWS;
+  }, [reviewImages, dict, locale]);
 
   const total = reviews.length;
 
-  const prevSlide = () => {
+  const handlePrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? total - 1 : prev - 1));
   };
 
-  const nextSlide = () => {
+  const handleNext = () => {
     setCurrentIndex((prev) => (prev === total - 1 ? 0 : prev + 1));
   };
 
-  // Optional auto-rotation every 6 seconds
-  useEffect(() => {
-    if (isPaused) return;
-    const interval = setInterval(nextSlide, 6000);
-    return () => clearInterval(interval);
-  }, [isPaused, total]);
-
-  // Touch Swipe handlers for mobile
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchEndX.current = null;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStartX.current !== null && touchEndX.current !== null) {
-      const diff = touchStartX.current - touchEndX.current;
-      if (diff > 45) {
-        requestAnimationFrame(() => nextSlide());
-      } else if (diff < -45) {
-        requestAnimationFrame(() => prevSlide());
-      }
-    }
-    touchStartX.current = null;
-    touchEndX.current = null;
-  };
-
-  // Indices for 3 visible cards on desktop: prev, current, next
-  const prevIndex = (currentIndex - 1 + total) % total;
-  const nextIdx = (currentIndex + 1) % total;
-
   return (
-    <div
-      className="relative w-full max-w-5xl mx-auto px-2 sm:px-8 select-none"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Navigation Arrow Left */}
-      <button
-        onClick={prevSlide}
-        aria-label="Предишен отзив"
-        className="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white text-brand-purple shadow-xl flex items-center justify-center hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
-      >
-        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
-      </button>
+    <div className="relative max-w-6xl mx-auto px-2 sm:px-6">
+      {/* Navigation Arrows for Desktop & Tablet */}
+      <div className="hidden sm:flex items-center justify-between absolute top-1/2 -translate-y-1/2 left-0 right-0 z-20 pointer-events-none px-0 lg:-mx-4">
+        <button
+          onClick={handlePrev}
+          aria-label="Previous review"
+          className="p-3 rounded-full bg-white text-brand-purple shadow-xl hover:bg-[#887ed8] hover:text-white transition-all transform hover:scale-110 active:scale-95 pointer-events-auto cursor-pointer border border-brand-purple/20"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button
+          onClick={handleNext}
+          aria-label="Next review"
+          className="p-3 rounded-full bg-white text-brand-purple shadow-xl hover:bg-[#887ed8] hover:text-white transition-all transform hover:scale-110 active:scale-95 pointer-events-auto cursor-pointer border border-brand-purple/20"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
 
-      {/* Navigation Arrow Right */}
-      <button
-        onClick={nextSlide}
-        aria-label="Следващ отзив"
-        className="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white text-brand-purple shadow-xl flex items-center justify-center hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
-      >
-        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
-      </button>
-
-      {/* Cards View */}
-      <div className="overflow-hidden py-4 sm:py-6">
-        {/* DESKTOP 3-CARD VIEW */}
-        <div className="hidden md:grid grid-cols-3 gap-5 sm:gap-6 items-center">
-          {[prevIndex, currentIndex, nextIdx].map((reviewIdx, pos) => {
-            const review = reviews[reviewIdx];
-            const isCenter = pos === 1;
+      {/* Main Viewport Container */}
+      <div className="overflow-hidden py-4">
+        {/* DESKTOP 3-CARD GRID VIEW */}
+        <div className="hidden md:grid md:grid-cols-3 gap-6 items-stretch">
+          {[0, 1, 2].map((offset) => {
+            const index = (currentIndex + offset) % total;
+            const review = reviews[index];
 
             return (
               <div
-                key={`${review.id}-${pos}`}
-                onClick={() => {
-                  if (pos === 0) prevSlide();
-                  if (pos === 2) nextSlide();
-                }}
+                key={`${review.id}-${offset}`}
                 className={cn(
-                  "bg-white rounded-3xl p-5 sm:p-7 shadow-card transition-all duration-300 flex flex-col justify-between cursor-pointer border border-brand-purple/10 min-h-[300px]",
-                  isCenter
-                    ? "scale-105 shadow-2xl z-10 ring-4 ring-white/90 opacity-100"
-                    : "scale-95 opacity-70 hover:opacity-90"
+                  "bg-white rounded-3xl p-5 lg:p-6 shadow-xl border border-brand-purple/15 flex flex-col justify-between transition-all duration-500 min-h-[300px]",
+                  offset === 1
+                    ? "scale-105 z-10 shadow-2xl ring-2 ring-white/60"
+                    : "opacity-95 hover:opacity-100"
                 )}
               >
                 {review.image ? (
-                  /* Screenshot Card: square/sub-rectangular container */
                   <div className="flex flex-col justify-between h-full space-y-3">
                     <div
                       className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer group"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setZoomedImage(review.image || null);
-                      }}
+                      onClick={() => setZoomedImage(review.image || null)}
                     >
                       <Image
                         src={review.image}
                         alt={review.name}
                         fill
                         className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
-                        sizes="320px"
+                        sizes="(max-width: 1024px) 50vw, 380px"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 text-brand-dark text-xs font-semibold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
-                          <Maximize2 className="w-3.5 h-3.5 text-brand-purple" />
-                          Преглед
-                        </span>
-                      </div>
                     </div>
-
                     <div className="pt-2 border-t border-brand-purple/10 flex items-center justify-between text-xs text-brand-muted">
                       <span className="font-semibold text-brand-dark/80">{review.name}</span>
-                      <span className="text-brand-purple font-medium">Оригинален скрийншот</span>
+                      <span className="text-brand-purple font-medium">{dict.about.originalScreenshotBadge}</span>
                     </div>
                   </div>
                 ) : (
-                  /* Social Review Card (matching mockup 1:1) */
                   <div className="flex flex-col justify-between h-full">
                     <div>
-                      {/* Header */}
+                      {/* Social Header */}
                       <div className="flex items-center justify-between gap-3 mb-3.5">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <div
                             className={cn(
                               "w-11 h-11 rounded-full flex items-center justify-center font-heading font-bold text-sm shadow-inner shrink-0",
@@ -280,8 +214,8 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
                           >
                             {review.avatarText}
                           </div>
-                          <div>
-                            <h4 className="font-heading font-bold text-sm text-brand-dark leading-snug">
+                          <div className="min-w-0">
+                            <h4 className="font-heading font-bold text-base text-brand-dark leading-snug truncate">
                               {review.name}
                             </h4>
                             <div className="flex items-center gap-1.5 text-xs text-brand-muted">
@@ -318,7 +252,7 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
 
                       {review.commentsCount && (
                         <span className="hover:underline cursor-pointer">
-                          {review.commentsCount} коментара
+                          {review.commentsCount} {dict.about.commentsSuffix}
                         </span>
                       )}
                     </div>
@@ -329,7 +263,7 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
           })}
         </div>
 
-        {/* MOBILE SINGLE CARD VIEW (matching mobile mockup 1:1) */}
+        {/* MOBILE SINGLE CARD VIEW */}
         <div className="md:hidden">
           {(() => {
             const review = reviews[currentIndex];
@@ -351,7 +285,7 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
                     </div>
                     <div className="pt-2 border-t border-brand-purple/10 flex items-center justify-between text-xs text-brand-muted">
                       <span className="font-semibold text-brand-dark/80">{review.name}</span>
-                      <span className="text-brand-purple font-medium">Оригинален скрийншот</span>
+                      <span className="text-brand-purple font-medium">{dict.about.originalScreenshotBadge}</span>
                     </div>
                   </div>
                 ) : (
@@ -402,7 +336,7 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
                       </div>
 
                       {review.commentsCount && (
-                        <span>{review.commentsCount} коментара</span>
+                        <span>{review.commentsCount} {dict.about.commentsSuffix}</span>
                       )}
                     </div>
                   </div>
@@ -419,7 +353,7 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}
-            aria-label={`Отиди на отзив ${idx + 1}`}
+            aria-label={`Review ${idx + 1}`}
             className={cn(
               "h-2.5 rounded-full transition-all duration-300 cursor-pointer",
               currentIndex === idx
@@ -440,14 +374,14 @@ export function ParentReviewsCarousel({ screenshotUrl, reviewImages }: ParentRev
             <button
               onClick={() => setZoomedImage(null)}
               className="absolute -top-3 -right-3 p-2 bg-white text-brand-dark rounded-full shadow-lg hover:bg-brand-purple hover:text-white transition-colors cursor-pointer"
-              aria-label="Затвори"
+              aria-label={dict.about.lightboxClose}
             >
               <X className="w-5 h-5" />
             </button>
             <div className="relative w-full h-[60vh]">
               <Image
                 src={zoomedImage}
-                alt="Пълен размер на отзива"
+                alt="Review"
                 fill
                 className="object-contain"
               />

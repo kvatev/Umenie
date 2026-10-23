@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
-import { createPortal } from "react-dom";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { X, Phone, MapPin, ArrowRight } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Phone, MapPin, X, ArrowRight } from "lucide-react";
 import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
+import { useLanguage } from "@/lib/i18n";
 import type { SiteSettings } from "@/lib/types/site-settings";
 
 interface MobileNavProps {
@@ -19,6 +21,7 @@ interface MobileNavProps {
 export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const { dict, locale } = useLanguage();
 
   useEffect(() => {
     setMounted(true);
@@ -26,7 +29,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
 
   const phoneDisplay = settings?.phoneDisplay || SITE_CONFIG.phoneDisplay;
   const phoneRaw = settings?.phoneRaw || SITE_CONFIG.phoneRaw;
-  const locationFull = settings?.locationFull || SITE_CONFIG.locationFull;
+  const locationFull = locale === "en" ? dict.common.locationFull : (settings?.locationFull || SITE_CONFIG.locationFull);
   const googleMapsUrl = settings?.googleMapsUrl || SITE_CONFIG.googleMapsUrl;
   const facebookUrl = settings?.facebookUrl || SITE_CONFIG.social.facebook;
   const instagramUrl = settings?.instagramUrl || SITE_CONFIG.social.instagram;
@@ -45,7 +48,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
     }
   }, [isOpen]);
 
-  // Close when pathname actually changes (e.g. navigation via browser history or link)
+  // Close when pathname actually changes
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname;
@@ -71,6 +74,19 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
     };
   }, [isOpen, onClose]);
 
+  // Localized navigation links
+  const localizedNavLinks = useMemo(() => {
+    return NAV_LINKS.map((link) => {
+      let label = link.label;
+      if (link.href === "/") label = dict.common.nav.home;
+      else if (link.href === "/uslugi") label = dict.common.nav.services;
+      else if (link.href === "/za-nas") label = dict.common.nav.about;
+      else if (link.href === "/blog") label = dict.common.nav.blog;
+      else if (link.href === "/grafik") label = dict.common.nav.schedule;
+      return { ...link, label };
+    });
+  }, [dict]);
+
   if (!mounted) return null;
 
   return createPortal(
@@ -91,35 +107,39 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
           "fixed top-0 right-0 bottom-0 z-[9999] w-[85%] max-w-sm h-full max-h-[100dvh] overflow-y-auto bg-[#f1f2f6] shadow-2xl flex flex-col p-6 transition-transform duration-300 ease-out md:hidden border-l border-brand-purple/20",
           isOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"
         )}
-        aria-label="Мобилно меню"
+        aria-label={dict.common.nav.mobileMenuLabel}
         aria-hidden={!isOpen}
       >
         <div className="flex-1 flex flex-col">
           {/* Drawer Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-brand-purple/15 shrink-0">
-            <Link href="/" onClick={onClose} className="relative block h-12 w-36 focus:outline-none">
+          <div className="flex items-center justify-between pb-4 border-b border-brand-purple/15 shrink-0 gap-2">
+            <Link href="/" onClick={onClose} className="relative block h-12 w-32 focus:outline-none">
               <Image
                 src="/images/logo.webp"
-                alt={SITE_CONFIG.name}
+                alt={dict.common.siteName}
                 fill
                 className="object-contain"
-                sizes="144px"
+                sizes="128px"
                 priority
               />
             </Link>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 rounded-full text-brand-dark hover:text-brand-purple hover:bg-brand-purple/10 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer active:scale-95"
-              aria-label="Затвори менюто"
-            >
-              <X className="w-6 h-6" />
-            </button>
+
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher size="sm" />
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-2 rounded-full text-brand-dark hover:text-brand-purple hover:bg-brand-purple/10 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer active:scale-95"
+                aria-label={dict.common.nav.closeMenu}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
           </div>
 
           {/* Navigation Links */}
           <nav className="flex-1 py-6 space-y-1">
-            {NAV_LINKS.map((link) => {
+            {localizedNavLinks.map((link) => {
               const isActive =
                 link.href === "/"
                   ? pathname === "/"
@@ -171,7 +191,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
           >
             <MapPin className="w-4 h-4 text-brand-purple shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-brand-purple">Локация</p>
+              <p className="font-semibold text-brand-purple">{dict.common.locationLabel}</p>
               <p className="text-brand-muted">{locationFull}</p>
             </div>
           </a>
@@ -182,7 +202,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
               href={facebookUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Facebook страница"
+              aria-label={dict.common.footer.facebookAria}
               className="p-2.5 rounded-full bg-white text-brand-purple shadow-sm hover:scale-110 hover:bg-brand-purple hover:text-white transition-all flex items-center justify-center"
             >
               <div className="relative w-5 h-5">
@@ -200,7 +220,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
               href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Instagram профил"
+              aria-label={dict.common.footer.instagramAria}
               className="p-2.5 rounded-full bg-white text-brand-purple shadow-sm hover:scale-110 hover:bg-brand-purple hover:text-white transition-all flex items-center justify-center"
             >
               <div className="relative w-5 h-5">
@@ -218,7 +238,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
               href={tiktokUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="TikTok профил"
+              aria-label={dict.common.footer.tiktokAria}
               className="p-2.5 rounded-full bg-white text-brand-purple shadow-sm hover:scale-110 hover:bg-brand-purple hover:text-white transition-all flex items-center justify-center"
             >
               <div className="relative w-5 h-5 flex items-center justify-center">

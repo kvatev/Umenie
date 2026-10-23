@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 export interface GalleryImage {
   src: string;
@@ -28,6 +29,7 @@ interface KidsGalleryProps {
 }
 
 export function KidsGallery({ images, order }: KidsGalleryProps) {
+  const { dict } = useLanguage();
   let galleryImages: GalleryImage[] = [];
 
   if (images && images.length > 0) {
@@ -136,7 +138,7 @@ export function KidsGallery({ images, order }: KidsGalleryProps) {
       {/* Navigation Left Arrow */}
       <button
         onClick={scrollPrev}
-        aria-label="Предишна снимка"
+        aria-label={dict.home.kidsGallery.prevPhotoAria}
         className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-white/95 text-brand-purple hover:bg-brand-purple hover:text-white shadow-xl backdrop-blur-sm transition-all transform hover:scale-110 active:scale-95 cursor-pointer"
       >
         <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
@@ -145,7 +147,7 @@ export function KidsGallery({ images, order }: KidsGalleryProps) {
       {/* Navigation Right Arrow */}
       <button
         onClick={scrollNext}
-        aria-label="Следваща снимка"
+        aria-label={dict.home.kidsGallery.nextPhotoAria}
         className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-white/95 text-brand-purple hover:bg-brand-purple hover:text-white shadow-xl backdrop-blur-sm transition-all transform hover:scale-110 active:scale-95 cursor-pointer"
       >
         <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
@@ -157,7 +159,7 @@ export function KidsGallery({ images, order }: KidsGalleryProps) {
           <button
             key={idx}
             onClick={() => scrollTo(idx)}
-            aria-label={`Снимка ${idx + 1}`}
+            aria-label={`${dict.home.kidsGallery.photoAria} ${idx + 1}`}
             className={cn(
               "transition-all duration-300 rounded-full cursor-pointer",
               idx === selectedIndex

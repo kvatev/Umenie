@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
@@ -8,6 +8,7 @@ import { Container } from "@/components/ui/Container";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { BlogPost } from "@/lib/types/blog";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 interface HomeBlogSectionProps {
   posts: BlogPost[];
@@ -18,13 +19,32 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const { dict, locale } = useLanguage();
 
-  if (!posts || posts.length === 0) {
+  // Localize posts if English dictionary has translation for the slug
+  const localizedPosts = useMemo(() => {
+    if (!posts) return [];
+    return posts.map((post) => {
+      const trans = (dict.blogPosts as any)?.[post.slug];
+      if (locale === "en" && trans) {
+        return {
+          ...post,
+          title: trans.title || post.title,
+          excerpt: trans.excerpt || post.excerpt,
+          category: trans.category || post.category,
+          readTime: trans.readTime || post.readTime,
+        };
+      }
+      return post;
+    });
+  }, [posts, dict, locale]);
+
+  if (!localizedPosts || localizedPosts.length === 0) {
     return null;
   }
 
   // Display latest articles (up to 6)
-  const displayPosts = posts.slice(0, 6);
+  const displayPosts = localizedPosts.slice(0, 6);
 
   // Update active dot and arrow states on scroll
   const handleScroll = useCallback(() => {
@@ -90,13 +110,13 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12 gap-4">
           <div className="space-y-2 text-left">
             <span className="inline-block px-3.5 py-1 rounded-full bg-brand-purple/10 text-brand-purple font-heading font-bold text-xs uppercase tracking-wider">
-              ПОЛЕЗНО ЗА РОДИТЕЛИ И ДЕЦА
+              {dict.home.blog.badge}
             </span>
             <h2 className="font-heading font-extrabold text-2xl sm:text-4xl lg:text-5xl text-brand-purple tracking-wide uppercase text-left">
-              ОТ НАШИЯ БЛОГ
+              {dict.home.blog.heading}
             </h2>
             <p className="text-brand-dark/80 text-sm sm:text-base md:text-lg max-w-xl text-left">
-              Практични съвети, идеи за развитие и вдъхновение от екипа на клуб „УМеНИе“.
+              {dict.home.blog.subtitle}
             </p>
           </div>
 
@@ -107,7 +127,7 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
                 type="button"
                 onClick={() => scroll("left")}
                 disabled={!canScrollLeft}
-                aria-label="Предишна статия"
+                aria-label={dict.home.blog.prevAria}
                 className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-brand-purple border border-brand-purple/20 hover:bg-brand-purple hover:text-white shadow-sm flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-brand-purple"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -116,7 +136,7 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
                 type="button"
                 onClick={() => scroll("right")}
                 disabled={!canScrollRight}
-                aria-label="Следваща статия"
+                aria-label={dict.home.blog.nextAria}
                 className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-brand-purple border border-brand-purple/20 hover:bg-brand-purple hover:text-white shadow-sm flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-brand-purple"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -127,13 +147,13 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
               href="/blog"
               className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-brand-purple border border-brand-purple/20 hover:bg-brand-purple hover:text-white transition-all transform hover:scale-[1.02] active:scale-95 shadow-sm font-heading font-bold text-xs sm:text-sm uppercase tracking-wide group"
             >
-              <span>ВСИЧКИ СТАТИИ</span>
+              <span>{dict.home.blog.allArticles}</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </div>
 
-        {/* Horizontal Carousel (Mobile swipeable & desktop scrollable with Left/Right arrows) */}
+        {/* Horizontal Carousel */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -167,7 +187,7 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
                     ? "w-8 bg-brand-purple"
                     : "w-2.5 bg-brand-purple/25 hover:bg-brand-purple/50"
                 )}
-                aria-label={`Към статия ${idx + 1}`}
+                aria-label={`Article ${idx + 1}`}
               />
             ))}
           </div>

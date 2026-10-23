@@ -5,35 +5,28 @@ import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Play, Pause, Users, Home, Puzzle } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 interface ClubTourVideoProps {
   src: string;
   poster: string;
 }
 
-const HIGHLIGHTS = [
-  { icon: Home, text: "Светли и уютни зали, близки до домашната среда" },
-  { icon: Users, text: "Малки групи и внимание към всяко дете" },
-  { icon: Puzzle, text: "Кътове за учене, шах, игри и творчество" },
-];
+const HIGHLIGHT_ICONS = [Users, Home, Puzzle];
 
-/**
- * "Как изглежда нашият клуб" – vertical tour video shown on both
- * mobile and desktop. The video is lazy-loaded when it approaches the
- * viewport, autoplays muted in a loop while visible and pauses when
- * scrolled away. Visitors can tap to pause/resume playback.
- */
 export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isNear, setIsNear] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [isPaused, setIsPaused] = useState(false); // user-initiated pause
+  const [isNear, setIsNear] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const { dict } = useLanguage();
 
-  // 1. Lazy-load: attach the source only when the block gets close
+  // 1. Dual-threshold observer: lazy load nearby (400px), autoplay strictly in viewport (35%)
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
+
     const nearObs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -43,10 +36,14 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
       },
       { rootMargin: "400px 0px" }
     );
+
     const visObs = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
       { threshold: 0.35 }
     );
+
     nearObs.observe(el);
     visObs.observe(el);
     return () => {
@@ -88,27 +85,29 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
               id="club-tour-heading"
               className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple leading-tight tracking-wide uppercase text-left"
             >
-              Как изглежда
-              <br className="hidden sm:block" /> нашият клуб
+              {dict.home.clubTour.titleLine1}
+              <br className="hidden sm:block" /> {dict.home.clubTour.titleLine2}
             </h2>
 
             <p className="text-brand-dark/90 text-base sm:text-lg leading-relaxed max-w-xl text-left">
-              Надникнете вътре и вижте мястото, където децата учат, играят и
-              творят всеки ден – подредено, светло и създадено с мисъл за тях.
+              {dict.home.clubTour.description}
             </p>
 
             <ul className="hidden lg:flex flex-col gap-3 pt-1">
-              {HIGHLIGHTS.map(({ icon: Icon, text }) => (
-                <li
-                  key={text}
-                  className="flex items-center gap-3 rounded-2xl bg-white/70 backdrop-blur-sm px-4 py-3 border border-brand-purple/10 shadow-sm transition-all duration-300 hover:translate-x-1 hover:shadow-card"
-                >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-purple/10 text-brand-purple">
-                    <Icon className="w-5 h-5" />
-                  </span>
-                  <span className="text-brand-dark/90 font-medium">{text}</span>
-                </li>
-              ))}
+              {dict.home.clubTour.highlights.map((text, idx) => {
+                const Icon = HIGHLIGHT_ICONS[idx % HIGHLIGHT_ICONS.length];
+                return (
+                  <li
+                    key={text}
+                    className="flex items-center gap-3 rounded-2xl bg-white/70 backdrop-blur-sm px-4 py-3 border border-brand-purple/10 shadow-sm transition-all duration-300 hover:translate-x-1 hover:shadow-card"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-purple/10 text-brand-purple">
+                      <Icon className="w-5 h-5" />
+                    </span>
+                    <span className="text-brand-dark/90 font-medium">{text}</span>
+                  </li>
+                );
+              })}
             </ul>
 
             <div className="hidden lg:flex pt-2">
@@ -116,7 +115,7 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
                 href="/za-nas"
                 className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base tracking-wider uppercase shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-95"
               >
-                ЗА НАС
+                {dict.home.clubTour.button}
               </Link>
             </div>
           </div>
@@ -158,7 +157,7 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
                     e.currentTarget.play().catch(() => {});
                   }}
                   className="absolute inset-0 w-full h-full object-cover cursor-pointer"
-                  aria-label="Видео: как изглежда образователен клуб УМеНИе отвътре"
+                  aria-label={dict.home.clubTour.videoAria}
                 />
 
                 {/* Bottom gradient for control legibility */}
@@ -169,7 +168,7 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
                   <button
                     type="button"
                     onClick={togglePlay}
-                    aria-label="Пусни видеото"
+                    aria-label={dict.home.clubTour.playAria}
                     className="absolute inset-0 flex items-center justify-center bg-black/25 transition-colors"
                   >
                     <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-brand-purple shadow-xl transition-transform hover:scale-110">
@@ -181,14 +180,14 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
                 {/* Controls */}
                 <div className="absolute bottom-4 inset-x-4 flex items-center justify-between">
                   <span className="rounded-full bg-black/35 backdrop-blur-md px-3 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-white/95">
-                    Клуб „УМеНИе“
+                    {dict.home.clubTour.videoBadge}
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       id="club-tour-play-toggle"
                       onClick={togglePlay}
-                      aria-label={isPaused ? "Пусни видеото" : "Спри видеото"}
+                      aria-label={isPaused ? dict.home.clubTour.playAria : dict.home.clubTour.pauseAria}
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 transition-all hover:bg-white/35 active:scale-90"
                     >
                       {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
@@ -205,7 +204,7 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
               href="/za-nas"
               className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm tracking-wider uppercase shadow-button hover:bg-brand-purple-hover transition-all active:scale-95"
             >
-              ЗА НАС
+              {dict.home.clubTour.button}
             </Link>
           </div>
         </div>

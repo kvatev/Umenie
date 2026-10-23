@@ -1,7 +1,10 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Clock, Calendar, ArrowRight, FileText } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 interface ScheduleBannerProps {
   scheduleFileUrl?: string | null;
@@ -9,13 +12,8 @@ interface ScheduleBannerProps {
 }
 
 export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBannerProps = {}) {
-  const schedulePreview = [
-    { day: "Пон - Пет", activity: "Учебна занималня", time: "12:30 - 17:30", badge: "Всеки ден" },
-    { day: "Вторник", activity: "БЕЛ и Математика (курсове)", time: "14:00 - 18:30", badge: "Интензивно" },
-    { day: "Четвъртък", activity: "Английски език (малки групи)", time: "14:30 - 17:00", badge: "Разговорен" },
-    { day: "Събота", activity: "Арт занимания & Шах", time: "10:30 - 14:00", badge: "Творчество" },
-    { day: "Периодично", activity: "Читателски клуб „Лигериа“", time: "18:00 - 20:30", badge: "За възрастни" },
-  ];
+  const { dict } = useLanguage();
+  const schedulePreview = dict.home.schedule.items;
 
   return (
     <section className="relative py-12 sm:py-18 lg:py-20 bg-gradient-to-b from-[#8376d4] via-brand-purple to-[#7c6ecf] text-white overflow-hidden shadow-xs">
@@ -27,7 +25,7 @@ export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBa
           {/* Left Column: Heading, Button and Curved Arrow */}
           <div className="lg:col-span-5 text-left space-y-6">
             <h2 className="font-heading font-bold text-2xl sm:text-4xl lg:text-5xl leading-tight tracking-wide uppercase text-left">
-              ГРАФИКЪТ ЗА<br className="hidden xs:block" /> СЕДМИЦАТА
+              {dict.home.schedule.titleLine1}<br className="hidden xs:block" /> {dict.home.schedule.titleLine2}
             </h2>
 
             <div className="pt-2 flex justify-start">
@@ -36,7 +34,7 @@ export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBa
                   href="/grafik"
                   className="inline-flex items-center justify-center px-8 sm:px-10 py-3.5 sm:py-4 rounded-full bg-white text-brand-purple font-heading font-bold text-xs sm:text-base tracking-wider uppercase shadow-xl hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  НАУЧЕТЕ ПОВЕЧЕ
+                  {dict.home.schedule.learnMore}
                 </Link>
 
                 <svg
@@ -45,14 +43,12 @@ export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBa
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  {/* Smooth swooping arc dipping down and curving up-right */}
                   <path
                     d="M 12 14 C 28 52, 68 56, 92 22"
                     stroke="white"
                     strokeWidth="3.5"
                     strokeLinecap="round"
                   />
-                  {/* Arrow head pointing up and right toward the card */}
                   <path
                     d="M 75 22 L 92 22 L 87 38"
                     stroke="white"
@@ -65,16 +61,16 @@ export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBa
             </div>
           </div>
 
-          {/* Right Column: Visualized Schedule White Card (matching mockups 1:1) */}
+          {/* Right Column: Visualized Schedule White Card */}
           <div className="lg:col-span-7">
             <div className="bg-white rounded-3xl p-4 sm:p-7 shadow-2xl text-brand-dark space-y-4 border-2 border-white/60">
               <div className="flex items-center justify-between border-b border-brand-purple/15 pb-3 gap-2">
                 <div className="flex items-center gap-2 text-brand-purple font-heading font-bold text-sm sm:text-base lg:text-lg min-w-0">
                   <Calendar className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                  <span className="truncate">АКТУАЛНА СЕДМИЧНА ПРОГРАМА</span>
+                  <span className="truncate">{dict.home.schedule.cardTitle}</span>
                 </div>
                 <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2 sm:px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap">
-                  Отворено записване
+                  {dict.home.schedule.openEnrollment}
                 </span>
               </div>
 
@@ -116,18 +112,18 @@ export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBa
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-purple hover:underline"
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    <span>Свали графика ({scheduleFileName || "PDF / Файл"})</span>
+                    <span>{dict.home.schedule.downloadSchedule} ({scheduleFileName || "PDF / Файл"})</span>
                   </a>
                 ) : (
                   <p className="text-xs text-brand-muted">
-                    Индивидуални часове според смяната на детето
+                    {dict.home.schedule.individualHours}
                   </p>
                 )}
                 <Link
                   href="/grafik"
                   className="inline-flex items-center gap-1.5 text-brand-purple font-heading font-bold text-xs sm:text-sm hover:underline"
                 >
-                  <span>Виж пълния график</span>
+                  <span>{dict.home.schedule.viewFullSchedule}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

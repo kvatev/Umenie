@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -9,6 +9,8 @@ import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { MobileNav } from "./MobileNav";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
+import { useLanguage } from "@/lib/i18n";
 import type { SiteSettings } from "@/lib/types/site-settings";
 
 interface HeaderProps {
@@ -18,6 +20,7 @@ interface HeaderProps {
 export function Header({ initialSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { dict, locale } = useLanguage();
 
   // Do not render public header in the admin panel
   if (pathname?.startsWith("/admin")) {
@@ -26,9 +29,9 @@ export function Header({ initialSettings }: HeaderProps) {
 
   const phoneDisplay = initialSettings?.phoneDisplay || SITE_CONFIG.phoneDisplay;
   const phoneRaw = initialSettings?.phoneRaw || SITE_CONFIG.phoneRaw;
-  const locationShort = initialSettings?.locationShort || SITE_CONFIG.locationShort;
+  const locationShort = locale === "en" ? dict.common.locationShort : (initialSettings?.locationShort || SITE_CONFIG.locationShort);
   const googleMapsUrl = initialSettings?.googleMapsUrl || SITE_CONFIG.googleMapsUrl;
-  const tagline = initialSettings?.tagline || SITE_CONFIG.tagline;
+  const tagline = locale === "en" ? dict.common.tagline : (initialSettings?.tagline || SITE_CONFIG.tagline);
 
   const closeMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(false);
@@ -37,6 +40,19 @@ export function Header({ initialSettings }: HeaderProps) {
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
+
+  // Localized navigation links
+  const localizedNavLinks = useMemo(() => {
+    return NAV_LINKS.map((link) => {
+      let label = link.label;
+      if (link.href === "/") label = dict.common.nav.home;
+      else if (link.href === "/uslugi") label = dict.common.nav.services;
+      else if (link.href === "/za-nas") label = dict.common.nav.about;
+      else if (link.href === "/blog") label = dict.common.nav.blog;
+      else if (link.href === "/grafik") label = dict.common.nav.schedule;
+      return { ...link, label };
+    });
+  }, [dict]);
 
   return (
     <>
@@ -57,13 +73,15 @@ export function Header({ initialSettings }: HeaderProps) {
             <span className="text-brand-muted">{tagline}</span>
           </div>
 
-          <a
-            href={`tel:${phoneRaw}`}
-            className="flex items-center gap-1.5 text-brand-dark font-bold hover:text-brand-purple transition-colors"
-          >
-            <Phone className="w-3.5 h-3.5 text-brand-purple shrink-0" />
-            <span>{phoneDisplay}</span>
-          </a>
+          <div className="flex items-center gap-4">
+            <a
+              href={`tel:${phoneRaw}`}
+              className="flex items-center gap-1.5 text-brand-dark font-bold hover:text-brand-purple transition-colors"
+            >
+              <Phone className="w-3.5 h-3.5 text-brand-purple shrink-0" />
+              <span>{phoneDisplay}</span>
+            </a>
+          </div>
         </Container>
       </div>
 
@@ -74,11 +92,11 @@ export function Header({ initialSettings }: HeaderProps) {
           <Link
             href="/"
             className="relative flex items-center h-16 w-48 sm:h-20 sm:w-60 md:w-64 focus:outline-none group"
-            aria-label="Начална страница на клуб УМеНИе"
+            aria-label={dict.common.nav.home}
           >
             <Image
               src="/images/logo.webp"
-              alt={SITE_CONFIG.name}
+              alt={dict.common.siteName}
               fill
               className="object-contain transition-transform duration-200 group-hover:scale-[1.02]"
               sizes="(max-width: 640px) 192px, 256px"
@@ -88,10 +106,10 @@ export function Header({ initialSettings }: HeaderProps) {
 
           {/* Desktop Navigation Links */}
           <nav
-            aria-label="Основна навигация"
+            aria-label={dict.common.nav.ariaNav}
             className="hidden md:flex items-center gap-1 lg:gap-3"
           >
-            {NAV_LINKS.map((link) => {
+            {localizedNavLinks.map((link) => {
               const isActive =
                 link.href === "/"
                   ? pathname === "/"
@@ -117,8 +135,9 @@ export function Header({ initialSettings }: HeaderProps) {
             })}
           </nav>
 
-          {/* Desktop Right Contact CTA */}
+          {/* Desktop Right CTA: Language Switcher + Phone */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher size="md" />
             <a
               href={`tel:${phoneRaw}`}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-sm shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-[0.98]"
@@ -128,24 +147,27 @@ export function Header({ initialSettings }: HeaderProps) {
             </a>
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <button
-            type="button"
-            onClick={toggleMobileMenu}
-            className="md:hidden flex flex-col justify-center items-center w-11 h-11 rounded-2xl bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-all focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer active:scale-95"
-            aria-label={isMobileMenuOpen ? "Затвори навигационното меню" : "Отвори навигационното меню"}
-            aria-expanded={isMobileMenuOpen}
-          >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6 text-brand-purple" />
-            ) : (
-              <Menu className="w-6 h-6 text-brand-purple" />
-            )}
-          </button>
+          {/* Mobile Right Controls: Language Switcher + Hamburger Button */}
+          <div className="flex md:hidden items-center gap-2">
+            <LanguageSwitcher size="sm" />
+            <button
+              type="button"
+              onClick={toggleMobileMenu}
+              className="flex flex-col justify-center items-center w-11 h-11 rounded-2xl bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-all focus:outline-none focus:ring-2 focus:ring-brand-purple cursor-pointer active:scale-95"
+              aria-label={isMobileMenuOpen ? dict.common.nav.closeMenu : dict.common.nav.openMenu}
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6 text-brand-purple" />
+              ) : (
+                <Menu className="w-6 h-6 text-brand-purple" />
+              )}
+            </button>
+          </div>
         </Container>
       </header>
 
-      {/* Mobile Drawer (placed outside header to prevent backdrop-filter containing block trap) */}
+      {/* Mobile Drawer */}
       <MobileNav
         isOpen={isMobileMenuOpen}
         onClose={closeMobileMenu}

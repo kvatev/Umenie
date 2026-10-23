@@ -17,6 +17,7 @@ import { getBlogPosts } from "@/lib/blog-service";
 import { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
+import { getServerDictionary } from "@/lib/i18n/server";
 import { listReviewsImagesAction } from "@/actions/admin-media";
 
 export const revalidate = 60; // revalidate on demand or every 60s
@@ -56,7 +57,8 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [settings, blogPosts, reviewsRes] = await Promise.all([
+  const [{ locale, dict }, settings, blogPosts, reviewsRes] = await Promise.all([
+    getServerDictionary(),
     getSiteSettings(),
     getBlogPosts({ limit: 6 }),
     listReviewsImagesAction(),
@@ -232,7 +234,7 @@ export default async function HomePage() {
         <Container size="xl" className="relative z-10">
           <div className="max-w-xl text-white space-y-4 sm:space-y-6 text-left">
             <h1 className="font-heading font-bold text-2xl xs:text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide drop-shadow-md text-white text-left">
-              УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА
+              {dict.home.hero.title}
             </h1>
             <div className="pt-2 flex justify-start">
               <Link
@@ -317,23 +319,21 @@ export default async function HomePage() {
 
               <div className="relative z-10 space-y-6 sm:space-y-8">
                 <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold text-left">
-                  В образователен клуб „УМеНИе“ децата{" "}
-                  <span className="text-brand-purple">растат с едно умение</span> повече
-                  всеки ден.
+                  {dict.home.mission.titlePre}
+                  <span className="text-brand-purple">{dict.home.mission.titleHighlight}</span>
+                  {dict.home.mission.titlePost}
                 </h2>
 
                 <div className="space-y-4 sm:space-y-5 text-base sm:text-lg md:text-xl text-brand-dark/90 leading-relaxed font-normal text-left">
                   <p>
-                    Английски, български, математика, шах, плетиво и учебна занималня.
-                    Различни занимания с една обща цел – детето да вземе от всяко от тях
-                    нещо, което остава и след края на часа.
+                    {dict.home.mission.p1}
                   </p>
                   <p>
-                    В <strong className="text-brand-purple font-bold">малки групи</strong> и с{" "}
-                    <strong className="text-brand-purple font-bold">внимание към всяко дете</strong>{" "}
-                    превръщаме различните занимания в начин то да се учи да мисли
-                    самостоятелно, да довършва започнатото, да намира решение и да
-                    работи с другите.
+                    {dict.home.mission.p2Pre}
+                    <strong className="text-brand-purple font-bold">{dict.home.mission.p2Bold1}</strong>
+                    {dict.home.mission.p2Mid}
+                    <strong className="text-brand-purple font-bold">{dict.home.mission.p2Bold2}</strong>
+                    {dict.home.mission.p2Post}
                   </p>
                 </div>
               </div>
@@ -374,10 +374,10 @@ export default async function HomePage() {
         <Container size="xl">
           <div className="text-left max-w-2xl mb-6 sm:mb-10">
             <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase text-left">
-              НАШИТЕ ДЕЦА С УМЕНИЯ
+              {dict.home.kidsGallery.title}
             </h2>
             <p className="text-brand-muted text-xs sm:text-base mt-1.5 sm:mt-2 text-left">
-              Моменти от ежедневието, творчеството и постиженията в клуба.
+              {dict.home.kidsGallery.subtitle}
             </p>
           </div>
 
