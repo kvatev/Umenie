@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/types/site-settings";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -5,17 +7,67 @@ export * from "@/lib/types/site-settings";
 
 const BUCKET_NAME = "site-assets";
 const FILE_NAME = "settings.json";
+const LOCAL_SETTINGS_PATH = path.join(process.cwd(), "data", "site-settings.json");
+
+function readLocalSettings(): Partial<SiteSettings> | null {
+  try {
+    if (fs.existsSync(LOCAL_SETTINGS_PATH)) {
+      const text = fs.readFileSync(LOCAL_SETTINGS_PATH, "utf8");
+      return JSON.parse(text);
+    }
+  } catch {}
+  return null;
+}
+
+export function mergeSettingsWithDefaults(json: Record<string, any>, dbRow?: Record<string, any> | null): SiteSettings {
+  const resolvedReviewUrl = dbRow?.testimonial_image_url || json.reviewScreenshotUrl?.trim() || "";
+  let resolvedReviewScreenshots: string[] = [];
+  if (Array.isArray(json.reviewScreenshots) && json.reviewScreenshots.length > 0) {
+    resolvedReviewScreenshots = json.reviewScreenshots;
+  } else if (resolvedReviewUrl) {
+    resolvedReviewScreenshots = [resolvedReviewUrl];
+  }
+
+  return {
+    phoneDisplay: json.phoneDisplay?.trim() || DEFAULT_SETTINGS.phoneDisplay,
+    phoneFull: json.phoneFull?.trim() || DEFAULT_SETTINGS.phoneFull,
+    phoneRaw: json.phoneRaw?.trim() || DEFAULT_SETTINGS.phoneRaw,
+    locationShort: json.locationShort?.trim() || DEFAULT_SETTINGS.locationShort,
+    locationFull: json.locationFull?.trim() || DEFAULT_SETTINGS.locationFull,
+    googleMapsUrl: json.googleMapsUrl?.trim() || DEFAULT_SETTINGS.googleMapsUrl,
+    email: (!json.email || json.email.trim() === "umenie48@gmail.com") ? DEFAULT_SETTINGS.email : json.email.trim(),
+    tagline: json.tagline?.trim() || DEFAULT_SETTINGS.tagline,
+    facebookUrl: json.facebookUrl?.trim() || DEFAULT_SETTINGS.facebookUrl,
+    instagramUrl: json.instagramUrl?.trim() || DEFAULT_SETTINGS.instagramUrl,
+    tiktokUrl: json.tiktokUrl?.trim() || json.tiktok_url?.trim() || DEFAULT_SETTINGS.tiktokUrl,
+    heroBannerUrl: (dbRow?.hero_media_type === "image" ? dbRow?.hero_media_url : null) || json.heroBannerUrl?.trim() || "",
+    heroVideoUrl: (dbRow?.hero_media_type === "video" ? dbRow?.hero_media_url : null) || json.heroVideoUrl?.trim() || "",
+    heroMediaType: dbRow?.hero_media_type || (json.heroMediaType === "video" ? "video" : "image"),
+    heroTitleEn: json.heroTitleEn?.trim() || "",
+    heroSubtitleEn: json.heroSubtitleEn?.trim() || "",
+    reviewScreenshotUrl: resolvedReviewUrl,
+    reviewScreenshots: resolvedReviewScreenshots,
+    kidsGalleryOrder: Array.isArray(json.kidsGalleryOrder) ? json.kidsGalleryOrder : [],
+    scheduleFileUrl: json.scheduleFileUrl?.trim() || "",
+    scheduleFileName: json.scheduleFileName?.trim() || "",
+    aboutValues: Array.isArray(json.aboutValues) && json.aboutValues.length > 0 ? json.aboutValues : DEFAULT_SETTINGS.aboutValues,
+    aboutFeatures: Array.isArray(json.aboutFeatures) && json.aboutFeatures.length > 0 ? json.aboutFeatures : DEFAULT_SETTINGS.aboutFeatures,
+    servicesOverrides: typeof json.servicesOverrides === "object" && json.servicesOverrides !== null ? json.servicesOverrides : {},
+  };
+}
 
 /**
  * Server-side helper to fetch site contacts & settings.
- * Falls back safely to DEFAULT_SETTINGS (SITE_CONFIG) on any error.
+ * Seamlessly layers: Local JSON Cache -> Supabase Storage -> Supabase DB Table -> DEFAULT_SETTINGS
  */
 export async function getSiteSettings(): Promise<SiteSettings> {
+  const localData = readLocalSettings() || {};
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey || supabaseUrl.includes("placeholder")) {
-    return DEFAULT_SETTINGS;
+    return mergeSettingsWithDefaults(localData);
   }
 
   try {
@@ -29,7 +81,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         .maybeSingle();
       dbRow = data;
     } catch {
-      // Table might not be migrated yet, ignore and fallback to storage
+      // Table might not be migrated yet, ignore and fallback
     }
 
     // 2. Also try reading storage settings.json
@@ -52,45 +104,15 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       // Fallback
     }
 
-    const json: Record<string, any> = {
+    const mergedJson: Record<string, any> = {
+      ...localData,
       ...storageJson,
       ...(dbRow?.settings_json || {}),
     };
 
-    const resolvedReviewUrl = dbRow?.testimonial_image_url || json.reviewScreenshotUrl?.trim() || "";
-    let resolvedReviewScreenshots: string[] = [];
-    if (Array.isArray(json.reviewScreenshots) && json.reviewScreenshots.length > 0) {
-      resolvedReviewScreenshots = json.reviewScreenshots;
-    } else if (resolvedReviewUrl) {
-      resolvedReviewScreenshots = [resolvedReviewUrl];
-    }
-
-    return {
-      phoneDisplay: json.phoneDisplay?.trim() || DEFAULT_SETTINGS.phoneDisplay,
-      phoneFull: json.phoneFull?.trim() || DEFAULT_SETTINGS.phoneFull,
-      phoneRaw: json.phoneRaw?.trim() || DEFAULT_SETTINGS.phoneRaw,
-      locationShort: json.locationShort?.trim() || DEFAULT_SETTINGS.locationShort,
-      locationFull: json.locationFull?.trim() || DEFAULT_SETTINGS.locationFull,
-      googleMapsUrl: json.googleMapsUrl?.trim() || DEFAULT_SETTINGS.googleMapsUrl,
-      email: (!json.email || json.email.trim() === "umenie48@gmail.com") ? DEFAULT_SETTINGS.email : json.email.trim(),
-      tagline: json.tagline?.trim() || DEFAULT_SETTINGS.tagline,
-      facebookUrl: json.facebookUrl?.trim() || DEFAULT_SETTINGS.facebookUrl,
-      instagramUrl: json.instagramUrl?.trim() || DEFAULT_SETTINGS.instagramUrl,
-      tiktokUrl: json.tiktokUrl?.trim() || json.tiktok_url?.trim() || DEFAULT_SETTINGS.tiktokUrl,
-      heroBannerUrl: (dbRow?.hero_media_type === "image" ? dbRow?.hero_media_url : null) || json.heroBannerUrl?.trim() || "",
-      heroVideoUrl: (dbRow?.hero_media_type === "video" ? dbRow?.hero_media_url : null) || json.heroVideoUrl?.trim() || "",
-      heroMediaType: dbRow?.hero_media_type || (json.heroMediaType === "video" ? "video" : "image"),
-      reviewScreenshotUrl: resolvedReviewUrl,
-      reviewScreenshots: resolvedReviewScreenshots,
-      kidsGalleryOrder: Array.isArray(json.kidsGalleryOrder) ? json.kidsGalleryOrder : [],
-      scheduleFileUrl: json.scheduleFileUrl?.trim() || "",
-      scheduleFileName: json.scheduleFileName?.trim() || "",
-      aboutValues: Array.isArray(json.aboutValues) && json.aboutValues.length > 0 ? json.aboutValues : DEFAULT_SETTINGS.aboutValues,
-      aboutFeatures: Array.isArray(json.aboutFeatures) && json.aboutFeatures.length > 0 ? json.aboutFeatures : DEFAULT_SETTINGS.aboutFeatures,
-      servicesOverrides: typeof json.servicesOverrides === "object" && json.servicesOverrides !== null ? json.servicesOverrides : {},
-    };
+    return mergeSettingsWithDefaults(mergedJson, dbRow);
   } catch (err) {
-    console.warn("Failed to load site settings from Supabase, using defaults:", err);
-    return DEFAULT_SETTINGS;
+    console.warn("Failed to load site settings from Supabase, using local cache or defaults:", err);
+    return mergeSettingsWithDefaults(localData);
   }
 }

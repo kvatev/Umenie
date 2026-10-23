@@ -60,6 +60,19 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
     const jsonString = JSON.stringify(updatedSettings, null, 2);
     const buffer = Buffer.from(jsonString, "utf-8");
 
+    // 0. Save to local data/site-settings.json (zero-downtime offline & development fallback)
+    try {
+      const fsModule = await import("fs");
+      const pathModule = await import("path");
+      const dataDir = pathModule.join(process.cwd(), "data");
+      if (!fsModule.existsSync(dataDir)) {
+        fsModule.mkdirSync(dataDir, { recursive: true });
+      }
+      fsModule.writeFileSync(pathModule.join(dataDir, "site-settings.json"), jsonString, "utf8");
+    } catch (fsErr) {
+      console.warn("Could not write local site-settings.json:", fsErr);
+    }
+
     // 1. Sync to site_settings table (schema requirement 1)
     try {
       await supabaseAdmin
@@ -96,15 +109,19 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
     } catch {}
 
     // 3. Revalidate all cached pages that use settings or media
-    revalidatePath("/");
-    revalidatePath("/uslugi");
-    revalidatePath("/za-nas");
-    revalidatePath("/grafik");
-    revalidatePath("/admin");
-    revalidatePath("/admin/contacts");
-    revalidatePath("/admin/media");
-    revalidatePath("/admin/settings");
-    revalidatePath("/admin/pages/home");
+    try {
+      revalidatePath("/");
+      revalidatePath("/uslugi");
+      revalidatePath("/za-nas");
+      revalidatePath("/grafik");
+      revalidatePath("/admin");
+      revalidatePath("/admin/contacts");
+      revalidatePath("/admin/media");
+      revalidatePath("/admin/settings");
+      revalidatePath("/admin/pages/home");
+    } catch (e) {
+      // Ignore if called outside an active Next.js request context
+    }
 
     return {
       success: true,

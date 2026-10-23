@@ -77,10 +77,12 @@ export async function saveServiceContentAction(slug: string, overrideData: Servi
     });
 
     if (res.success) {
-      revalidatePath("/uslugi");
-      revalidatePath(`/uslugi/${slug}`);
-      revalidatePath("/");
-      revalidatePath("/admin/pages/services");
+      try {
+        revalidatePath("/uslugi");
+        revalidatePath(`/uslugi/${slug}`);
+        revalidatePath("/");
+        revalidatePath("/admin/pages/services");
+      } catch (e) {}
     }
 
     return {
@@ -301,9 +303,11 @@ export async function saveAboutPageContentAction(
     });
 
     if (res.success) {
-      revalidatePath("/za-nas");
-      revalidatePath("/");
-      revalidatePath("/admin/pages/about");
+      try {
+        revalidatePath("/za-nas");
+        revalidatePath("/");
+        revalidatePath("/admin/pages/about");
+      } catch (e) {}
     }
 
     return {

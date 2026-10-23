@@ -241,7 +241,7 @@ export default async function HomePage() {
                 href="/uslugi"
                 className="font-heading font-bold text-base sm:text-lg uppercase tracking-wide text-white bg-[#887ed8] hover:bg-[#776dc7] rounded-full px-7 py-3 inline-flex items-center justify-center shadow-lg transition-transform active:scale-95 w-auto"
               >
-                НАУЧЕТЕ ПОВЕЧЕ
+                {dict.home.hero.learnMore}
               </Link>
             </div>
           </div>
