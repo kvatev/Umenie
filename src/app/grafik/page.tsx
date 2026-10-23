@@ -96,17 +96,17 @@ export default async function SchedulePage() {
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
-        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4 px-4 relative z-10">
-          <h1 className="font-heading font-bold text-3xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide uppercase leading-tight">
+        <div className="text-left max-w-3xl space-y-3 sm:space-y-4 relative z-10">
+          <h1 className="font-heading font-bold text-3xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide uppercase leading-tight text-left">
             НАШИЯТ ГРАФИК
           </h1>
-          <p className="text-brand-dark/85 text-sm sm:text-lg md:text-xl font-sans max-w-2xl mx-auto font-normal">
+          <p className="text-brand-dark/85 text-sm sm:text-lg md:text-xl font-sans max-w-2xl font-normal text-left">
             Разгледайте предстоящите занимания и изберете какви умения ще развие вашето дете.
           </p>
 
           {/* Download Official Schedule File Banner if uploaded in Admin */}
           {settings.scheduleFileUrl && (
-            <div className="pt-2 max-w-xl mx-auto">
+            <div className="pt-2 max-w-xl text-left">
               <a
                 href={settings.scheduleFileUrl}
                 target="_blank"
