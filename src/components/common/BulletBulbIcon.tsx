@@ -9,13 +9,14 @@ export interface BulletBulbIconProps extends React.HTMLAttributes<HTMLSpanElemen
 
 /**
  * Authentic hand-drawn brand lightbulb icon (/images/bulb.webp)
- * used for bullet points and feature lists across every service, blog, and site enumerations.
+ * with a subtle faded / soft-print effect (opacity ~75%) that blends naturally
+ * into the surrounding card background like a watermark/stamp illustration.
  */
 export function BulletBulbIcon({ className, ...props }: BulletBulbIconProps) {
   return (
     <span
       className={cn(
-        "relative inline-block w-5 h-5 sm:w-6 sm:h-6 shrink-0 mt-0.5 select-none pointer-events-none drop-shadow-sm",
+        "relative inline-block w-5 h-5 sm:w-6 sm:h-6 shrink-0 mt-0.5 select-none pointer-events-none opacity-75 contrast-[0.95] transition-opacity",
         className
       )}
       aria-hidden="true"
