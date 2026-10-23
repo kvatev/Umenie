@@ -109,17 +109,17 @@ export function ReviewsSection({
     <section className="py-12 sm:py-20 bg-brand-bg relative overflow-hidden">
       <Container size="xl">
         {/* Header */}
-        <div className="text-left sm:text-center max-w-2xl mx-auto mb-8 sm:mb-12 space-y-2">
-          <div className="text-left sm:text-center">
+        <div className="text-left max-w-2xl mb-8 sm:mb-12 space-y-2">
+          <div className="text-left">
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-purple/10 text-brand-purple px-4 py-1.5 text-xs sm:text-sm font-semibold tracking-wide">
               <MessageSquareQuote className="w-4 h-4" />
               Доверие от родителите
             </span>
           </div>
-          <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase text-left sm:text-center">
+          <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase text-left">
             ЕТО КАКВО КАЗВАТ РОДИТЕЛИТЕ
           </h2>
-          <p className="text-brand-muted text-xs sm:text-base text-left sm:text-center">
+          <p className="text-brand-muted text-xs sm:text-base text-left">
             Реални отзиви и впечатления от семействата в образователен клуб „УМеНИе“.
           </p>
         </div>

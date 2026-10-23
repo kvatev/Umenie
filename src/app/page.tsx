@@ -306,7 +306,7 @@ export default async function HomePage() {
             </div>
 
             {/* Mission Card */}
-            <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 sm:p-10 md:p-14 rounded-3xl sm:rounded-4xl shadow-card border border-brand-purple/15 text-left sm:text-center space-y-6 sm:space-y-8 overflow-hidden">
+            <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 sm:p-10 md:p-14 rounded-3xl sm:rounded-4xl shadow-card border border-brand-purple/15 text-left space-y-6 sm:space-y-8 overflow-hidden">
               {/* Decorative Bulb Watermark strictly behind the text */}
               <div
                 className="absolute pointer-events-none select-none -z-0 opacity-15 sm:opacity-20 top-4 sm:top-8 left-1/2 -translate-x-1/2 w-48 h-48 sm:w-64 sm:h-64"
@@ -316,13 +316,13 @@ export default async function HomePage() {
               </div>
 
               <div className="relative z-10 space-y-6 sm:space-y-8">
-                <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold text-left sm:text-center">
+                <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold text-left">
                   В образователен клуб „УМеНИе“ децата{" "}
                   <span className="text-brand-purple">растат с едно умение</span> повече
                   всеки ден.
                 </h2>
 
-                <div className="space-y-4 sm:space-y-5 text-base sm:text-lg md:text-xl text-brand-dark/90 leading-relaxed font-normal text-left sm:text-center">
+                <div className="space-y-4 sm:space-y-5 text-base sm:text-lg md:text-xl text-brand-dark/90 leading-relaxed font-normal text-left">
                   <p>
                     Английски, български, математика, шах, плетиво и учебна занималня.
                     Различни занимания с една обща цел – детето да вземе от всяко от тях
@@ -372,11 +372,11 @@ export default async function HomePage() {
       {/* 6. KIDS GALLERY ("НАШИТЕ ДЕЦА С УМЕНИЯ") */}
       <section className="py-12 sm:py-20 bg-gradient-to-b from-[#e4e1f7]/60 via-brand-bg to-brand-bg">
         <Container size="xl">
-          <div className="text-left sm:text-center max-w-2xl mx-auto mb-6 sm:mb-10">
-            <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase text-left sm:text-center">
+          <div className="text-left max-w-2xl mb-6 sm:mb-10">
+            <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase text-left">
               НАШИТЕ ДЕЦА С УМЕНИЯ
             </h2>
-            <p className="text-brand-muted text-xs sm:text-base mt-1.5 sm:mt-2 text-left sm:text-center">
+            <p className="text-brand-muted text-xs sm:text-base mt-1.5 sm:mt-2 text-left">
               Моменти от ежедневието, творчеството и постиженията в клуба.
             </p>
           </div>

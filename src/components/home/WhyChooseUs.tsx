@@ -21,12 +21,12 @@ export function WhyChooseUs() {
       </div>
 
       <Container size="xl" className="relative z-10">
-        <div className="max-w-3xl mx-auto text-left sm:text-center space-y-5 sm:space-y-6">
-          <h2 className="font-heading font-bold text-2xl sm:text-4xl lg:text-5xl text-brand-purple leading-tight tracking-wide uppercase text-left sm:text-center">
+        <div className="max-w-4xl text-left space-y-5 sm:space-y-6">
+          <h2 className="font-heading font-bold text-2xl sm:text-4xl lg:text-5xl text-brand-purple leading-tight tracking-wide uppercase text-left">
             ЗАЩО ДА ИЗБЕРЕТЕ<br className="hidden sm:block" /> КЛУБ „УМЕНИЕ“?
           </h2>
 
-          <p className="text-brand-dark/90 text-base sm:text-xl leading-relaxed max-w-2xl mx-auto text-left sm:text-center font-normal">
+          <p className="text-brand-dark/90 text-base sm:text-xl leading-relaxed max-w-2xl text-left font-normal">
             В малки групи всяко дете получава лично внимание и подкрепа. Ние учим децата чрез практика, без екрани и в среда, близка до домашния уют.
           </p>
 
@@ -47,7 +47,7 @@ export function WhyChooseUs() {
             ))}
           </div>
 
-          <div className="pt-4 flex justify-start sm:justify-center">
+          <div className="pt-4 flex justify-start">
             <Link
               href="/za-nas"
               className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base tracking-wider uppercase shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-95 cursor-pointer"
