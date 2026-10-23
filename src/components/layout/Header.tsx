@@ -64,7 +64,7 @@ export function Header({ initialSettings }: HeaderProps) {
               href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-brand-dark/80 hover:text-brand-purple transition-colors font-medium"
+              className="flex items-center gap-1.5 text-brand-dark/80 hover:text-brand-purple transition-colors font-medium whitespace-nowrap"
             >
               <MapPin className="w-3.5 h-3.5 text-brand-purple shrink-0" />
               <span>{locationShort}</span>
@@ -76,7 +76,7 @@ export function Header({ initialSettings }: HeaderProps) {
           <div className="flex items-center gap-4">
             <a
               href={`tel:${phoneRaw}`}
-              className="flex items-center gap-1.5 text-brand-dark font-bold hover:text-brand-purple transition-colors"
+              className="flex items-center gap-1.5 text-brand-dark font-bold hover:text-brand-purple transition-colors whitespace-nowrap"
             >
               <Phone className="w-3.5 h-3.5 text-brand-purple shrink-0" />
               <span>{phoneDisplay}</span>
@@ -87,34 +87,27 @@ export function Header({ initialSettings }: HeaderProps) {
 
       {/* Main navigation bar (stays sticky at top when scrolling) */}
       <header className="sticky top-0 z-40 w-full bg-[#f1f2f6]/95 backdrop-blur-md border-b border-brand-purple/15 shadow-sm transition-all duration-200">
-        <Container size="xl" className="flex items-center justify-between h-20 md:h-24">
-          {/* Top-Left side: Desktop Language Switcher (Far-Left) + Logo */}
-          <div className="flex items-center gap-4 xl:gap-6">
-            <div className="hidden lg:flex items-center shrink-0">
-              <LanguageSwitcher size="md" />
-            </div>
+        <Container size="xl" className="flex items-center justify-between h-20 md:h-24 gap-3 xl:gap-6">
+          {/* Logo on the left (clean & unconstrained) */}
+          <Link
+            href="/"
+            className="relative flex items-center h-16 w-44 sm:h-20 sm:w-52 lg:w-56 xl:w-64 focus:outline-none group shrink-0"
+            aria-label={dict.common.nav.home}
+          >
+            <Image
+              src="/images/logo.webp"
+              alt={dict.common.siteName}
+              fill
+              className="object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+              sizes="(max-width: 640px) 176px, 256px"
+              priority
+            />
+          </Link>
 
-            {/* Logo */}
-            <Link
-              href="/"
-              className="relative flex items-center h-16 w-48 sm:h-20 sm:w-56 lg:w-60 xl:w-64 focus:outline-none group"
-              aria-label={dict.common.nav.home}
-            >
-              <Image
-                src="/images/logo.webp"
-                alt={dict.common.siteName}
-                fill
-                className="object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-                sizes="(max-width: 640px) 192px, 256px"
-                priority
-              />
-            </Link>
-          </div>
-
-          {/* Desktop Navigation Links (>= lg) */}
+          {/* Desktop Navigation Links (>= lg, spacious, guaranteed no line wrapping) */}
           <nav
             aria-label={dict.common.nav.ariaNav}
-            className="hidden lg:flex items-center gap-1 xl:gap-3"
+            className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0"
           >
             {localizedNavLinks.map((link) => {
               const isActive =
@@ -127,7 +120,7 @@ export function Header({ initialSettings }: HeaderProps) {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "relative px-3.5 xl:px-4 py-2 rounded-full font-heading text-sm xl:text-base font-bold transition-all duration-200 tracking-wide",
+                    "relative px-2.5 xl:px-4 py-2 rounded-full font-heading text-xs lg:text-sm xl:text-base font-bold transition-all duration-200 tracking-wide whitespace-nowrap",
                     isActive
                       ? "text-brand-purple bg-brand-purple/10"
                       : "text-brand-dark hover:text-brand-purple hover:bg-brand-purple/5"
@@ -142,15 +135,18 @@ export function Header({ initialSettings }: HeaderProps) {
             })}
           </nav>
 
-          {/* Desktop Right CTA: Phone (Language Switcher moved to top-left) */}
-          <div className="hidden lg:flex items-center gap-3">
+          {/* Desktop Right Controls: Phone CTA + Language Switcher on the far right AFTER phone number */}
+          <div className="hidden lg:flex items-center gap-2.5 xl:gap-3.5 shrink-0">
             <a
               href={`tel:${phoneRaw}`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-sm shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-3.5 xl:px-5 py-2.5 rounded-full bg-brand-purple text-white font-heading font-bold text-xs lg:text-sm shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-[0.98] whitespace-nowrap shrink-0"
             >
               <Phone className="w-4 h-4 shrink-0" />
-              <span>{phoneDisplay}</span>
+              <span className="whitespace-nowrap font-bold">{phoneDisplay}</span>
             </a>
+
+            {/* Language Switcher with SVG flags on the far right after the phone */}
+            <LanguageSwitcher size="md" className="shrink-0" />
           </div>
 
           {/* Mobile (< lg) Right Controls: Language Switcher directly next to Hamburger Menu */}
