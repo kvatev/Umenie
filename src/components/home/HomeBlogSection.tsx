@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 import { Container } from "@/components/ui/Container";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { BlogPost } from "@/lib/types/blog";
@@ -15,10 +17,6 @@ interface HomeBlogSectionProps {
 }
 
 export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
   const { dict, locale } = useLanguage();
 
   // Localize posts if English dictionary has translation for the slug
@@ -39,54 +37,93 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
     });
   }, [posts, dict, locale]);
 
-  if (!localizedPosts || localizedPosts.length === 0) {
-    return null;
-  }
-
   // Display latest articles (up to 6)
-  const displayPosts = localizedPosts.slice(0, 6);
+  const displayPosts = useMemo(() => {
+    return localizedPosts.slice(0, 6);
+  }, [localizedPosts]);
 
-  // Update active dot and arrow states on scroll
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-
-    setCanScrollLeft(scrollLeft > 10);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-
-    const firstCard = scrollRef.current.firstElementChild as HTMLElement | null;
-    if (firstCard) {
-      const cardWidth = firstCard.offsetWidth + 16; // width + gap
-      const newIndex = Math.round(scrollLeft / cardWidth);
-      setActiveIndex(Math.min(Math.max(0, newIndex), displayPosts.length - 1));
-    }
+  // To guarantee truly seamless infinite looping across 3-column desktop and mobile views,
+  // ensure at least 12 slides in the Embla track by repeating the articles cyclically
+  const loopMultiplier = useMemo(() => {
+    if (displayPosts.length === 0) return 1;
+    return Math.max(3, Math.ceil(12 / displayPosts.length));
   }, [displayPosts.length]);
 
+  const loopedPosts = useMemo(() => {
+    const list: { post: BlogPost; uniqueKey: string; originalIndex: number }[] = [];
+    for (let r = 0; r < loopMultiplier; r++) {
+      displayPosts.forEach((post, i) => {
+        list.push({
+          post,
+          uniqueKey: `${post.id}-loop-${r}-${i}`,
+          originalIndex: i,
+        });
+      });
+    }
+    return list;
+  }, [displayPosts, loopMultiplier]);
+
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    {
+      loop: true,
+      align: "start",
+      skipSnaps: false,
+      duration: 28,
+    },
+    [
+      Autoplay({
+        delay: 5000,
+        stopOnInteraction: false,
+        stopOnMouseEnter: true,
+      }),
+    ]
+  );
+
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi || displayPosts.length === 0) return;
+    const currentSnap = emblaApi.selectedScrollSnap();
+    const realIdx = ((currentSnap % displayPosts.length) + displayPosts.length) % displayPosts.length;
+    setActiveIndex(realIdx);
+  }, [emblaApi, displayPosts.length]);
+
   useEffect(() => {
-    handleScroll();
-    window.addEventListener("resize", handleScroll);
-    return () => window.removeEventListener("resize", handleScroll);
-  }, [handleScroll]);
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi, onSelect]);
 
-  const scroll = (direction: "left" | "right") => {
-    if (!scrollRef.current) return;
-    const firstCard = scrollRef.current.firstElementChild as HTMLElement | null;
-    const step = firstCard ? firstCard.offsetWidth + 16 : 320;
-    scrollRef.current.scrollBy({
-      left: direction === "left" ? -step : step,
-      behavior: "smooth",
-    });
-  };
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
 
-  const scrollToCard = (index: number) => {
-    if (!scrollRef.current) return;
-    const firstCard = scrollRef.current.firstElementChild as HTMLElement | null;
-    const step = firstCard ? firstCard.offsetWidth + 16 : 320;
-    scrollRef.current.scrollTo({
-      left: index * step,
-      behavior: "smooth",
-    });
-  };
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
+  const scrollToDot = useCallback(
+    (targetIdx: number) => {
+      if (!emblaApi || displayPosts.length === 0) return;
+      const currentSnap = emblaApi.selectedScrollSnap();
+      const currentReal = ((currentSnap % displayPosts.length) + displayPosts.length) % displayPosts.length;
+      let diff = targetIdx - currentReal;
+      const half = displayPosts.length / 2;
+      if (diff > half) diff -= displayPosts.length;
+      if (diff < -half) diff += displayPosts.length;
+      emblaApi.scrollTo(currentSnap + diff);
+    },
+    [emblaApi, displayPosts.length]
+  );
+
+  if (!displayPosts || displayPosts.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-14 sm:py-20 md:py-24 relative overflow-hidden bg-brand-bg">
@@ -121,23 +158,21 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
           </div>
 
           <div className="flex items-center gap-3 self-start md:self-end">
-            {/* Left & Right Arrow Buttons */}
+            {/* Left & Right Arrow Buttons (Infinitely scrollable) */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => scroll("left")}
-                disabled={!canScrollLeft}
+                onClick={scrollPrev}
                 aria-label={dict.home.blog.prevAria}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-brand-purple border border-brand-purple/20 hover:bg-brand-purple hover:text-white shadow-sm flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-brand-purple"
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-brand-purple border border-brand-purple/20 hover:bg-brand-purple hover:text-white shadow-sm flex items-center justify-center transition-all cursor-pointer active:scale-95"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 type="button"
-                onClick={() => scroll("right")}
-                disabled={!canScrollRight}
+                onClick={scrollNext}
                 aria-label={dict.home.blog.nextAria}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-brand-purple border border-brand-purple/20 hover:bg-brand-purple hover:text-white shadow-sm flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-brand-purple"
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-brand-purple border border-brand-purple/20 hover:bg-brand-purple hover:text-white shadow-sm flex items-center justify-center transition-all cursor-pointer active:scale-95"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -153,34 +188,32 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
           </div>
         </div>
 
-        {/* Horizontal Carousel */}
+        {/* Embla Viewport */}
         <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar gap-4 sm:gap-6 pb-4 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0"
+          ref={emblaRef}
+          className="overflow-hidden w-full cursor-grab active:cursor-grabbing pb-4 pt-1 select-none"
         >
-          {displayPosts.map((post) => (
-            <div
-              key={post.id}
-              className="w-[85%] sm:w-[46%] lg:w-[calc(33.333%-1.05rem)] shrink-0 snap-start flex flex-col h-auto"
-            >
-              <BlogCard post={post} />
-            </div>
-          ))}
+          {/* Embla Container */}
+          <div className="flex -ml-4 sm:-ml-6 items-stretch touch-pan-y">
+            {loopedPosts.map(({ post, uniqueKey }) => (
+              <div
+                key={uniqueKey}
+                className="flex-[0_0_86%] xs:flex-[0_0_82%] sm:flex-[0_0_48%] lg:flex-[0_0_33.333333%] min-w-0 pl-4 sm:pl-6 flex flex-col h-auto"
+              >
+                <BlogCard post={post} />
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Pagination Dots */}
+        {/* Pagination Dots (Cyclic matching original articles) */}
         {displayPosts.length > 1 && (
           <div className="flex justify-center items-center gap-2 mt-6 pt-2">
             {displayPosts.map((_, idx) => (
               <button
                 key={idx}
                 type="button"
-                onClick={() => scrollToCard(idx)}
+                onClick={() => scrollToDot(idx)}
                 className={cn(
                   "h-2.5 rounded-full transition-all duration-300 cursor-pointer",
                   activeIndex === idx
