@@ -179,21 +179,16 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
                 )}
 
                 {/* Controls */}
-                <div className="absolute bottom-4 inset-x-4 flex items-center justify-between">
-                  <span className="rounded-full bg-black/35 backdrop-blur-md px-3 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-white/95">
-                    {dict.home.clubTour.videoBadge}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      id="club-tour-play-toggle"
-                      onClick={togglePlay}
-                      aria-label={isPaused ? dict.home.clubTour.playAria : dict.home.clubTour.pauseAria}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 transition-all hover:bg-white/35 active:scale-90"
-                    >
-                      {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
-                    </button>
-                  </div>
+                <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                  <button
+                    type="button"
+                    id="club-tour-play-toggle"
+                    onClick={togglePlay}
+                    aria-label={isPaused ? dict.home.clubTour.playAria : dict.home.clubTour.pauseAria}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 transition-all hover:bg-white/35 active:scale-90 cursor-pointer"
+                  >
+                    {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
+                  </button>
                 </div>
               </div>
             </div>
