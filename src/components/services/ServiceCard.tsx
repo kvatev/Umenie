@@ -42,6 +42,7 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
     return (
       <Link
         href={`/uslugi/${service.slug}`}
+        prefetch={true}
         className="group bg-white rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between items-center text-center w-full h-full border border-brand-purple/10 transform hover:-translate-y-1 focus:outline-none"
       >
         {/* Image wrapper */}
@@ -78,7 +79,7 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
   return (
     <div
       onClick={handleCardClick}
-      onMouseEnter={() => setIsRevealed(true)}
+      onMouseEnter={() => { setIsRevealed(true); router.prefetch(`/uslugi/${service.slug}`); }}
       onMouseLeave={() => setIsRevealed(false)}
       className="group relative aspect-[4/5] sm:aspect-square w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer select-none bg-slate-900 border border-brand-purple/15 hover:border-brand-purple/40"
     >
@@ -143,6 +144,7 @@ export function ServiceCard({ service, variant = "home" }: ServiceCardProps) {
         <div className="mt-auto pt-2 w-full">
           <Link
             href={`/uslugi/${service.slug}`}
+            prefetch={true}
             onClick={(e) => e.stopPropagation()}
             className="w-full bg-[#887ed8] hover:bg-[#776dc7] text-white rounded-xl sm:rounded-2xl py-2 px-2.5 sm:px-3 flex items-center justify-between text-[11px] sm:text-xs md:text-sm font-bold tracking-wider uppercase transition-all shadow-md active:scale-95"
           >

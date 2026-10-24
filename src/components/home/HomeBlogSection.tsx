@@ -180,6 +180,7 @@ export function HomeBlogSection({ posts }: HomeBlogSectionProps) {
 
             <Link
               href="/blog"
+              prefetch={true}
               className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-white text-brand-purple border border-brand-purple/20 hover:bg-brand-purple hover:text-white transition-all transform hover:scale-[1.02] active:scale-95 shadow-sm font-heading font-bold text-xs sm:text-sm uppercase tracking-wide group"
             >
               <span>{dict.home.blog.allArticles}</span>

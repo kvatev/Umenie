@@ -113,7 +113,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
         <div className="flex-1 flex flex-col">
           {/* Drawer Header */}
           <div className="flex items-center justify-between pb-4 border-b border-brand-purple/15 shrink-0 gap-2">
-            <Link href="/" onClick={onClose} className="relative block h-12 w-32 focus:outline-none">
+            <Link href="/" prefetch={true} onClick={onClose} className="relative block h-12 w-32 focus:outline-none">
               <Image
                 src="/images/logo.webp"
                 alt={dict.common.siteName}
@@ -149,6 +149,7 @@ export function MobileNav({ isOpen, onClose, settings }: MobileNavProps) {
                 <Link
                   key={link.href}
                   href={link.href}
+                  prefetch={true}
                   onClick={onClose}
                   className={cn(
                     "flex items-center justify-between px-4 py-3 rounded-2xl font-heading text-base font-bold transition-all duration-200 tracking-wide",

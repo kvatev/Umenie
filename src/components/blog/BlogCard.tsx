@@ -79,7 +79,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
               </div>
 
               <h3 className="font-heading font-bold text-xl sm:text-2xl lg:text-3xl text-brand-dark group-hover:text-brand-purple transition-colors leading-snug">
-                <Link href={`/blog/${post.slug}`} className="focus:outline-none">
+                <Link href={`/blog/${post.slug}`} prefetch={true} className="focus:outline-none">
                   {title}
                 </Link>
               </h3>

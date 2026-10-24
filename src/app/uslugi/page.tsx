@@ -11,8 +11,6 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { Calendar } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Услуги и занимания за деца | Образователен клуб УМеНИе Бургас",
@@ -132,7 +130,7 @@ export default async function ServicesPage() {
 
         {/* Action Button to Schedule */}
         <div className="text-center mt-12 sm:mt-16">
-          <Link href="/grafik">
+          <Link href="/grafik" prefetch={true}>
             <Button size="lg" className="text-base sm:text-lg shadow-xl px-10 py-4">
               <Calendar className="w-5 h-5 mr-2" />
               {dict.services.viewSchedule}

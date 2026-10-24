@@ -91,6 +91,7 @@ export function Header({ initialSettings }: HeaderProps) {
           {/* Logo on the left (clean & unconstrained) */}
           <Link
             href="/"
+            prefetch={true}
             className="relative flex items-center h-16 w-44 sm:h-20 sm:w-52 lg:w-56 xl:w-64 focus:outline-none group shrink-0"
             aria-label={dict.common.nav.home}
           >
@@ -119,6 +120,7 @@ export function Header({ initialSettings }: HeaderProps) {
                 <Link
                   key={link.href}
                   href={link.href}
+                  prefetch={true}
                   className={cn(
                     "relative px-2.5 xl:px-4 py-2 rounded-full font-heading text-xs lg:text-sm xl:text-base font-bold transition-all duration-200 tracking-wide whitespace-nowrap",
                     isActive

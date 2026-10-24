@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { cache } from "react";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const MEDIA_BUCKET = "site-media";
@@ -28,17 +29,24 @@ export interface ReviewImageRecord {
  * Revalidate all public pages that consume media or settings
  */
 function revalidatePublicPages() {
-  revalidatePath("/");
-  revalidatePath("/za-nas");
-  revalidatePath("/grafik");
-  revalidatePath("/uslugi");
-  revalidatePath("/admin");
-  revalidatePath("/admin/media");
-  revalidatePath("/admin/settings");
-  revalidatePath("/admin/pages/home");
-  revalidatePath("/admin/pages/services");
-  revalidatePath("/admin/pages/about");
-  revalidatePath("/admin/pages/schedule");
+  try {
+    revalidateTag("site-settings");
+    revalidateTag("reviews-images");
+    revalidateTag("schedule-events");
+  } catch {}
+  try {
+    revalidatePath("/", "layout");
+    revalidatePath("/za-nas", "page");
+    revalidatePath("/grafik", "page");
+    revalidatePath("/uslugi", "layout");
+    revalidatePath("/admin", "layout");
+    revalidatePath("/admin/media");
+    revalidatePath("/admin/settings");
+    revalidatePath("/admin/pages/home");
+    revalidatePath("/admin/pages/services");
+    revalidatePath("/admin/pages/about");
+    revalidatePath("/admin/pages/schedule");
+  } catch {}
 }
 
 /**
@@ -512,44 +520,72 @@ export async function uploadReviewImageAction(formData: FormData) {
 /**
  * List review images from reviews_images table, site_settings, or storage folder
  */
+/**
+ * Raw uncached reviews images fetcher from Supabase.
+ */
+async function fetchRawReviewsImages(): Promise<ReviewImageRecord[]> {
+  // 1. Try querying reviews_images table
+  try {
+    const { data: dbRows, error: dbErr } = await supabaseAdmin
+      .from("reviews_images")
+      .select("*")
+      .order("display_order", { ascending: true });
+
+    if (!dbErr && dbRows && dbRows.length > 0) {
+      return dbRows as ReviewImageRecord[];
+    }
+  } catch {}
+
+  // 2. Check site settings reviewScreenshots
+  try {
+    const { getSiteSettings } = await import("@/lib/site-settings");
+    const settings = await getSiteSettings();
+    if (settings.reviewScreenshots && settings.reviewScreenshots.length > 0) {
+      return settings.reviewScreenshots.map((url, idx) => ({
+        id: `settings-${idx}`,
+        public_url: url,
+        display_order: idx + 1,
+      }));
+    }
+  } catch {}
+
+  // 3. Fallback to storage folder reviews/
+  try {
+    const storageRes = await listMediaFolderAction("reviews");
+    return (storageRes.items || []).map((item, idx) => ({
+      id: item.id || `storage-${idx}`,
+      public_url: item.publicUrl,
+      display_order: idx + 1,
+    }));
+  } catch {}
+
+  return [];
+}
+
+/**
+ * High-performance on-demand tagged cache for reviews images.
+ * Instant edge reads for home & about pages; invalidated on admin uploads/deletes.
+ */
+export const getCachedReviewsImages = cache(
+  unstable_cache(
+    async (): Promise<ReviewImageRecord[]> => {
+      return await fetchRawReviewsImages();
+    },
+    ["reviews-images-cache-key"],
+    { tags: ["reviews-images"], revalidate: 3600 }
+  )
+);
+
+/**
+ * List review images from reviews_images table, site_settings, or storage folder
+ */
 export async function listReviewsImagesAction(): Promise<{
   success: boolean;
   items: ReviewImageRecord[];
 }> {
   try {
-    // 1. Try querying reviews_images table
-    try {
-      const { data: dbRows, error: dbErr } = await supabaseAdmin
-        .from("reviews_images")
-        .select("*")
-        .order("display_order", { ascending: true });
-
-      if (!dbErr && dbRows && dbRows.length > 0) {
-        return { success: true, items: dbRows as ReviewImageRecord[] };
-      }
-    } catch {}
-
-    // 2. Check site settings reviewScreenshots
-    const { getSiteSettings } = await import("@/lib/site-settings");
-    const settings = await getSiteSettings();
-    if (settings.reviewScreenshots && settings.reviewScreenshots.length > 0) {
-      const items: ReviewImageRecord[] = settings.reviewScreenshots.map((url, idx) => ({
-        id: `settings-${idx}`,
-        public_url: url,
-        display_order: idx + 1,
-      }));
-      return { success: true, items };
-    }
-
-    // 3. Fallback to storage folder reviews/
-    const storageRes = await listMediaFolderAction("reviews");
-    const fallbackItems: ReviewImageRecord[] = (storageRes.items || []).map((item, idx) => ({
-      id: item.id || `storage-${idx}`,
-      public_url: item.publicUrl,
-      display_order: idx + 1,
-    }));
-
-    return { success: true, items: fallbackItems };
+    const items = await getCachedReviewsImages();
+    return { success: true, items };
   } catch (err) {
     console.error("List reviews images exception:", err);
     return { success: false, items: [] };

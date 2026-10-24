@@ -8,8 +8,6 @@ import { getBlogPosts } from "@/lib/blog-service";
 import { SITE_CONFIG } from "@/lib/constants";
 import { getServerDictionary } from "@/lib/i18n/server";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Блог и полезни статии | Образователен клуб „УМеНИе“ Бургас",

@@ -11,8 +11,6 @@ import { getSchedulesAction } from "@/actions/admin-schedules";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { FileText, Download } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Седмичен график и записване | Образователен клуб УМеНИе",

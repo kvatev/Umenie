@@ -8,8 +8,6 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { listReviewsImagesAction } from "@/actions/admin-media";
 import { getServerDictionary } from "@/lib/i18n/server";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "За нас – Мисия, Ценности и Екип | Образователен клуб УМеНИе",

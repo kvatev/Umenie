@@ -1,4 +1,5 @@
-import { unstable_noStore as noStore } from "next/cache";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/types/site-settings";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -45,14 +46,10 @@ export function mergeSettingsWithDefaults(json: Record<string, any>, dbRow?: Rec
 }
 
 /**
- * Server-side helper to fetch site contacts & settings directly from Supabase (DB + Storage).
- * Zero local filesystem usage — 100% cloud persistent on Vercel Serverless.
+ * Raw uncached loader for site settings directly from Supabase (DB + Storage).
+ * Used by admin operations and the cached public wrapper.
  */
-export async function getSiteSettings(): Promise<SiteSettings> {
-  try {
-    noStore();
-  } catch {}
-
+export async function getUncachedSiteSettings(): Promise<SiteSettings> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 
@@ -116,3 +113,24 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return mergeSettingsWithDefaults({});
   }
 }
+
+/**
+ * Admin alias to guarantee fresh uncached data in admin editor forms.
+ */
+export const getSiteSettingsAdmin = getUncachedSiteSettings;
+
+/**
+ * High-performance on-demand cached site settings for public pages.
+ * - unstable_cache with tag 'site-settings' delivers 0ms cached reads on edge.
+ * - React.cache deduplicates calls per request render pass.
+ * - Instant on-demand purge via revalidateTag('site-settings') when admin saves.
+ */
+export const getSiteSettings = cache(
+  unstable_cache(
+    async (): Promise<SiteSettings> => {
+      return await getUncachedSiteSettings();
+    },
+    ["site-settings-cache-key"],
+    { tags: ["site-settings"], revalidate: 3600 }
+  )
+);

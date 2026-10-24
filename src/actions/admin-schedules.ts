@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath, unstable_noStore as noStore } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { cache } from "react";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   ScheduleItem,
@@ -19,6 +20,10 @@ const FALLBACK_BUCKET = "site-assets";
 const EXTENDED_SCHEDULE_FILE = "schedules_extended.json";
 
 function revalidatePublicPages() {
+  try {
+    revalidateTag("schedule-events");
+    revalidateTag("site-settings");
+  } catch {}
   try {
     revalidatePath("/", "layout");
     revalidatePath("/grafik", "page");
@@ -138,11 +143,10 @@ async function saveStoredExtendedSchedules(items: ScheduleItem[]): Promise<boole
  * 4. DEFAULT_SCHEDULES fallback
  * Guarantees zero events disappear when creating new ones.
  */
-export async function getSchedulesAction(): Promise<ScheduleItem[]> {
-  try {
-    noStore();
-  } catch {}
-
+/**
+ * Raw uncached schedule fetcher querying Supabase database and storage.
+ */
+export async function fetchRawSchedules(): Promise<ScheduleItem[]> {
   try {
     const itemMap = new Map<string, ScheduleItem>();
 
@@ -215,6 +219,29 @@ export async function getSchedulesAction(): Promise<ScheduleItem[]> {
     console.error("Error fetching schedules in action:", err);
     return DEFAULT_SCHEDULES;
   }
+}
+
+/**
+ * High-performance on-demand tagged cache for schedules.
+ * - unstable_cache with tag "schedule-events" delivers instant responses on /grafik.
+ * - Instant on-demand purge via revalidateTag("schedule-events") on any admin mutation.
+ */
+export const getCachedSchedules = cache(
+  unstable_cache(
+    async (): Promise<ScheduleItem[]> => {
+      return await fetchRawSchedules();
+    },
+    ["schedule-events-cache-key"],
+    { tags: ["schedule-events"], revalidate: 3600 }
+  )
+);
+
+export async function getSchedulesAction(): Promise<ScheduleItem[]> {
+  return await getCachedSchedules();
+}
+
+export async function getUncachedSchedulesAction(): Promise<ScheduleItem[]> {
+  return await fetchRawSchedules();
 }
 
 /**

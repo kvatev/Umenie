@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import {
   saveBlogPost,
   deleteBlogPost,
@@ -30,6 +30,7 @@ export async function saveBlogArticleAction(data: {
 
     const saved = await saveBlogPost(data);
 
+    try { revalidateTag("blog-posts"); } catch {}
     revalidatePath("/blog");
     revalidatePath(`/blog/${saved.slug}`);
     revalidatePath("/");
@@ -45,6 +46,7 @@ export async function saveBlogArticleAction(data: {
 export async function deleteBlogArticleAction(id: string) {
   try {
     const success = await deleteBlogPost(id);
+    try { revalidateTag("blog-posts"); } catch {}
     revalidatePath("/blog");
     revalidatePath("/");
     revalidatePath("/admin/pages/blog");
@@ -58,6 +60,7 @@ export async function deleteBlogArticleAction(id: string) {
 export async function togglePublishBlogArticleAction(id: string, published: boolean) {
   try {
     await saveBlogPost({ id, published } as any);
+    try { revalidateTag("blog-posts"); } catch {}
     revalidatePath("/blog");
     revalidatePath("/");
     revalidatePath("/admin/pages/blog");

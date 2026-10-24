@@ -32,6 +32,7 @@ export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBa
               <div className="relative inline-block">
                 <Link
                   href="/grafik"
+                  prefetch={true}
                   className="inline-flex items-center justify-center px-8 sm:px-10 py-3.5 sm:py-4 rounded-full bg-white text-brand-purple font-heading font-bold text-xs sm:text-base tracking-wider uppercase shadow-xl hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                 >
                   {dict.home.schedule.learnMore}
@@ -121,6 +122,7 @@ export function ScheduleBanner({ scheduleFileUrl, scheduleFileName }: ScheduleBa
                 )}
                 <Link
                   href="/grafik"
+                  prefetch={true}
                   className="inline-flex items-center gap-1.5 text-brand-purple font-heading font-bold text-xs sm:text-sm hover:underline"
                 >
                   <span>{dict.home.schedule.viewFullSchedule}</span>

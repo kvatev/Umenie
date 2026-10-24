@@ -53,8 +53,10 @@ export function LanguageProvider({
         // safe fallback
       }
 
-      // Re-trigger Server Components execution with updated cookies
-      router.refresh();
+      // Re-trigger Server Components execution with updated cookies inside startTransition to ensure 0ms UI responsiveness
+      React.startTransition(() => {
+        router.refresh();
+      });
     },
     [locale, router]
   );

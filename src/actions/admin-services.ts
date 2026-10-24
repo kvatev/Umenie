@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
 import { updateSiteSettingsAction } from "@/actions/admin-settings";
@@ -61,8 +61,11 @@ async function safeUpload(
  */
 function revalidateServicesAndPublicPages(slug?: string) {
   try {
+    revalidateTag("site-settings");
+  } catch {}
+  try {
     revalidatePath("/", "layout");
-    revalidatePath("/uslugi", "page");
+    revalidatePath("/uslugi", "layout");
     revalidatePath("/uslugi/[slug]", "page");
     if (slug) revalidatePath(`/uslugi/${slug}`, "page");
     revalidatePath("/za-nas", "page");

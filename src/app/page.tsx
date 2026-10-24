@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,8 +22,6 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { listReviewsImagesAction } from "@/actions/admin-media";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 
 
@@ -59,12 +59,109 @@ export const metadata: Metadata = {
   },
 };
 
+
+const getCachedHomeAssets = cache(
+  unstable_cache(
+    async () => {
+      let dynamicGalleryImages: { src: string; alt: string }[] | undefined = undefined;
+      let storageHeroVideo: string | null = null;
+      let storageHeroBanner: string | null = null;
+      let storageReviewScreenshot: string | null = null;
+
+      try {
+        const { data: dbGallery } = await supabaseAdmin
+          .from("gallery_images")
+          .select("public_url, caption")
+          .order("display_order", { ascending: true });
+
+        if (dbGallery && dbGallery.length > 0) {
+          dynamicGalleryImages = dbGallery.map((g) => ({
+            src: g.public_url,
+            alt: g.caption || "Деца с умения в образователен клуб УМеНИе",
+          }));
+        }
+      } catch {}
+
+      try {
+        const { data: files } = await supabaseAdmin.storage
+          .from("site-assets")
+          .list("", { limit: 100 });
+
+        if (files && files.length > 0) {
+          const videoFile = files.find(
+            (f) =>
+              f.name.startsWith("hero-video") ||
+              f.name.endsWith(".mp4") ||
+              f.name.endsWith(".webm")
+          );
+          if (videoFile) {
+            const { data: vData } = supabaseAdmin.storage
+              .from("site-assets")
+              .getPublicUrl(videoFile.name);
+            if (vData?.publicUrl) storageHeroVideo = vData.publicUrl;
+          }
+
+          const bannerFile = files.find((f) => f.name.startsWith("hero-banner"));
+          if (bannerFile) {
+            const { data: urlData } = supabaseAdmin.storage
+              .from("site-assets")
+              .getPublicUrl(bannerFile.name);
+            if (urlData?.publicUrl) storageHeroBanner = urlData.publicUrl;
+          }
+
+          const reviewFile = files.find(
+            (f) =>
+              f.name.startsWith("review-") ||
+              f.name.startsWith("otziv-") ||
+              f.name.includes("screenshot")
+          );
+          if (reviewFile) {
+            const { data: rData } = supabaseAdmin.storage
+              .from("site-assets")
+              .getPublicUrl(reviewFile.name);
+            if (rData?.publicUrl) storageReviewScreenshot = rData.publicUrl;
+          }
+
+          if (!dynamicGalleryImages || dynamicGalleryImages.length === 0) {
+            const galleryFiles = files.filter(
+              (f) => f.name.startsWith("kids-") || f.name.startsWith("gallery-")
+            );
+            if (galleryFiles.length > 0) {
+              dynamicGalleryImages = galleryFiles.map((f) => {
+                const { data } = supabaseAdmin.storage
+                  .from("site-assets")
+                  .getPublicUrl(f.name);
+                return {
+                  src: data.publicUrl,
+                  alt: "Деца с умения в образователен клуб УМеНИе",
+                };
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Storage assets check warning:", err);
+      }
+
+      return {
+        dynamicGalleryImages,
+        storageHeroVideo,
+        storageHeroBanner,
+        storageReviewScreenshot,
+      };
+    },
+    ["home-assets-cache-key"],
+    { tags: ["site-settings"], revalidate: 3600 }
+  )
+);
+
 export default async function HomePage() {
-  const [{ locale, dict }, settings, blogPosts, reviewsRes] = await Promise.all([
+  const [{ locale, dict }, settings, blogPosts, reviewsRes, homeAssets] = await Promise.all([
     getServerDictionary(),
     getSiteSettings(),
     getBlogPosts({ limit: 6 }),
     listReviewsImagesAction(),
+    getCachedHomeAssets(),
   ]);
 
   let heroMediaSrc = "/images/opening-photo.webp";
@@ -76,104 +173,22 @@ export default async function HomePage() {
     isHeroVideo = true;
   } else if (settings.heroBannerUrl) {
     heroMediaSrc = settings.heroBannerUrl;
+  } else if (homeAssets.storageHeroVideo) {
+    heroMediaSrc = homeAssets.storageHeroVideo;
+    isHeroVideo = true;
+  } else if (homeAssets.storageHeroBanner) {
+    heroMediaSrc = homeAssets.storageHeroBanner;
   }
 
   // 2. Resolve Review Screenshot & Reviews List
-  let reviewScreenshotUrl: string | null = settings.reviewScreenshotUrl || "/images/review-screenshot.webp";
+  let reviewScreenshotUrl: string | null =
+    settings.reviewScreenshotUrl ||
+    homeAssets.storageReviewScreenshot ||
+    "/images/review-screenshot.webp";
   const reviewImages = reviewsRes.items || [];
 
-  // 3. Resolve Gallery from gallery_images table or storage
-  let dynamicGalleryImages: { src: string; alt: string }[] | undefined = undefined;
-
-  try {
-    const { data: dbGallery } = await supabaseAdmin
-      .from("gallery_images")
-      .select("public_url, caption")
-      .order("display_order", { ascending: true });
-
-    if (dbGallery && dbGallery.length > 0) {
-      dynamicGalleryImages = dbGallery.map((g) => ({
-        src: g.public_url,
-        alt: g.caption || "Деца с умения в образователен клуб УМеНИе",
-      }));
-    }
-  } catch {}
-
-  try {
-    const { data: files } = await supabaseAdmin.storage
-      .from("site-assets")
-      .list("", { limit: 100 });
-
-    if (files && files.length > 0) {
-      // If hero not set in settings, fallback to storage files
-      if (!settings.heroVideoUrl && !settings.heroBannerUrl) {
-        const videoFile = files.find(
-          (f) =>
-            f.name.startsWith("hero-video") ||
-            f.name.endsWith(".mp4") ||
-            f.name.endsWith(".webm")
-        );
-
-        if (videoFile) {
-          const { data: vData } = supabaseAdmin.storage
-            .from("site-assets")
-            .getPublicUrl(videoFile.name);
-          if (vData?.publicUrl) {
-            heroMediaSrc = vData.publicUrl;
-            isHeroVideo = true;
-          }
-        } else {
-          const bannerFile = files.find((f) => f.name.startsWith("hero-banner"));
-          if (bannerFile) {
-            const { data: urlData } = supabaseAdmin.storage
-              .from("site-assets")
-              .getPublicUrl(bannerFile.name);
-            if (urlData?.publicUrl) {
-              heroMediaSrc = urlData.publicUrl;
-            }
-          }
-        }
-      }
-
-      // If review screenshot not set in settings, fallback to storage files
-      if (!reviewScreenshotUrl) {
-        const reviewFile = files.find(
-          (f) =>
-            f.name.startsWith("review-") ||
-            f.name.startsWith("otziv-") ||
-            f.name.includes("screenshot")
-        );
-        if (reviewFile) {
-          const { data: rData } = supabaseAdmin.storage
-            .from("site-assets")
-            .getPublicUrl(reviewFile.name);
-          if (rData?.publicUrl) {
-            reviewScreenshotUrl = rData.publicUrl;
-          }
-        }
-      }
-
-      // Fallback: Check for Kids Gallery dynamic photos in storage if table was empty
-      if (!dynamicGalleryImages || dynamicGalleryImages.length === 0) {
-        const galleryFiles = files.filter(
-          (f) => f.name.startsWith("kids-") || f.name.startsWith("gallery-")
-        );
-        if (galleryFiles.length > 0) {
-          dynamicGalleryImages = galleryFiles.map((f) => {
-            const { data } = supabaseAdmin.storage
-              .from("site-assets")
-              .getPublicUrl(f.name);
-            return {
-              src: data.publicUrl,
-              alt: "Деца с умения в образователен клуб УМеНИе",
-            };
-          });
-        }
-      }
-    }
-  } catch (err) {
-    console.warn("Storage assets check warning:", err);
-  }
+  // 3. Resolve Gallery
+  const dynamicGalleryImages = homeAssets.dynamicGalleryImages;
 
   // Resolve 6 services with admin overrides & bilingual dictionary fallback
   const overrides = settings.servicesOverrides || {};

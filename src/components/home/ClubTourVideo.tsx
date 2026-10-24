@@ -113,6 +113,7 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
             <div className="hidden lg:flex pt-2">
               <Link
                 href="/za-nas"
+                  prefetch={true}
                 className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base tracking-wider uppercase shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-95"
               >
                 {dict.home.clubTour.button}
@@ -202,6 +203,7 @@ export function ClubTourVideo({ src, poster }: ClubTourVideoProps) {
           <div className="lg:hidden order-3 flex justify-start sm:justify-center">
             <Link
               href="/za-nas"
+                  prefetch={true}
               className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm tracking-wider uppercase shadow-button hover:bg-brand-purple-hover transition-all active:scale-95"
             >
               {dict.home.clubTour.button}

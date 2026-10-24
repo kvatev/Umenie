@@ -51,6 +51,7 @@ export function WhyChooseUs() {
           <div className="pt-4 flex justify-start">
             <Link
               href="/za-nas"
+                  prefetch={true}
               className="inline-flex items-center justify-center px-10 py-4 rounded-full bg-brand-purple text-white font-heading font-bold text-sm sm:text-base tracking-wider uppercase shadow-button hover:bg-brand-purple-hover hover:shadow-button-hover transition-all active:scale-95 cursor-pointer"
             >
               {dict.home.whyChooseUs.button}

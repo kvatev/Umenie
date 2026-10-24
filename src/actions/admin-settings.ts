@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
 import { SiteSettings, DEFAULT_SETTINGS, normalizePhoneNumber } from "@/lib/types/site-settings";
@@ -105,10 +105,13 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
       }
     }
 
-    // 4. Revalidate all cached pages that use settings or media
+    // 4. Revalidate all cached pages and tags that use settings or media
     try {
+      revalidateTag("site-settings");
+      revalidateTag("reviews-images");
+      revalidateTag("schedule-events");
       revalidatePath("/", "layout");
-      revalidatePath("/uslugi", "page");
+      revalidatePath("/uslugi", "layout");
       revalidatePath("/uslugi/[slug]", "page");
       revalidatePath("/za-nas", "page");
       revalidatePath("/grafik", "page");

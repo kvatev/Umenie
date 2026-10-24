@@ -154,7 +154,7 @@ export function Footer({ initialSettings }: FooterProps) {
 
           {/* Column 2: Socials & Brand Identity (Visible on Desktop) */}
           <div className="hidden md:flex flex-col items-center justify-center text-center space-y-4 py-2">
-            <Link href="/" className="relative block h-16 w-48">
+            <Link href="/" prefetch={true} className="relative block h-16 w-48">
               <Image
                 src="/images/logo.webp"
                 alt={dict.common.siteName}
@@ -233,6 +233,7 @@ export function Footer({ initialSettings }: FooterProps) {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    prefetch={true}
                     className="hover:text-brand-purple transition-colors inline-block py-1"
                   >
                     {link.label}

@@ -20,8 +20,6 @@ import { SITE_CONFIG } from "@/lib/constants";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fullBlogArticlesEn } from "@/lib/i18n";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -71,17 +69,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BlogPostDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const [{ locale, dict }, post, allPosts, comments] = await Promise.all([
+    getServerDictionary(),
+    getBlogPostBySlug(slug),
+    getBlogPosts({ limit: 4 }),
+    getBlogComments({ postSlug: slug }),
+  ]);
 
   if (!post) {
     notFound();
   }
-
-  const [{ locale, dict }, allPosts, comments] = await Promise.all([
-    getServerDictionary(),
-    getBlogPosts({ limit: 4 }),
-    getBlogComments({ postSlug: post.slug }),
-  ]);
 
   const enArticle = locale === "en" ? fullBlogArticlesEn[post.slug] : null;
   const enPost = locale === "en" ? (dict.blogPosts as Record<string, any>)?.[post.slug] : null;
