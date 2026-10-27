@@ -1,7 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
-import { cache } from "react";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   ScheduleItem,
@@ -11,7 +10,6 @@ import {
   formatDateKey,
   parseDateKey,
   getDayOfWeekNumber,
-  getEventOccurrenceDates,
 } from "@/lib/schedule-data";
 import { randomUUID } from "crypto";
 
@@ -20,25 +18,17 @@ const FALLBACK_BUCKET = "site-assets";
 const EXTENDED_SCHEDULE_FILE = "schedules_extended.json";
 
 function revalidatePublicPages() {
-  try {
-    revalidateTag("schedule-events");
-    revalidateTag("site-settings");
-  } catch {}
-  try {
-    revalidatePath("/", "layout");
-    revalidatePath("/grafik", "page");
-    revalidatePath("/uslugi", "page");
-    revalidatePath("/uslugi/[slug]", "page");
-    revalidatePath("/za-nas", "page");
-    revalidatePath("/admin", "layout");
-    revalidatePath("/admin/pages/schedule", "page");
-    revalidatePath("/admin/schedule", "page");
-  } catch {}
+  revalidatePath("/");
+  revalidatePath("/za-nas");
+  revalidatePath("/grafik");
+  revalidatePath("/uslugi");
+  revalidatePath("/admin/pages/schedule");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin");
 }
 
 export interface ScheduleFormData {
   title: string;
-  title_en?: string;
   titleEn?: string;
   category: string;
   day_of_week: number;
@@ -52,83 +42,49 @@ export interface ScheduleFormData {
   recurrence?: RecurrenceRule | null;
   series_id?: string | null;
   additional_days?: number[];     // Multi-day selection
-  excluded_dates?: string[];
-  excludedDates?: string[];
 }
 
 /**
  * Storage helpers for extended schedule metadata (zero-downtime persistence)
  */
-const SCHEDULE_META_FILES = ["settings/schedules-meta.json", "schedules_extended.json"];
-const STORAGE_BUCKETS = ["site-media", "site-assets"];
-
 async function getStoredExtendedSchedules(): Promise<ScheduleItem[] | null> {
   try {
-    const { data: dbSetting } = await supabaseAdmin
-      .from("settings")
-      .select("value")
-      .eq("key", "schedules_data")
-      .maybeSingle();
-    if (dbSetting?.value && Array.isArray(dbSetting.value) && dbSetting.value.length > 0) {
-      return dbSetting.value.map((row: any) => mapRowToScheduleItem(row));
-    }
-  } catch {}
+    const { data, error } = await supabaseAdmin.storage
+      .from(MEDIA_BUCKET)
+      .download(EXTENDED_SCHEDULE_FILE);
 
-  for (const bucket of STORAGE_BUCKETS) {
-    for (const fileName of SCHEDULE_META_FILES) {
-      try {
-        const { data, error } = await supabaseAdmin.storage
-          .from(bucket)
-          .download(fileName);
-
-        if (!error && data) {
-          const text = await data.text();
-          if (text && text.trim().startsWith("[")) {
-            const parsed = JSON.parse(text);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              return parsed.map((row) => mapRowToScheduleItem(row));
-            }
-          }
-        }
-      } catch (err) {}
+    if (!error && data) {
+      const text = await data.text();
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((row) => mapRowToScheduleItem(row));
+      }
     }
+  } catch (err) {
+    // Continue
   }
   return null;
 }
 
 async function saveStoredExtendedSchedules(items: ScheduleItem[]): Promise<boolean> {
   try {
-    try {
-      await supabaseAdmin
-        .from("settings")
-        .upsert({
-          key: "schedules_data",
-          value: items,
-          updated_at: new Date().toISOString(),
-        });
-    } catch {}
-
     const jsonString = JSON.stringify(items, null, 2);
     const buffer = Buffer.from(jsonString, "utf-8");
 
-    for (const bucket of STORAGE_BUCKETS) {
-      try {
-        await supabaseAdmin.storage.createBucket(bucket, { public: true });
-      } catch {}
+    // Ensure bucket exists
+    try {
+      await supabaseAdmin.storage.createBucket(MEDIA_BUCKET, { public: true });
+    } catch {}
 
-      for (const fileName of SCHEDULE_META_FILES) {
-        try {
-          await supabaseAdmin.storage
-            .from(bucket)
-            .upload(fileName, buffer, {
-              contentType: "application/json",
-              upsert: true,
-              cacheControl: "0",
-            });
-        } catch {}
-      }
-    }
-    return true;
+    const { error } = await supabaseAdmin.storage
+      .from(MEDIA_BUCKET)
+      .upload(EXTENDED_SCHEDULE_FILE, buffer, {
+        contentType: "application/json",
+        upsert: true,
+        cacheControl: "0",
+      });
+
+    return !error;
   } catch (err) {
     console.error("Error saving extended schedules to storage:", err);
     return false;
@@ -143,10 +99,7 @@ async function saveStoredExtendedSchedules(items: ScheduleItem[]): Promise<boole
  * 4. DEFAULT_SCHEDULES fallback
  * Guarantees zero events disappear when creating new ones.
  */
-/**
- * Raw uncached schedule fetcher querying Supabase database and storage.
- */
-export async function fetchRawSchedules(): Promise<ScheduleItem[]> {
+export async function getSchedulesAction(): Promise<ScheduleItem[]> {
   try {
     const itemMap = new Map<string, ScheduleItem>();
 
@@ -167,28 +120,7 @@ export async function fetchRawSchedules(): Promise<ScheduleItem[]> {
       console.warn("Could not query schedule_events table:", e);
     }
 
-    // 2. Storage metadata: download and merge to ensure all dates, recurrence rules and translations are rich
-    const stored = await getStoredExtendedSchedules();
-    if (stored && stored.length > 0) {
-      for (const item of stored) {
-        const existing = itemMap.get(item.id);
-        if (!existing) {
-          itemMap.set(item.id, item);
-        } else {
-          itemMap.set(item.id, {
-            ...existing,
-            titleEn: existing.titleEn || item.titleEn,
-            title_en: existing.title_en || item.title_en,
-            date: existing.date || item.date,
-            recurrence: existing.recurrence || item.recurrence,
-            seriesId: existing.seriesId || item.seriesId,
-            excludedDates: existing.excludedDates && existing.excludedDates.length > 0 ? existing.excludedDates : item.excludedDates,
-          });
-        }
-      }
-    }
-
-    // 3. Baseline schedules table for legacy seeds
+    // 2. Compatibility & Fallback: Query schedules table to ensure NO existing/legacy schedule is ever lost
     try {
       const { data: schedData, error: schedErr } = await supabaseAdmin
         .from("schedules")
@@ -199,19 +131,56 @@ export async function fetchRawSchedules(): Promise<ScheduleItem[]> {
       if (!schedErr && schedData && schedData.length > 0) {
         for (const row of schedData) {
           if (!itemMap.has(row.id)) {
-            itemMap.set(row.id, mapRowToScheduleItem(row));
+            const mapped = mapRowToScheduleItem(row);
+            itemMap.set(row.id, mapped);
+
+            // Automatically mirror into schedule_events
+            try {
+              await supabaseAdmin.from("schedule_events").upsert({
+                id: row.id,
+                title: row.title,
+                category: row.category,
+                day_of_week: row.day_of_week,
+                start_time: row.start_time,
+                end_time: row.end_time,
+                age_group: row.age_group,
+                location: row.location || "Славейков, блок 48, партер",
+                capacity: 10,
+                is_active: row.is_active ?? true,
+                event_date: null,
+                recurrence_type: "none",
+                recurrence_count: null,
+                recurrence_until: null,
+                series_id: null,
+              });
+            } catch {}
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Could not query schedules table:", e);
+    }
+
+    // 3. Extended storage fallback
+    if (itemMap.size === 0) {
+      const stored = await getStoredExtendedSchedules();
+      if (stored && stored.length > 0) {
+        for (const item of stored) {
+          if (!itemMap.has(item.id)) {
+            itemMap.set(item.id, item);
+          }
+        }
+      }
+    }
 
     if (itemMap.size > 0) {
       const allItems = Array.from(itemMap.values());
-      allItems.sort((a, b) => {
-        if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
+      return allItems.sort((a, b) => {
+        if (a.dayOfWeek !== b.dayOfWeek) {
+          return a.dayOfWeek - b.dayOfWeek;
+        }
         return a.startTime.localeCompare(b.startTime);
       });
-      return allItems;
     }
 
     return DEFAULT_SCHEDULES;
@@ -219,29 +188,6 @@ export async function fetchRawSchedules(): Promise<ScheduleItem[]> {
     console.error("Error fetching schedules in action:", err);
     return DEFAULT_SCHEDULES;
   }
-}
-
-/**
- * High-performance on-demand tagged cache for schedules.
- * - unstable_cache with tag "schedule-events" delivers instant responses on /grafik.
- * - Instant on-demand purge via revalidateTag("schedule-events") on any admin mutation.
- */
-export const getCachedSchedules = cache(
-  unstable_cache(
-    async (): Promise<ScheduleItem[]> => {
-      return await fetchRawSchedules();
-    },
-    ["schedule-events-cache-key"],
-    { tags: ["schedule-events"], revalidate: 3600 }
-  )
-);
-
-export async function getSchedulesAction(): Promise<ScheduleItem[]> {
-  return await getCachedSchedules();
-}
-
-export async function getUncachedSchedulesAction(): Promise<ScheduleItem[]> {
-  return await fetchRawSchedules();
 }
 
 /**
@@ -282,7 +228,6 @@ export async function createScheduleAction(data: ScheduleFormData) {
         await supabaseAdmin.from("schedule_events").insert({
           id: newId,
           title: data.title,
-          title_en: data.title_en || data.titleEn || null,
           category: data.category,
           day_of_week: dow,
           start_time: data.start_time,
@@ -317,8 +262,6 @@ export async function createScheduleAction(data: ScheduleFormData) {
       const newItem = mapRowToScheduleItem({
         id: newId,
         title: data.title,
-        title_en: data.title_en || data.titleEn || null,
-        titleEn: data.title_en || data.titleEn || null,
         category: data.category,
         day_of_week: dow,
         start_time: data.start_time,
@@ -384,7 +327,6 @@ export async function updateScheduleAction(
         recurrence_count: data.recurrence?.count || null,
         recurrence_until: data.recurrence?.untilDate || null,
       };
-      if (data.title_en !== undefined || data.titleEn !== undefined) updatePayload.title_en = data.title_en ?? data.titleEn ?? null;
       if (data.day_of_week !== undefined) updatePayload.day_of_week = data.day_of_week;
       if (data.date !== undefined) updatePayload.event_date = data.date;
 
@@ -419,8 +361,7 @@ export async function updateScheduleAction(
       return {
         ...item,
         title: data.title ?? item.title,
-        titleEn: (data.titleEn !== undefined ? data.titleEn : (data.title_en !== undefined ? data.title_en : item.titleEn)),
-        title_en: (data.title_en !== undefined ? data.title_en : (data.titleEn !== undefined ? data.titleEn : item.title_en)),
+        titleEn: data.titleEn ?? item.titleEn,
         category: (data.category ?? item.category) as ScheduleItem["category"],
         dayOfWeek: data.day_of_week ?? item.dayOfWeek,
         startTime: data.start_time ? data.start_time.slice(0, 5) : item.startTime,
@@ -431,7 +372,6 @@ export async function updateScheduleAction(
         isActive: data.is_active ?? item.isActive,
         date: data.date !== undefined ? data.date : item.date,
         recurrence: data.recurrence !== undefined ? data.recurrence : item.recurrence,
-        excludedDates: (data.excluded_dates || data.excludedDates) !== undefined ? (data.excluded_dates || data.excludedDates) : item.excludedDates,
       };
     });
 
@@ -498,121 +438,16 @@ export async function toggleScheduleActiveAction(
   }
 }
 
-export type DeleteScheduleScope = "single" | "series" | "dates";
-
-export interface DeleteScheduleOptions {
-  scope?: DeleteScheduleScope;
-  targetDate?: string;    // "YYYY-MM-DD"
-  targetDates?: string[]; // array of "YYYY-MM-DD"
-}
-
 /**
- * Delete Schedule Item (Single, Specific Day / Days, or Entire Series)
+ * Delete Schedule Item (Single or Entire Series)
  */
-export async function deleteScheduleAction(
-  id: string,
-  optionsOrScope: DeleteScheduleScope | DeleteScheduleOptions = "single",
-  datesParam?: string[]
-) {
+export async function deleteScheduleAction(id: string, scope: "single" | "series" = "single") {
   try {
-    let scope: DeleteScheduleScope = "single";
-    let targetDates: string[] = [];
-
-    if (typeof optionsOrScope === "string") {
-      scope = optionsOrScope;
-      if (datesParam && Array.isArray(datesParam)) {
-        targetDates = datesParam;
-      }
-    } else if (optionsOrScope && typeof optionsOrScope === "object") {
-      scope = optionsOrScope.scope || "single";
-      if (optionsOrScope.targetDates && Array.isArray(optionsOrScope.targetDates)) {
-        targetDates = optionsOrScope.targetDates;
-      } else if (optionsOrScope.targetDate) {
-        targetDates = [optionsOrScope.targetDate];
-      }
-    }
-
     const currentList = await getSchedulesAction();
     const target = currentList.find((item) => item.id === id);
+    const deleteAllSeries = scope === "series" && Boolean(target?.seriesId);
+    const seriesId = target?.seriesId;
 
-    if (!target) {
-      return { success: false, message: "Занятието не е намерено." };
-    }
-
-    const deleteAllSeries = scope === "series" && Boolean(target.seriesId);
-    const seriesId = target.seriesId;
-
-    // A. Specific Date(s) Deletion from a Recurring Series
-    if (scope === "dates" || targetDates.length > 0) {
-      const isRecurring = Boolean(
-        (target.recurrence && target.recurrence.type !== "none") ||
-        target.seriesId ||
-        target.date
-      );
-
-      // If it is a recurring series, exclude the dates without deleting the parent event
-      if (isRecurring) {
-        const existingExcluded = target.excludedDates || [];
-        const mergedExcluded = Array.from(new Set([...existingExcluded, ...targetDates]));
-
-        // Check if all occurrences are now excluded
-        const allOccurrences = getEventOccurrenceDates(target, true);
-        const remainingOccurrences = allOccurrences.filter((d) => !mergedExcluded.includes(d));
-
-        if (allOccurrences.length > 0 && remainingOccurrences.length === 0) {
-          // No occurrences left: delete the entire record
-          try {
-            await supabaseAdmin.from("schedule_events").delete().eq("id", id);
-          } catch {}
-          try {
-            await supabaseAdmin.from("schedules").delete().eq("id", id);
-          } catch {}
-
-          const updatedList = currentList.filter((item) => item.id !== id);
-          await saveStoredExtendedSchedules(updatedList);
-          revalidatePublicPages();
-
-          return {
-            success: true,
-            message: "Всички дати от серията бяха изтрити, занятието беше премахнато.",
-          };
-        }
-
-        // Otherwise update excluded_dates
-        try {
-          await supabaseAdmin
-            .from("schedule_events")
-            .update({ excluded_dates: mergedExcluded })
-            .eq("id", id);
-        } catch {}
-
-        const updatedList = currentList.map((item) => {
-          if (item.id === id) {
-            return {
-              ...item,
-              excludedDates: mergedExcluded,
-            };
-          }
-          return item;
-        });
-
-        await saveStoredExtendedSchedules(updatedList);
-        revalidatePublicPages();
-
-        const count = targetDates.length;
-        const msg =
-          count === 1
-            ? "Занятието за избрания ден беше изтрито успешно!"
-            : "Избраните " + count + " дни бяха изтрити успешно!";
-
-        return {
-          success: true,
-          message: msg,
-        };
-      }
-    }
-
-    // B. Full Delete (Entire Series or Single Item)
     // 1. Delete from schedule_events table
     try {
       const q = supabaseAdmin.from("schedule_events").delete();
@@ -637,6 +472,7 @@ export async function deleteScheduleAction(
     });
 
     await saveStoredExtendedSchedules(updatedList);
+
     revalidatePublicPages();
 
     return {

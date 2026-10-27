@@ -8,9 +8,8 @@ import { SERVICES_DATA } from "@/lib/services-data";
 import { ServiceCard } from "@/components/services/ServiceCard";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { getSiteSettings } from "@/lib/site-settings";
-import { getServerDictionary } from "@/lib/i18n/server";
+import { resolveServiceData, getLocaleFromContext, DEFAULT_DICTIONARY_BG, DEFAULT_DICTIONARY_EN } from "@/lib/dictionaries";
 import { Calendar } from "lucide-react";
-
 
 export const metadata: Metadata = {
   title: "Услуги и занимания за деца | Образователен клуб УМеНИе Бургас",
@@ -46,51 +45,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ServicesPage() {
-  const [{ locale, dict }, settings] = await Promise.all([
-    getServerDictionary(),
-    getSiteSettings(),
-  ]);
+export const revalidate = 60;
 
+export default async function ServicesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ lang?: string }>;
+}) {
+  const locale = await getLocaleFromContext(searchParams);
+  const isEn = locale === "en";
+  const settings = await getSiteSettings();
   const overrides = settings.servicesOverrides || {};
 
   const services = SERVICES_DATA.map((srv) => {
-    const o = overrides[srv.slug];
-    if (locale === "en") {
-      const enItem = (dict.services.items as Record<string, any>)[srv.slug];
-      const customTitle = o?.titleEn?.trim();
-      const customShortTitle = o?.badgeEn?.trim() || o?.shortTitleEn?.trim();
-      const customIntro = o?.introNarrativeEn?.trim() || o?.introEn?.trim();
-
-      return {
-        ...srv,
-        title: customTitle || enItem?.title || srv.title,
-        shortTitle: customShortTitle || enItem?.shortTitle || srv.shortTitle,
-        titleLines: customTitle ? [customTitle] : (enItem?.titleLines || [srv.title]),
-        shortDescription: customIntro || enItem?.shortDescription || srv.shortDescription,
-        titleEn: customTitle || enItem?.title,
-        shortTitleEn: customShortTitle || enItem?.shortTitle,
-        badgeEn: customShortTitle || enItem?.shortTitle,
-        shortDescriptionEn: customIntro || enItem?.shortDescription,
-        introNarrativeEn: customIntro || enItem?.shortDescription,
-      };
-    }
-    const enItem = (dict.services.items as Record<string, any>)?.[srv.slug];
-    const customTitleEn = o?.titleEn?.trim();
-    const customShortTitleEn = o?.badgeEn?.trim() || o?.shortTitleEn?.trim();
-    const customIntroEn = o?.introNarrativeEn?.trim() || o?.introEn?.trim();
-
-    return {
-      ...srv,
-      title: o?.title?.trim() || srv.title,
-      shortTitle: o?.shortTitle?.trim() || srv.shortTitle,
-      shortDescription: o?.intro?.trim() || srv.shortDescription,
-      titleEn: customTitleEn || enItem?.title,
-      shortTitleEn: customShortTitleEn || enItem?.shortTitle,
-      badgeEn: customShortTitleEn || enItem?.shortTitle,
-      shortDescriptionEn: customIntroEn || enItem?.shortDescription,
-      introNarrativeEn: customIntroEn || enItem?.shortDescription,
-    };
+    return resolveServiceData(srv, overrides[srv.slug], locale);
   });
 
   return (
@@ -100,7 +68,7 @@ export default async function ServicesPage() {
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-12 sm:mb-16 relative">
           <div className="flex items-center justify-center gap-3">
             <h1 className="font-heading font-bold text-4xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide">
-              {dict.services.title}
+              УСЛУГИ
             </h1>
             <div className="relative w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rotate-6 shrink-0 -mt-2">
               <Image
@@ -113,7 +81,7 @@ export default async function ServicesPage() {
             </div>
           </div>
           <p className="text-brand-dark text-base sm:text-xl font-medium">
-            {dict.services.subtitle}
+            {isEn ? DEFAULT_DICTIONARY_EN.services.subtitle : DEFAULT_DICTIONARY_BG.services.subtitle}
           </p>
         </div>
 
@@ -130,10 +98,10 @@ export default async function ServicesPage() {
 
         {/* Action Button to Schedule */}
         <div className="text-center mt-12 sm:mt-16">
-          <Link href="/grafik" prefetch={true}>
+          <Link href="/grafik">
             <Button size="lg" className="text-base sm:text-lg shadow-xl px-10 py-4">
               <Calendar className="w-5 h-5 mr-2" />
-              {dict.services.viewSchedule}
+              ВИЖТЕ ГРАФИКА
             </Button>
           </Link>
         </div>

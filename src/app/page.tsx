@@ -1,5 +1,3 @@
-import { unstable_cache } from "next/cache";
-import { cache } from "react";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,11 +17,10 @@ import { getBlogPosts } from "@/lib/blog-service";
 import { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
-import { getServerDictionary } from "@/lib/i18n/server";
+import { resolveLocalized, getLocaleFromContext, DEFAULT_DICTIONARY_BG, DEFAULT_DICTIONARY_EN } from "@/lib/dictionaries";
 import { listReviewsImagesAction } from "@/actions/admin-media";
 
-
-
+export const revalidate = 60; // revalidate on demand or every 60s
 
 export const metadata: Metadata = {
   title: "Образователен клуб „УМеНИе“ – Начало | Бургас",
@@ -59,113 +56,36 @@ export const metadata: Metadata = {
   },
 };
 
-
-const getCachedHomeAssets = cache(
-  unstable_cache(
-    async () => {
-      let dynamicGalleryImages: { src: string; alt: string }[] | undefined = undefined;
-      let storageHeroVideo: string | null = null;
-      let storageHeroBanner: string | null = null;
-      let storageReviewScreenshot: string | null = null;
-
-      try {
-        const { data: dbGallery } = await supabaseAdmin
-          .from("gallery_images")
-          .select("public_url, caption")
-          .order("display_order", { ascending: true });
-
-        if (dbGallery && dbGallery.length > 0) {
-          dynamicGalleryImages = dbGallery.map((g) => ({
-            src: g.public_url,
-            alt: g.caption || "Деца с умения в образователен клуб УМеНИе",
-          }));
-        }
-      } catch {}
-
-      try {
-        const { data: files } = await supabaseAdmin.storage
-          .from("site-assets")
-          .list("", { limit: 100 });
-
-        if (files && files.length > 0) {
-          const videoFile = files.find(
-            (f) =>
-              f.name.startsWith("hero-video") ||
-              f.name.endsWith(".mp4") ||
-              f.name.endsWith(".webm")
-          );
-          if (videoFile) {
-            const { data: vData } = supabaseAdmin.storage
-              .from("site-assets")
-              .getPublicUrl(videoFile.name);
-            if (vData?.publicUrl) storageHeroVideo = vData.publicUrl;
-          }
-
-          const bannerFile = files.find((f) => f.name.startsWith("hero-banner"));
-          if (bannerFile) {
-            const { data: urlData } = supabaseAdmin.storage
-              .from("site-assets")
-              .getPublicUrl(bannerFile.name);
-            if (urlData?.publicUrl) storageHeroBanner = urlData.publicUrl;
-          }
-
-          const reviewFile = files.find(
-            (f) =>
-              f.name.startsWith("review-") ||
-              f.name.startsWith("otziv-") ||
-              f.name.includes("screenshot")
-          );
-          if (reviewFile) {
-            const { data: rData } = supabaseAdmin.storage
-              .from("site-assets")
-              .getPublicUrl(reviewFile.name);
-            if (rData?.publicUrl) storageReviewScreenshot = rData.publicUrl;
-          }
-
-          if (!dynamicGalleryImages || dynamicGalleryImages.length === 0) {
-            const galleryFiles = files.filter(
-              (f) => f.name.startsWith("kids-") || f.name.startsWith("gallery-")
-            );
-            if (galleryFiles.length > 0) {
-              dynamicGalleryImages = galleryFiles.map((f) => {
-                const { data } = supabaseAdmin.storage
-                  .from("site-assets")
-                  .getPublicUrl(f.name);
-                return {
-                  src: data.publicUrl,
-                  alt: "Деца с умения в образователен клуб УМеНИе",
-                };
-              });
-            }
-          }
-        }
-      } catch (err) {
-        console.warn("Storage assets check warning:", err);
-      }
-
-      return {
-        dynamicGalleryImages,
-        storageHeroVideo,
-        storageHeroBanner,
-        storageReviewScreenshot,
-      };
-    },
-    ["home-assets-cache-key"],
-    { tags: ["site-settings"], revalidate: 3600 }
-  )
-);
-
-export default async function HomePage() {
-  const [{ locale, dict }, settings, blogPosts, reviewsRes, homeAssets] = await Promise.all([
-    getServerDictionary(),
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ lang?: string }>;
+}) {
+  const locale = await getLocaleFromContext(searchParams);
+  const [settings, blogPosts, reviewsRes] = await Promise.all([
     getSiteSettings(),
     getBlogPosts({ limit: 6 }),
     listReviewsImagesAction(),
-    getCachedHomeAssets(),
   ]);
 
   let heroMediaSrc = "/images/opening-photo.webp";
   let isHeroVideo = false;
+
+
+  const heroTitle = resolveLocalized(
+    locale,
+    settings.heroTitle,
+    settings.heroTitleEn,
+    DEFAULT_DICTIONARY_BG.home.heroTitle,
+    DEFAULT_DICTIONARY_EN.home.heroTitle
+  );
+  const heroSubtitle = resolveLocalized(
+    locale,
+    settings.heroSubtitle,
+    settings.heroSubtitleEn,
+    DEFAULT_DICTIONARY_BG.home.heroSubtitle,
+    DEFAULT_DICTIONARY_EN.home.heroSubtitle
+  );
 
   // 1. Resolve Hero media: Video or Image from settings or storage
   if (settings.heroMediaType === "video" && settings.heroVideoUrl) {
@@ -173,52 +93,106 @@ export default async function HomePage() {
     isHeroVideo = true;
   } else if (settings.heroBannerUrl) {
     heroMediaSrc = settings.heroBannerUrl;
-  } else if (homeAssets.storageHeroVideo) {
-    heroMediaSrc = homeAssets.storageHeroVideo;
-    isHeroVideo = true;
-  } else if (homeAssets.storageHeroBanner) {
-    heroMediaSrc = homeAssets.storageHeroBanner;
   }
 
   // 2. Resolve Review Screenshot & Reviews List
-  let reviewScreenshotUrl: string | null =
-    settings.reviewScreenshotUrl ||
-    homeAssets.storageReviewScreenshot ||
-    "/images/review-screenshot.webp";
+  let reviewScreenshotUrl: string | null = settings.reviewScreenshotUrl || "/images/review-screenshot.webp";
   const reviewImages = reviewsRes.items || [];
 
-  // 3. Resolve Gallery
-  const dynamicGalleryImages = homeAssets.dynamicGalleryImages;
+  // 3. Resolve Gallery from gallery_images table or storage
+  let dynamicGalleryImages: { src: string; alt: string }[] | undefined = undefined;
 
-  // Resolve 6 services with admin overrides & bilingual dictionary fallback
-  const overrides = settings.servicesOverrides || {};
-  const services = SERVICES_DATA.map((srv) => {
-    const o = overrides[srv.slug];
-    const enItem = (dict.services?.items as Record<string, any>)?.[srv.slug];
+  try {
+    const { data: dbGallery } = await supabaseAdmin
+      .from("gallery_images")
+      .select("public_url, caption")
+      .order("display_order", { ascending: true });
 
-    const customTitle = o?.title?.trim();
-    const customShortTitle = o?.shortTitle?.trim();
-    const customIntro = o?.intro?.trim();
+    if (dbGallery && dbGallery.length > 0) {
+      dynamicGalleryImages = dbGallery.map((g) => ({
+        src: g.public_url,
+        alt: g.caption || "Деца с умения в образователен клуб УМеНИе",
+      }));
+    }
+  } catch {}
 
-    const customTitleEn = o?.titleEn?.trim();
-    const customShortTitleEn = o?.badgeEn?.trim() || o?.shortTitleEn?.trim();
-    const customIntroEn = o?.introNarrativeEn?.trim() || o?.introEn?.trim();
+  try {
+    const { data: files } = await supabaseAdmin.storage
+      .from("site-assets")
+      .list("", { limit: 100 });
 
-    return {
-      ...srv,
-      title: customTitle || srv.title,
-      shortTitle: customShortTitle || srv.shortTitle,
-      shortDescription: customIntro || srv.shortDescription,
-      titleEn: customTitleEn || enItem?.title,
-      shortTitleEn: customShortTitleEn || enItem?.shortTitle,
-      badgeEn: customShortTitleEn || enItem?.shortTitle,
-      shortDescriptionEn: customIntroEn || enItem?.shortDescription,
-      introNarrativeEn: customIntroEn || enItem?.intro,
-      introEn: customIntroEn || enItem?.intro,
-    };
-  });
+    if (files && files.length > 0) {
+      // If hero not set in settings, fallback to storage files
+      if (!settings.heroVideoUrl && !settings.heroBannerUrl) {
+        const videoFile = files.find(
+          (f) =>
+            f.name.startsWith("hero-video") ||
+            f.name.endsWith(".mp4") ||
+            f.name.endsWith(".webm")
+        );
 
-    // Resolve Kids Gallery photos with priority to custom kidsGalleryOrder
+        if (videoFile) {
+          const { data: vData } = supabaseAdmin.storage
+            .from("site-assets")
+            .getPublicUrl(videoFile.name);
+          if (vData?.publicUrl) {
+            heroMediaSrc = vData.publicUrl;
+            isHeroVideo = true;
+          }
+        } else {
+          const bannerFile = files.find((f) => f.name.startsWith("hero-banner"));
+          if (bannerFile) {
+            const { data: urlData } = supabaseAdmin.storage
+              .from("site-assets")
+              .getPublicUrl(bannerFile.name);
+            if (urlData?.publicUrl) {
+              heroMediaSrc = urlData.publicUrl;
+            }
+          }
+        }
+      }
+
+      // If review screenshot not set in settings, fallback to storage files
+      if (!reviewScreenshotUrl) {
+        const reviewFile = files.find(
+          (f) =>
+            f.name.startsWith("review-") ||
+            f.name.startsWith("otziv-") ||
+            f.name.includes("screenshot")
+        );
+        if (reviewFile) {
+          const { data: rData } = supabaseAdmin.storage
+            .from("site-assets")
+            .getPublicUrl(reviewFile.name);
+          if (rData?.publicUrl) {
+            reviewScreenshotUrl = rData.publicUrl;
+          }
+        }
+      }
+
+      // Fallback: Check for Kids Gallery dynamic photos in storage if table was empty
+      if (!dynamicGalleryImages || dynamicGalleryImages.length === 0) {
+        const galleryFiles = files.filter(
+          (f) => f.name.startsWith("kids-") || f.name.startsWith("gallery-")
+        );
+        if (galleryFiles.length > 0) {
+          dynamicGalleryImages = galleryFiles.map((f) => {
+            const { data } = supabaseAdmin.storage
+              .from("site-assets")
+              .getPublicUrl(f.name);
+            return {
+              src: data.publicUrl,
+              alt: "Деца с умения в образователен клуб УМеНИе",
+            };
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Storage assets check warning:", err);
+  }
+
+  // Resolve Kids Gallery photos with priority to custom kidsGalleryOrder
   let resolvedKidsGallery: { src: string; alt: string }[] | undefined = undefined;
   if (settings.kidsGalleryOrder && settings.kidsGalleryOrder.length > 0) {
     resolvedKidsGallery = settings.kidsGalleryOrder.map((path, idx) => {
@@ -280,14 +254,14 @@ export default async function HomePage() {
         <Container size="xl" className="relative z-10">
           <div className="max-w-xl text-white space-y-4 sm:space-y-6 text-left">
             <h1 className="font-heading font-bold text-2xl xs:text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-wide drop-shadow-md text-white text-left">
-              {locale === "en" ? (settings.heroTitleEn?.trim() || dict.home.hero.title) : dict.home.hero.title}
+              УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА
             </h1>
             <div className="pt-2 flex justify-start">
               <Link
                 href="/uslugi"
                 className="font-heading font-bold text-base sm:text-lg uppercase tracking-wide text-white bg-[#887ed8] hover:bg-[#776dc7] rounded-full px-7 py-3 inline-flex items-center justify-center shadow-lg transition-transform active:scale-95 w-auto"
               >
-                {dict.home.hero.learnMore}
+                НАУЧЕТЕ ПОВЕЧЕ
               </Link>
             </div>
           </div>
@@ -354,7 +328,7 @@ export default async function HomePage() {
             </div>
 
             {/* Mission Card */}
-            <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 sm:p-10 md:p-14 rounded-3xl sm:rounded-4xl shadow-card border border-brand-purple/15 text-left space-y-6 sm:space-y-8 overflow-hidden">
+            <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 sm:p-10 md:p-14 rounded-3xl sm:rounded-4xl shadow-card border border-brand-purple/15 text-left sm:text-center space-y-6 sm:space-y-8 overflow-hidden">
               {/* Decorative Bulb Watermark strictly behind the text */}
               <div
                 className="absolute pointer-events-none select-none -z-0 opacity-15 sm:opacity-20 top-4 sm:top-8 left-1/2 -translate-x-1/2 w-48 h-48 sm:w-64 sm:h-64"
@@ -364,22 +338,24 @@ export default async function HomePage() {
               </div>
 
               <div className="relative z-10 space-y-6 sm:space-y-8">
-                <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold text-left">
-                  {dict.home.mission.titlePre}
-                  <span className="text-brand-purple">{dict.home.mission.titleHighlight}</span>
-                  {dict.home.mission.titlePost}
+                <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-brand-dark leading-snug font-bold text-left sm:text-center">
+                  В образователен клуб „УМеНИе“ децата{" "}
+                  <span className="text-brand-purple">растат с едно умение</span> повече
+                  всеки ден.
                 </h2>
 
-                <div className="space-y-4 sm:space-y-5 text-base sm:text-lg md:text-xl text-brand-dark/90 leading-relaxed font-normal text-left">
+                <div className="space-y-4 sm:space-y-5 text-base sm:text-lg md:text-xl text-brand-dark/90 leading-relaxed font-normal text-left sm:text-center">
                   <p>
-                    {dict.home.mission.p1}
+                    Английски, български, математика, шах, плетиво и учебна занималня.
+                    Различни занимания с една обща цел – детето да вземе от всяко от тях
+                    нещо, което остава и след края на часа.
                   </p>
                   <p>
-                    {dict.home.mission.p2Pre}
-                    <strong className="text-brand-purple font-bold">{dict.home.mission.p2Bold1}</strong>
-                    {dict.home.mission.p2Mid}
-                    <strong className="text-brand-purple font-bold">{dict.home.mission.p2Bold2}</strong>
-                    {dict.home.mission.p2Post}
+                    В <strong className="text-brand-purple font-bold">малки групи</strong> и с{" "}
+                    <strong className="text-brand-purple font-bold">внимание към всяко дете</strong>{" "}
+                    превръщаме различните занимания в начин то да се учи да мисли
+                    самостоятелно, да довършва започнатото, да намира решение и да
+                    работи с другите.
                   </p>
                 </div>
               </div>
@@ -392,7 +368,7 @@ export default async function HomePage() {
       <section id="activities" className="pb-12 pt-2 sm:py-16 bg-brand-bg scroll-mt-24">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 items-stretch">
-            {services.map((service) => (
+            {SERVICES_DATA.map((service) => (
               <ServiceCard
                 key={service.slug}
                 service={service}
@@ -403,27 +379,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 4. CLUB TOUR VIDEO ("Как изглежда нашият клуб") */}
+      {/* 4. CLUB TOUR VIDEO & KIDS GALLERY ("Ето как изглежда нашият клуб" / "Нашите деца с умения") */}
       <ClubTourVideo
         src="/videos/club-tour.mp4"
         poster="/videos/club-tour-poster.webp"
       />
 
-      {/* 5. WEEKLY SCHEDULE BANNER ("ГРАФИКЪТ ЗА СЕДМИЦАТА" - Positioned directly under Club look) */}
-      <ScheduleBanner
-        scheduleFileUrl={settings.scheduleFileUrl}
-        scheduleFileName={settings.scheduleFileName}
-      />
-
-      {/* 6. KIDS GALLERY ("НАШИТЕ ДЕЦА С УМЕНИЯ") */}
-      <section className="py-12 sm:py-20 bg-gradient-to-b from-[#e4e1f7]/60 via-brand-bg to-brand-bg">
+      <section className="py-12 sm:py-20 bg-brand-bg">
         <Container size="xl">
-          <div className="text-left max-w-2xl mb-6 sm:mb-10">
-            <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase text-left">
-              {dict.home.kidsGallery.title}
+          <div className="text-left sm:text-center max-w-2xl mx-auto mb-6 sm:mb-10">
+            <h2 className="font-heading font-bold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase text-left sm:text-center">
+              НАШИТЕ ДЕЦА С УМЕНИЯ
             </h2>
-            <p className="text-brand-muted text-xs sm:text-base mt-1.5 sm:mt-2 text-left">
-              {dict.home.kidsGallery.subtitle}
+            <p className="text-brand-muted text-xs sm:text-base mt-1.5 sm:mt-2 text-left sm:text-center">
+              Моменти от ежедневието, творчеството и постиженията в клуба.
             </p>
           </div>
 
@@ -432,6 +401,12 @@ export default async function HomePage() {
           />
         </Container>
       </section>
+
+      {/* 5. WEEKLY SCHEDULE BANNER ("ГРАФИКЪТ ЗА СЕДМИЦАТА" - Moved immediately AFTER Club look & Gallery!) */}
+      <ScheduleBanner
+        scheduleFileUrl={settings.scheduleFileUrl}
+        scheduleFileName={settings.scheduleFileName}
+      />
 
       {/* 6. "ЗАЩО ДА ИЗБЕРЕТЕ КЛУБ УМЕНИЕ?" (Must be positioned ABOVE Reviews section!) */}
       <WhyChooseUs />

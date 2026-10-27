@@ -7,10 +7,9 @@ import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { supabase } from "@/lib/supabase/client";
 import { DEFAULT_SCHEDULES, ScheduleItem, mapRowToScheduleItem } from "@/lib/schedule-data";
 import { getSiteSettings } from "@/lib/site-settings";
+import { getLocaleFromContext } from "@/lib/dictionaries";
 import { getSchedulesAction } from "@/actions/admin-schedules";
-import { getServerDictionary } from "@/lib/i18n/server";
 import { FileText, Download } from "lucide-react";
-
 
 export const metadata: Metadata = {
   title: "Седмичен график и записване | Образователен клуб УМеНИе",
@@ -47,6 +46,8 @@ export const metadata: Metadata = {
 };
 
 // Revalidate on demand or every 60 seconds
+export const revalidate = 60;
+
 async function getSchedules(): Promise<ScheduleItem[]> {
   try {
     const items = await getSchedulesAction();
@@ -79,16 +80,21 @@ async function getSchedules(): Promise<ScheduleItem[]> {
   return DEFAULT_SCHEDULES;
 }
 
-export default async function SchedulePage() {
-  const [{ locale, dict }, schedules, settings] = await Promise.all([
-    getServerDictionary(),
+export default async function SchedulePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ lang?: string }>;
+}) {
+  const locale = await getLocaleFromContext(searchParams);
+  const isEn = locale === "en";
+  const [schedules, settings] = await Promise.all([
     getSchedules(),
     getSiteSettings(),
   ]);
 
   return (
     <div className="w-full bg-[#f1f2f6] text-brand-dark overflow-x-hidden pt-8 sm:pt-14 pb-4 space-y-10 sm:space-y-14">
-      {/* 1. Page Header */}
+      {/* 1. Page Header (matching "График Десктоп.png" & "График 1 - мобилна.png" 1:1) */}
       <Container size="xl" className="relative">
         {/* Decorative bulb top-right matching mobile mockup */}
         <div
@@ -97,17 +103,17 @@ export default async function SchedulePage() {
           <Image src="/images/bulb.webp" alt="" fill className="object-contain" />
         </div>
 
-        <div className="text-left max-w-3xl space-y-3 sm:space-y-4 relative z-10">
-          <h1 className="font-heading font-bold text-3xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide uppercase leading-tight text-left">
-            {dict.schedule.pageTitle}
+        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4 px-4 relative z-10">
+          <h1 className="font-heading font-bold text-3xl sm:text-5xl lg:text-6xl text-brand-purple tracking-wide uppercase leading-tight">
+            {isEn ? "OUR SCHEDULE" : "НАШИЯТ ГРАФИК"}
           </h1>
-          <p className="text-brand-dark/85 text-sm sm:text-lg md:text-xl font-sans max-w-2xl font-normal text-left">
-            {dict.schedule.pageSubtitle}
+          <p className="text-brand-dark/85 text-sm sm:text-lg md:text-xl font-sans max-w-2xl mx-auto font-normal">
+            {isEn ? "Explore upcoming classes and choose the skills your child will develop." : "Разгледайте предстоящите занимания и изберете какви умения ще развие вашето дете."}
           </p>
 
           {/* Download Official Schedule File Banner if uploaded in Admin */}
           {settings.scheduleFileUrl && (
-            <div className="pt-2 max-w-xl text-left">
+            <div className="pt-2 max-w-xl mx-auto">
               <a
                 href={settings.scheduleFileUrl}
                 target="_blank"
@@ -115,7 +121,7 @@ export default async function SchedulePage() {
                 className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-brand-purple text-white font-heading font-bold text-xs sm:text-sm uppercase tracking-wider shadow-button hover:bg-brand-purple-hover hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 <FileText className="w-4 h-4 shrink-0" />
-                <span>{dict.schedule.downloadSchedule}</span>
+                <span>Свали актуалния график (PDF / Снимка)</span>
                 <Download className="w-4 h-4 shrink-0 ml-1" />
               </a>
             </div>
@@ -125,7 +131,7 @@ export default async function SchedulePage() {
 
       {/* 2. Interactive Calendar Component */}
       <Container size="xl">
-        <ScheduleCalendar initialSchedules={schedules} />
+        <ScheduleCalendar initialSchedules={schedules} locale={locale} />
       </Container>
 
       {/* 3. Bottom Contact Banner */}

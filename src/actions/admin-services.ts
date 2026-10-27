@@ -58,45 +58,65 @@ async function safeUpload(
 
 /**
  * 1. Save or update service text and settings overrides
+ * Unifies all property aliases (badge <-> shortTitle, intro <-> introNarrative, bullets <-> bulletPoints)
  */
-function revalidateServicesAndPublicPages(slug?: string) {
-  try {
-    revalidateTag("site-settings");
-  } catch {}
-  try {
-    revalidatePath("/", "layout");
-    revalidatePath("/uslugi", "layout");
-    revalidatePath("/uslugi/[slug]", "page");
-    if (slug) revalidatePath(`/uslugi/${slug}`, "page");
-    revalidatePath("/za-nas", "page");
-    revalidatePath("/grafik", "page");
-    revalidatePath("/admin", "layout");
-    revalidatePath("/admin/pages/services", "page");
-    revalidatePath("/admin/pages/about", "page");
-    revalidatePath("/admin/pages/home", "page");
-  } catch (e) {}
-}
-
 export async function saveServiceContentAction(slug: string, overrideData: ServiceOverride) {
   try {
     const settings = await getSiteSettings();
     const currentOverrides = settings.servicesOverrides || {};
+    const existing = currentOverrides[slug] || {};
+
+    // Normalize aliases bidirectionally
+    const shortTitle = overrideData.shortTitle ?? overrideData.badge ?? existing.shortTitle ?? existing.badge;
+    const shortTitleEn = overrideData.shortTitleEn ?? overrideData.badgeEn ?? existing.shortTitleEn ?? existing.badgeEn;
+
+    const intro = overrideData.intro ?? overrideData.introNarrative ?? existing.intro ?? existing.introNarrative;
+    const introEn = overrideData.introEn ?? overrideData.introNarrativeEn ?? existing.introEn ?? existing.introNarrativeEn;
+
+    const bulletPoints = overrideData.bulletPoints ?? overrideData.bullets ?? existing.bulletPoints ?? existing.bullets;
+    const bulletPointsEn = overrideData.bulletPointsEn ?? overrideData.bulletsEn ?? existing.bulletPointsEn ?? existing.bulletsEn;
+
+    const page1 = overrideData.page1Image || overrideData.pageImages?.[0] || existing.page1Image || existing.pageImages?.[0];
+    const page2 = overrideData.page2Image || overrideData.pageImages?.[1] || existing.page2Image || existing.pageImages?.[1];
+    const pageImages = (page1 || page2) ? [page1 || "", page2 || page1 || ""] : (existing.pageImages || []);
+
+    const normalizedData: ServiceOverride = {
+      ...existing,
+      ...overrideData,
+      shortTitle,
+      badge: shortTitle,
+      shortTitleEn,
+      badgeEn: shortTitleEn,
+      intro,
+      introNarrative: intro,
+      introEn,
+      introNarrativeEn: introEn,
+      bulletPoints,
+      bullets: bulletPoints,
+      bulletPointsEn,
+      bulletsEn: bulletPointsEn,
+      pageImages,
+      page1Image: page1,
+      page2Image: page2,
+    };
 
     const updatedOverrides = {
       ...currentOverrides,
-      [slug]: {
-        ...(currentOverrides[slug] || {}),
-        ...overrideData,
-      },
+      [slug]: normalizedData,
     };
 
     const res = await updateSiteSettingsAction({
       servicesOverrides: updatedOverrides,
     });
 
-    if (res.success) {
-      revalidateServicesAndPublicPages(slug);
-    }
+    try {
+      revalidateTag("site-settings");
+    } catch {}
+
+    revalidatePath("/", "layout");
+    revalidatePath("/uslugi");
+    revalidatePath(`/uslugi/${slug}`);
+    revalidatePath("/admin/pages/services");
 
     return {
       success: true,
@@ -126,7 +146,6 @@ export async function uploadServiceImageAction(formData: FormData) {
     let contentType = file.type || "image/webp";
     let extension = "webp";
 
-    // Convert and optimize using high-fidelity WebP (quality 92, max 1920px, EXIF orientation preserved)
     try {
       const sharpModule = await import("sharp");
       const sharp = sharpModule.default;
@@ -176,6 +195,8 @@ export async function uploadServiceImageAction(formData: FormData) {
           [slug]: {
             ...serviceOverride,
             pageImages,
+            page1Image: pageImages[0],
+            page2Image: pageImages[1],
           },
         },
       });
@@ -192,7 +213,14 @@ export async function uploadServiceImageAction(formData: FormData) {
       });
     }
 
-    revalidateServicesAndPublicPages(slug);
+    try {
+      revalidateTag("site-settings");
+    } catch {}
+
+    revalidatePath("/", "layout");
+    revalidatePath("/uslugi");
+    revalidatePath(`/uslugi/${slug}`);
+    revalidatePath("/admin/pages/services");
 
     return {
       success: true,
@@ -237,7 +265,14 @@ export async function saveSliderImageSettingAction(
       },
     });
 
-    revalidateServicesAndPublicPages(slug);
+    try {
+      revalidateTag("site-settings");
+    } catch {}
+
+    revalidatePath("/", "layout");
+    revalidatePath("/uslugi");
+    revalidatePath(`/uslugi/${slug}`);
+    revalidatePath("/admin/pages/services");
 
     return {
       success: true,
@@ -271,7 +306,6 @@ export async function deleteServiceSliderImageAction(slug: string, imageUrlOrPat
       },
     });
 
-    // Also attempt deletion from storage if it is a storage path/url
     try {
       const cleanPath = imageUrlOrPath.split("?")[0];
       const match = cleanPath.match(/services\/[a-z0-9\-]+\/slider\/[a-z0-9\-.]+/);
@@ -281,7 +315,14 @@ export async function deleteServiceSliderImageAction(slug: string, imageUrlOrPat
       }
     } catch {}
 
-    revalidateServicesAndPublicPages(slug);
+    try {
+      revalidateTag("site-settings");
+    } catch {}
+
+    revalidatePath("/", "layout");
+    revalidatePath("/uslugi");
+    revalidatePath(`/uslugi/${slug}`);
+    revalidatePath("/admin/pages/services");
 
     return {
       success: true,
@@ -294,7 +335,7 @@ export async function deleteServiceSliderImageAction(slug: string, imageUrlOrPat
 }
 
 /**
- * 4. Save About page values and feature points
+ * 4. Save About page values and feature points (BG & EN)
  */
 export async function saveAboutPageContentAction(
   aboutValues: AboutTextItem[],
@@ -306,9 +347,13 @@ export async function saveAboutPageContentAction(
       aboutFeatures,
     });
 
-    if (res.success) {
-      revalidateServicesAndPublicPages();
-    }
+    try {
+      revalidateTag("site-settings");
+    } catch {}
+
+    revalidatePath("/", "layout");
+    revalidatePath("/za-nas");
+    revalidatePath("/admin/pages/about");
 
     return {
       success: true,

@@ -16,7 +16,6 @@ export interface ScheduleItem {
   id: string;
   title: string;
   titleEn?: string;
-  title_en?: string;
   category: "english" | "math" | "knitting" | "art" | "reading" | "chess" | "stem" | "study_hall";
   dayOfWeek: number; // 1 = Понеделник, 7 = Неделя
   dayName: string;
@@ -32,7 +31,6 @@ export interface ScheduleItem {
   seriesId?: string | null;       // Shared UUID for recurring series
   capacity?: number;
   isActive?: boolean;
-  excludedDates?: string[]; // Array of "YYYY-MM-DD" dates excluded from this recurrence series
 }
 
 export const DAYS_OF_WEEK = [
@@ -224,6 +222,20 @@ export const CATEGORY_STYLES: Record<string, { bg: string; text: string; border:
   study_hall: { bg: "bg-teal-100", text: "text-teal-800", border: "border-teal-300" },
 };
 
+
+export function getAutomaticEnglishTitle(title: string): string {
+  const norm = (title || "").toLowerCase();
+  if (norm.includes("шах")) return "Chess Club";
+  if (norm.includes("плет")) return "Knitting and Applied Arts";
+  if (norm.includes("мат")) return "Mathematics (Lessons and Courses)";
+  if (norm.includes("англ")) return "English Language (Lessons and Courses)";
+  if (norm.includes("занимал")) return "Study Hall";
+  if (norm.includes("stem") || norm.includes("стем")) return "STEM Club";
+  if (norm.includes("разбиране") || norm.includes("лигериа") || norm.includes("книг")) return "Reading Club 'Ligeria'";
+  if (norm.includes("арт") || norm.includes("рисув")) return "Art and Creative Workshop";
+  return title;
+}
+
 export function deduceCategory(title: string): ScheduleItem["category"] {
   const norm = (title || "").toLowerCase();
   if (norm.includes("шах")) return "chess";
@@ -239,8 +251,6 @@ export function deduceCategory(title: string): ScheduleItem["category"] {
 export function mapRowToScheduleItem(row: {
   id: string;
   title: string;
-  title_en?: string | null;
-  titleEn?: string | null;
   category?: string;
   day_of_week: number;
   start_time: string;
@@ -257,8 +267,6 @@ export function mapRowToScheduleItem(row: {
   seriesId?: string | null;
   capacity?: number;
   is_active?: boolean;
-  excluded_dates?: string[] | null;
-  excludedDates?: string[] | null;
 }): ScheduleItem {
   const dayName = DAYS_OF_WEEK.find((d) => d.dayNumber === row.day_of_week)?.name || "Понеделник";
   const cat = (row.category || deduceCategory(row.title)) as ScheduleItem["category"];
@@ -279,8 +287,7 @@ export function mapRowToScheduleItem(row: {
   return {
     id: row.id,
     title: row.title,
-    titleEn: row.title_en || row.titleEn || undefined,
-    title_en: row.title_en || row.titleEn || undefined,
+    titleEn: (row as any).title_en || (row as any).titleEn || getAutomaticEnglishTitle(row.title),
     category: cat,
     dayOfWeek: row.day_of_week,
     dayName,
@@ -296,7 +303,6 @@ export function mapRowToScheduleItem(row: {
     seriesId: row.seriesId || row.series_id || null,
     capacity: row.capacity || 10,
     isActive: row.is_active !== false,
-    excludedDates: Array.isArray(row.excluded_dates) ? row.excluded_dates : (Array.isArray(row.excludedDates) ? row.excludedDates : []),
   };
 }
 
@@ -342,285 +348,94 @@ export function formatDateHumanBg(val: Date | string): string {
 }
 
 /**
- * Safely calculates calendar day difference (targetDate - startDate)
- * using UTC to completely avoid DST / timezone shifts.
- */
-export function getDaysDifference(startDateStr: string, targetDateStr: string): number {
-  const [sy, sm, sd] = startDateStr.split("-").map(Number);
-  const [ty, tm, td] = targetDateStr.split("-").map(Number);
-  const startUTC = Date.UTC(sy, sm - 1, sd);
-  const targetUTC = Date.UTC(ty, tm - 1, td);
-  return Math.round((targetUTC - startUTC) / (1000 * 60 * 60 * 24));
-}
-
-/**
- * Adds an exact number of calendar days to a YYYY-MM-DD date key in UTC.
- */
-export function addDaysToDateKey(dateKey: string, daysToAdd: number): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const dateUTC = new Date(Date.UTC(y, m - 1, d + daysToAdd));
-  const resY = dateUTC.getUTCFullYear();
-  const resM = String(dateUTC.getUTCMonth() + 1).padStart(2, "0");
-  const resD = String(dateUTC.getUTCDate()).padStart(2, "0");
-  return `${resY}-${resM}-${resD}`;
-}
-
-/**
  * Checks whether an event occurs on a specific calendar target date.
- * Strict Filtering Rule:
- * 1. Never render before startDate (diffDays < 0).
- * 2. Respect untilDate.
- * 3. Exact recurrence intervals:
- *    - "none": diffDays === 0
- *    - "weekly", "weekly_eoy", "custom_until": diffDays % 7 === 0
- *    - "biweekly": diffDays >= 0 && diffDays % 14 === 0 (Strictly hidden on Day 7, Day 21, Day 35!)
- *    - "weekly_count": diffDays >= 0 && diffDays % 7 === 0 && (diffDays / 7) < count
  */
 export function isEventOnDate(
   item: {
     dayOfWeek?: number;
     day_of_week?: number;
     date?: string | null;
-    startDate?: string | null;
-    event_date?: string | null;
     recurrence?: RecurrenceRule | null;
-    recurrence_type?: string | null;
-    recurrenceCount?: number | null;
-    recurrence_count?: number | null;
-    untilDate?: string | null;
-    recurrence_until?: string | null;
     isActive?: boolean;
     is_active?: boolean;
-    excludedDates?: string[];
-    excluded_dates?: string[];
   },
-  targetDate: Date | string
+  targetDate: Date
 ): boolean {
   if (item.isActive === false || item.is_active === false) return false;
 
-  const targetDateStr = typeof targetDate === "string" ? targetDate : formatDateKey(targetDate);
-  const excluded = item.excludedDates || item.excluded_dates;
-  if (Array.isArray(excluded) && excluded.includes(targetDateStr)) {
-    return false;
+  const dow = item.dayOfWeek ?? item.day_of_week ?? 1;
+  const targetDateKey = formatDateKey(targetDate);
+  const targetDow = getDayOfWeekNumber(targetDate);
+
+  // 1. If it's a legacy weekly item with NO specific date anchor:
+  if (!item.date) {
+    return dow === targetDow;
   }
 
-  const startDateStr = item.startDate || item.date || item.event_date;
+  // 2. Has an anchor start date
+  const anchorDate = parseDateKey(item.date);
+  const anchorDateKey = formatDateKey(anchorDate);
 
-  // 1. If the event has a startDate (or event_date):
-  if (startDateStr) {
-    const diffDays = getDaysDifference(startDateStr, targetDateStr);
+  // If target date is before the start date, it has not started
+  if (targetDateKey < anchorDateKey) return false;
 
-    // RULE A — NEVER RENDER BEFORE START DATE:
-    if (diffDays < 0) return false;
+  const rule = item.recurrence;
 
-    // RULE B — RESPECT END DATE (untilDate):
-    const untilDate = item.recurrence?.untilDate || item.untilDate || item.recurrence_until;
-    if (untilDate && getDaysDifference(untilDate, targetDateStr) > 0) {
-      return false;
+  // Single occurrence (no recurrence)
+  if (!rule || rule.type === "none") {
+    return targetDateKey === anchorDateKey;
+  }
+
+  // Must match the event's day of week
+  if (targetDow !== dow) return false;
+
+  // Day difference from anchor in full days (calendar date difference, independent of time-of-day)
+  const d1 = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate()).getTime();
+  const d2 = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()).getTime();
+  const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return false;
+
+  switch (rule.type) {
+    case "weekly_eoy": {
+      // Every week until Dec 31 of anchor year
+      const anchorYear = anchorDate.getFullYear();
+      return diffDays % 7 === 0 && targetDate.getFullYear() === anchorYear;
     }
-
-    // RULE C — EXACT RECURRENCE INTERVALS:
-    const recType = item.recurrence?.type || item.recurrence_type || "none";
-
-    // Single occurrence (no recurrence)
-    if (recType === "none" || !recType) {
-      return diffDays === 0;
+    case "weekly_count": {
+      // Weekly for N weeks
+      const maxCount = rule.count && rule.count > 0 ? rule.count : 1;
+      const weekIndex = diffDays / 7;
+      return diffDays % 7 === 0 && weekIndex >= 0 && weekIndex < maxCount;
     }
-
-    // Weekly
-    if (recType === "weekly" || recType === "weekly_eoy" || recType === "custom_until") {
-      return diffDays % 7 === 0;
-    }
-
-    // Biweekly (През седмица / на всеки 2 седмици / 14 дни):
-    // Return diffDays >= 0 && diffDays % 14 === 0!
-    if (recType === "biweekly") {
+    case "biweekly": {
+      // Every other week (every 14 days)
       if (diffDays % 14 !== 0) return false;
       const biweekIndex = diffDays / 14;
-      const count = item.recurrence?.count || item.recurrenceCount || item.recurrence_count;
-      if (item.recurrence?.biweeklySpan === "count" && count) {
-        return biweekIndex >= 0 && biweekIndex < count;
+
+      if (rule.biweeklySpan === "count" && rule.count) {
+        return biweekIndex >= 0 && biweekIndex < rule.count;
       }
-      return true;
+      if (rule.untilDate) {
+        return targetDateKey <= rule.untilDate;
+      }
+      // default biweekly: until end of anchor year
+      return targetDate.getFullYear() === anchorDate.getFullYear();
     }
-
-    // Weekly count: repeat for N weeks (e.g. only for 2 weeks)
-    if (recType === "weekly_count") {
-      const maxCount = item.recurrence?.count || item.recurrenceCount || item.recurrence_count || 2;
-      return diffDays % 7 === 0 && (diffDays / 7) < maxCount;
+    case "custom_until": {
+      // Every week until custom date
+      if (diffDays % 7 !== 0) return false;
+      if (!rule.untilDate) return true;
+      return targetDateKey <= rule.untilDate;
     }
-
-    return diffDays === 0;
+    default:
+      return targetDateKey === anchorDateKey;
   }
-
-  // 2. Legacy baseline templates with NO start date: match by day of week
-  const dow = item.dayOfWeek ?? item.day_of_week ?? 1;
-  const [ty, tm, td] = targetDateStr.split("-").map(Number);
-  const targetDateObj = new Date(Date.UTC(ty, tm - 1, td));
-  const targetDow = targetDateObj.getUTCDay() === 0 ? 7 : targetDateObj.getUTCDay();
-
-  return dow === targetDow;
 }
 
 /**
  * Returns all events scheduled for a specific date, sorted chronologically.
  */
-
-/**
- * Calculates all occurrence dates for an event based on its start date and recurrence rule.
- * Returns array of "YYYY-MM-DD" strings in chronological order.
- * @param item Event data containing date, recurrence, dayOfWeek, and optional excludedDates
- * @param includeExcluded If true, returns all rule-generated dates; if false (default), excludes dates in item.excludedDates
- * @param maxDates Limit max occurrences (default 52)
- */
-export function getEventOccurrenceDates(
-  item: {
-    date?: string | null;
-    startDate?: string | null;
-    event_date?: string | null;
-    recurrence?: RecurrenceRule | null;
-    dayOfWeek?: number;
-    day_of_week?: number;
-    excludedDates?: string[];
-    excluded_dates?: string[];
-  },
-  includeExcluded = false,
-  maxDates = 52
-): string[] {
-  const dates: string[] = [];
-  const excluded = new Set(item.excludedDates || item.excluded_dates || []);
-
-  const startDateStr = item.startDate || item.date || (item as any).event_date;
-  if (!startDateStr) {
-    const dow = item.dayOfWeek ?? item.day_of_week ?? 1;
-    const now = new Date();
-    const currentDow = getDayOfWeekNumber(now);
-    const startOffset = (dow - currentDow + 7) % 7;
-    const firstDate = new Date(now);
-    firstDate.setDate(firstDate.getDate() + startOffset);
-
-    const limit = Math.min(maxDates, 12);
-    for (let i = 0; i < limit; i++) {
-      const d = new Date(firstDate);
-      d.setDate(d.getDate() + i * 7);
-      const k = formatDateKey(d);
-      if (includeExcluded || !excluded.has(k)) {
-        dates.push(k);
-      }
-    }
-    return dates;
-  }
-
-  const anchorDate = parseDateKey(startDateStr);
-  const rule = item.recurrence;
-
-  if (!rule || rule.type === "none") {
-    const k = formatDateKey(anchorDate);
-    if (includeExcluded || !excluded.has(k)) {
-      dates.push(k);
-    }
-    return dates;
-  }
-
-  const anchorYear = anchorDate.getFullYear();
-
-  switch (rule.type) {
-    case "weekly_count": {
-      const count = rule.count && rule.count > 0 ? rule.count : 2;
-      for (let i = 0; i < count; i++) {
-        const d = new Date(anchorDate);
-        d.setDate(d.getDate() + i * 7);
-        const k = formatDateKey(d);
-        if (includeExcluded || !excluded.has(k)) {
-          dates.push(k);
-        }
-      }
-      break;
-    }
-
-    case "weekly_eoy": {
-      let current = new Date(anchorDate);
-      let count = 0;
-      while (current.getFullYear() === anchorYear && count < maxDates) {
-        const k = formatDateKey(current);
-        if (includeExcluded || !excluded.has(k)) {
-          dates.push(k);
-        }
-        current = new Date(current);
-        current.setDate(current.getDate() + 7);
-        count++;
-      }
-      break;
-    }
-
-    case "biweekly": {
-      if (rule.biweeklySpan === "count" && rule.count) {
-        const count = rule.count;
-        for (let i = 0; i < count; i++) {
-          const d = new Date(anchorDate);
-          d.setDate(d.getDate() + i * 14);
-          const k = formatDateKey(d);
-          if (includeExcluded || !excluded.has(k)) {
-            dates.push(k);
-          }
-        }
-      } else if (rule.untilDate) {
-        let current = new Date(anchorDate);
-        let count = 0;
-        while (formatDateKey(current) <= rule.untilDate && count < maxDates) {
-          const k = formatDateKey(current);
-          if (includeExcluded || !excluded.has(k)) {
-            dates.push(k);
-          }
-          current = new Date(current);
-          current.setDate(current.getDate() + 14);
-          count++;
-        }
-      } else {
-        let current = new Date(anchorDate);
-        let count = 0;
-        while (current.getFullYear() === anchorYear && count < maxDates) {
-          const k = formatDateKey(current);
-          if (includeExcluded || !excluded.has(k)) {
-            dates.push(k);
-          }
-          current = new Date(current);
-          current.setDate(current.getDate() + 14);
-          count++;
-        }
-      }
-      break;
-    }
-
-    case "custom_until": {
-      const untilKey = rule.untilDate;
-      let current = new Date(anchorDate);
-      let count = 0;
-      while (count < maxDates) {
-        const k = formatDateKey(current);
-        if (untilKey && k > untilKey) break;
-        if (includeExcluded || !excluded.has(k)) {
-          dates.push(k);
-        }
-        current = new Date(current);
-        current.setDate(current.getDate() + 7);
-        count++;
-      }
-      break;
-    }
-
-    default: {
-      const k = formatDateKey(anchorDate);
-      if (includeExcluded || !excluded.has(k)) {
-        dates.push(k);
-      }
-      break;
-    }
-  }
-
-  return dates;
-}
-
 export function getEventsForDate(events: ScheduleItem[], targetDate: Date): ScheduleItem[] {
   return events
     .filter((e) => isEventOnDate(e, targetDate))
@@ -703,8 +518,8 @@ export function getRecurrenceHumanSummary(
 export function itemToRecord(item: ScheduleItem): {
   id: string;
   title: string;
-  title_en?: string;
   titleEn?: string;
+  title_en?: string;
   category: string;
   day_of_week: number;
   start_time: string;
@@ -717,14 +532,12 @@ export function itemToRecord(item: ScheduleItem): {
   recurrence?: RecurrenceRule | null;
   seriesId?: string | null;
   series_id?: string | null;
-  excludedDates?: string[];
-  excluded_dates?: string[];
 } {
   return {
     id: item.id,
     title: item.title,
-    title_en: item.titleEn || item.title_en || undefined,
-    titleEn: item.titleEn || item.title_en || undefined,
+    titleEn: item.titleEn,
+    title_en: item.titleEn,
     category: item.category,
     day_of_week: item.dayOfWeek,
     start_time: item.startTime,
@@ -737,7 +550,5 @@ export function itemToRecord(item: ScheduleItem): {
     recurrence: item.recurrence,
     seriesId: item.seriesId,
     series_id: item.seriesId,
-    excludedDates: item.excludedDates || [],
-    excluded_dates: item.excludedDates || [],
   };
 }

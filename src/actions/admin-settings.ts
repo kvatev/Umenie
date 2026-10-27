@@ -6,7 +6,6 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { SiteSettings, DEFAULT_SETTINGS, normalizePhoneNumber } from "@/lib/types/site-settings";
 
 const FILE_NAME = "settings.json";
-const OVERRIDES_FILE = "settings/site-overrides.json";
 
 export async function getSiteSettingsAction(): Promise<SiteSettings> {
   return await getSiteSettings();
@@ -30,23 +29,36 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
       phoneRaw = formData.phoneRaw?.trim() || normalized.phoneRaw;
     }
 
+    const heroBannerUrl =
+      formData.heroBannerUrl !== undefined
+        ? formData.heroBannerUrl.trim()
+        : formData.heroImageUrl !== undefined
+        ? formData.heroImageUrl.trim()
+        : (current.heroBannerUrl || "");
+
     const updatedSettings: SiteSettings = {
       phoneDisplay,
       phoneFull,
       phoneRaw,
       locationShort: formData.locationShort?.trim() ?? current.locationShort,
+      locationShortEn: formData.locationShortEn?.trim() ?? current.locationShortEn ?? DEFAULT_SETTINGS.locationShortEn,
       locationFull: formData.locationFull?.trim() ?? current.locationFull,
+      locationFullEn: formData.locationFullEn?.trim() ?? current.locationFullEn ?? DEFAULT_SETTINGS.locationFullEn,
       googleMapsUrl: formData.googleMapsUrl?.trim() ?? current.googleMapsUrl,
       email: formData.email?.trim() ?? current.email,
       tagline: formData.tagline?.trim() ?? current.tagline,
+      taglineEn: formData.taglineEn?.trim() ?? current.taglineEn ?? DEFAULT_SETTINGS.taglineEn,
       facebookUrl: formData.facebookUrl?.trim() ?? current.facebookUrl,
       instagramUrl: formData.instagramUrl?.trim() ?? current.instagramUrl,
       tiktokUrl: formData.tiktokUrl?.trim() ?? current.tiktokUrl,
-      heroBannerUrl: formData.heroBannerUrl !== undefined ? formData.heroBannerUrl.trim() : (current.heroBannerUrl || ""),
+      heroTitle: formData.heroTitle?.trim() ?? current.heroTitle ?? DEFAULT_SETTINGS.heroTitle,
+      heroTitleEn: formData.heroTitleEn?.trim() ?? current.heroTitleEn ?? DEFAULT_SETTINGS.heroTitleEn,
+      heroSubtitle: formData.heroSubtitle?.trim() ?? current.heroSubtitle ?? DEFAULT_SETTINGS.heroSubtitle,
+      heroSubtitleEn: formData.heroSubtitleEn?.trim() ?? current.heroSubtitleEn ?? DEFAULT_SETTINGS.heroSubtitleEn,
+      heroBannerUrl,
+      heroImageUrl: heroBannerUrl,
       heroVideoUrl: formData.heroVideoUrl !== undefined ? formData.heroVideoUrl.trim() : (current.heroVideoUrl || ""),
       heroMediaType: formData.heroMediaType ?? (current.heroMediaType || "image"),
-      heroTitleEn: formData.heroTitleEn !== undefined ? formData.heroTitleEn.trim() : (current.heroTitleEn || ""),
-      heroSubtitleEn: formData.heroSubtitleEn !== undefined ? formData.heroSubtitleEn.trim() : (current.heroSubtitleEn || ""),
       reviewScreenshotUrl: formData.reviewScreenshotUrl !== undefined ? formData.reviewScreenshotUrl.trim() : (current.reviewScreenshotUrl || ""),
       reviewScreenshots: formData.reviewScreenshots ?? (current.reviewScreenshots || []),
       kidsGalleryOrder: formData.kidsGalleryOrder ?? (current.kidsGalleryOrder || []),
@@ -60,20 +72,7 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
     const jsonString = JSON.stringify(updatedSettings, null, 2);
     const buffer = Buffer.from(jsonString, "utf-8");
 
-    // 1. Sync to Supabase Postgres settings table (key-value store, primary)
-    try {
-      await supabaseAdmin
-        .from("settings")
-        .upsert({
-          key: "site_settings",
-          value: updatedSettings,
-          updated_at: new Date().toISOString(),
-        });
-    } catch (dbErr) {
-      console.warn("Could not upsert to settings table:", dbErr);
-    }
-
-    // 2. Sync to site_settings table if present
+    // 1. Sync to site_settings table (schema requirement 1)
     try {
       await supabaseAdmin
         .from("site_settings")
@@ -85,46 +84,49 @@ export async function updateSiteSettingsAction(formData: Partial<SiteSettings>) 
           settings_json: updatedSettings,
           updated_at: new Date().toISOString(),
         });
-    } catch {}
-
-    // 3. Sync to Supabase Storage (site-media and site-assets) with cacheControl: "0"
-    const buckets = ["site-media", "site-assets"];
-    const files = [FILE_NAME, OVERRIDES_FILE];
-
-    for (const b of buckets) {
-      for (const f of files) {
-        try {
-          await supabaseAdmin.storage
-            .from(b)
-            .upload(f, buffer, {
-              contentType: "application/json",
-              upsert: true,
-              cacheControl: "0",
-            });
-        } catch {}
-      }
+    } catch (dbErr) {
+      console.warn("Could not upsert to site_settings table (continuing with storage):", dbErr);
     }
 
-    // 4. Revalidate all cached pages and tags that use settings or media
+    // 2. Sync to site-media storage bucket (primary) and site-assets (backup)
+    try {
+      await supabaseAdmin.storage
+        .from("site-media")
+        .upload(FILE_NAME, buffer, {
+          contentType: "application/json",
+          upsert: true,
+          cacheControl: "0",
+        });
+    } catch {}
+
+    try {
+      await supabaseAdmin.storage
+        .from("site-assets")
+        .upload(FILE_NAME, buffer, {
+          contentType: "application/json",
+          upsert: true,
+        });
+    } catch {}
+
+    // 3. Cache invalidation: revalidateTag and revalidatePath('/', 'layout')
     try {
       revalidateTag("site-settings");
       revalidateTag("reviews-images");
       revalidateTag("schedule-events");
-      revalidatePath("/", "layout");
-      revalidatePath("/uslugi", "layout");
-      revalidatePath("/uslugi/[slug]", "page");
-      revalidatePath("/za-nas", "page");
-      revalidatePath("/grafik", "page");
-      revalidatePath("/admin", "layout");
-      revalidatePath("/admin/contacts");
-      revalidatePath("/admin/media");
-      revalidatePath("/admin/settings");
-      revalidatePath("/admin/pages/home");
-      revalidatePath("/admin/pages/services");
-      revalidatePath("/admin/pages/about");
-    } catch (e) {
-      // Ignore if called outside an active Next.js request context
-    }
+    } catch {}
+
+    revalidatePath("/", "layout");
+    revalidatePath("/");
+    revalidatePath("/uslugi");
+    revalidatePath("/za-nas");
+    revalidatePath("/grafik");
+    revalidatePath("/admin");
+    revalidatePath("/admin/contacts");
+    revalidatePath("/admin/media");
+    revalidatePath("/admin/settings");
+    revalidatePath("/admin/pages/home");
+    revalidatePath("/admin/pages/services");
+    revalidatePath("/admin/pages/about");
 
     return {
       success: true,

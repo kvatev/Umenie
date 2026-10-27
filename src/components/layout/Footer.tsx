@@ -1,90 +1,82 @@
-"use client";
-
-import React, { useMemo } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Mail, MapPin } from "lucide-react";
-import { FOOTER_LEGAL_LINKS, SITE_CONFIG } from "@/lib/constants";
+import { Phone, MapPin, Mail } from "lucide-react";
+import { SITE_CONFIG, FOOTER_LEGAL_LINKS } from "@/lib/constants";
 import { Container } from "@/components/ui/Container";
-import { useLanguage } from "@/lib/i18n";
-import type { SiteSettings } from "@/lib/types/site-settings";
+import { getSiteSettings } from "@/lib/site-settings";
+import { resolveLocalized, getLocaleFromContext } from "@/lib/dictionaries";
 
-interface FooterProps {
-  initialSettings?: SiteSettings;
-}
-
-export function Footer({ initialSettings }: FooterProps) {
+export async function Footer() {
   const currentYear = new Date().getFullYear();
-  const { dict, locale } = useLanguage();
+  const settings = await getSiteSettings();
+  const locale = await getLocaleFromContext();
 
-  const settings = {
-    locationShort: locale === "en" ? dict.common.locationShort : (initialSettings?.locationShort || SITE_CONFIG.locationShort),
-    locationFull: locale === "en" ? dict.common.locationFull : (initialSettings?.locationFull || SITE_CONFIG.locationFull),
-    phoneDisplay: initialSettings?.phoneDisplay || SITE_CONFIG.phoneDisplay,
-    phoneRaw: initialSettings?.phoneRaw || SITE_CONFIG.phoneRaw,
-    email: initialSettings?.email || SITE_CONFIG.email,
-    googleMapsUrl: initialSettings?.googleMapsUrl || SITE_CONFIG.googleMapsUrl,
-    tagline: locale === "en" ? dict.common.footer.tagline : (initialSettings?.tagline || SITE_CONFIG.tagline),
-    facebookUrl: initialSettings?.facebookUrl || SITE_CONFIG.social.facebook,
-    instagramUrl: initialSettings?.instagramUrl || SITE_CONFIG.social.instagram,
-    tiktokUrl: initialSettings?.tiktokUrl || SITE_CONFIG.social.tiktok,
-  };
+  const isEn = locale === "en";
 
-  const localizedLegalLinks = useMemo(() => {
-    return FOOTER_LEGAL_LINKS.map((link) => {
-      let label = link.label;
-      if (link.href === "/blog") label = dict.common.footer.links.blog;
-      else if (link.href === "/za-nas") label = dict.common.footer.links.about;
-      else if (link.href === "/politika-za-poveritelnost") label = dict.common.footer.links.privacy;
-      else if (link.href === "/obsti-usloviya") label = dict.common.footer.links.terms;
-      return { ...link, label };
-    });
-  }, [dict]);
+  const locationFull = resolveLocalized(
+    locale,
+    settings.locationFull,
+    settings.locationFullEn,
+    SITE_CONFIG.locationFull,
+    "Slaveykov complex, block 48, ground floor, Burgas"
+  );
+
+  const tagline = resolveLocalized(
+    locale,
+    settings.tagline,
+    settings.taglineEn,
+    SITE_CONFIG.tagline,
+    "Educational club for successful children in Burgas"
+  );
+
+  const contactsTitle = isEn ? "CONTACTS" : "КОНТАКТИ";
+  const allRightsReserved = isEn
+    ? `© ${currentYear} Educational Club "Umenie" Burgas. All rights reserved.`
+    : `© ${currentYear} Образователен клуб „УМеНИе“ Бургас. Всички права запазени.`;
 
   return (
-    <footer className="w-full bg-[#e8e4f5] text-brand-dark pt-12 pb-8 border-t border-brand-purple/20">
+    <footer className="w-full bg-[#f1f2f6] border-t border-brand-purple/20 pt-10 sm:pt-14 pb-8 mt-auto">
       <Container size="xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 pb-8 border-b border-brand-purple/15">
-          {/* Column 1: Contacts & Physical Location */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 items-start pb-8 sm:pb-10 border-b border-brand-purple/15">
+          {/* Column 1: Contacts */}
           <div className="space-y-4">
             <h3 className="font-heading font-bold text-xl md:text-2xl text-brand-purple tracking-wide">
-              {dict.common.footer.contactsTitle}
+              {contactsTitle}
             </h3>
             <ul className="space-y-3.5 text-sm md:text-base font-medium text-brand-dark">
+              <li>
+                <a
+                  href={`tel:${settings.phoneRaw}`}
+                  className="inline-flex items-center gap-3 hover:text-brand-purple transition-colors group"
+                >
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors shrink-0">
+                    <Phone className="w-4 h-4 shrink-0" />
+                  </span>
+                  <span className="font-semibold">{settings.phoneFull}</span>
+                </a>
+              </li>
               <li>
                 <a
                   href={settings.googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-start gap-2.5 hover:text-brand-purple transition-colors group"
+                  className="inline-flex items-center gap-3 hover:text-brand-purple transition-colors group"
                 >
-                  <span className="p-1.5 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors shrink-0 mt-0.5">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors shrink-0">
                     <MapPin className="w-4 h-4 shrink-0" />
                   </span>
-                  <span className="text-xs md:text-sm leading-snug">
-                    {settings.locationFull}
-                  </span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href={`tel:${settings.phoneRaw}`}
-                  className="flex items-center gap-2.5 hover:text-brand-purple transition-colors group"
-                >
-                  <span className="p-1.5 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors shrink-0">
-                    <Phone className="w-4 h-4 shrink-0" />
-                  </span>
-                  <span className="text-xs md:text-sm font-semibold">
-                    {settings.phoneDisplay}
+                  <span className="text-xs md:text-sm font-medium">
+                    {locationFull}
                   </span>
                 </a>
               </li>
               <li>
                 <a
                   href={`mailto:${settings.email}`}
-                  className="flex items-center gap-2.5 hover:text-brand-purple transition-colors group"
+                  className="inline-flex items-center gap-3 hover:text-brand-purple transition-colors group"
                 >
-                  <span className="p-1.5 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors shrink-0">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white transition-colors shrink-0">
                     <Mail className="w-4 h-4 shrink-0" />
                   </span>
                   <span className="text-xs md:text-sm font-medium">
@@ -100,7 +92,7 @@ export function Footer({ initialSettings }: FooterProps) {
                 href={settings.facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={dict.common.footer.facebookAria}
+                aria-label="Facebook страница на УМеНИе"
                 className="relative w-11 h-11 rounded-full p-2 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm active:scale-95 flex items-center justify-center"
               >
                 <div className="relative w-6 h-6">
@@ -118,7 +110,7 @@ export function Footer({ initialSettings }: FooterProps) {
                 href={settings.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={dict.common.footer.instagramAria}
+                aria-label="Instagram профил на УМеНИе"
                 className="relative w-11 h-11 rounded-full p-2 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm active:scale-95 flex items-center justify-center"
               >
                 <div className="relative w-6 h-6">
@@ -136,7 +128,7 @@ export function Footer({ initialSettings }: FooterProps) {
                 href={settings.tiktokUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={dict.common.footer.tiktokAria}
+                aria-label="TikTok профил на УМеНИе"
                 className="relative w-11 h-11 rounded-full p-2 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm active:scale-95 flex items-center justify-center"
               >
                 <div className="relative w-5 h-5 flex items-center justify-center">
@@ -154,24 +146,24 @@ export function Footer({ initialSettings }: FooterProps) {
 
           {/* Column 2: Socials & Brand Identity (Visible on Desktop) */}
           <div className="hidden md:flex flex-col items-center justify-center text-center space-y-4 py-2">
-            <Link href="/" prefetch={true} className="relative block h-16 w-48">
+            <Link href={isEn ? "/?lang=en" : "/"} className="relative block h-16 w-48">
               <Image
                 src="/images/logo.webp"
-                alt={dict.common.siteName}
+                alt={SITE_CONFIG.name}
                 fill
                 className="object-contain"
                 sizes="192px"
               />
             </Link>
             <p className="text-xs md:text-sm text-brand-muted max-w-xs font-medium">
-              {settings.tagline}
+              {tagline}
             </p>
             <div className="flex items-center gap-4 pt-2">
               <a
                 href={settings.facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={dict.common.footer.facebookAria}
+                aria-label="Facebook страница на УМеНИе"
                 className="relative w-12 h-12 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm flex items-center justify-center"
               >
                 <div className="relative w-7 h-7">
@@ -189,7 +181,7 @@ export function Footer({ initialSettings }: FooterProps) {
                 href={settings.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={dict.common.footer.instagramAria}
+                aria-label="Instagram профил на УМеНИе"
                 className="relative w-12 h-12 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm flex items-center justify-center"
               >
                 <div className="relative w-7 h-7">
@@ -207,7 +199,7 @@ export function Footer({ initialSettings }: FooterProps) {
                 href={settings.tiktokUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={dict.common.footer.tiktokAria}
+                aria-label="TikTok профил на УМеНИе"
                 className="relative w-12 h-12 rounded-full p-2.5 bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white transition-all transform hover:scale-110 shadow-sm flex items-center justify-center"
               >
                 <div className="relative w-6 h-6 flex items-center justify-center">
@@ -223,18 +215,17 @@ export function Footer({ initialSettings }: FooterProps) {
             </div>
           </div>
 
-          {/* Column 3: Quick / Legal Links */}
-          <div className="space-y-4 md:text-right pt-2 md:pt-0">
+          {/* Column 3: Legal & Information Links */}
+          <div className="space-y-4 md:text-right">
             <h3 className="font-heading font-bold text-xl md:text-2xl text-brand-purple tracking-wide">
-              {dict.common.footer.quickLinksTitle}
+              {isEn ? "INFORMATION" : "ИНФОРМАЦИЯ"}
             </h3>
-            <ul className="space-y-2.5 text-sm md:text-base font-medium text-brand-dark">
-              {localizedLegalLinks.map((link) => (
+            <ul className="space-y-2.5 text-xs md:text-sm font-medium text-brand-dark/80">
+              {FOOTER_LEGAL_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link
-                    href={link.href}
-                    prefetch={true}
-                    className="hover:text-brand-purple transition-colors inline-block py-1"
+                    href={isEn ? `${link.href}?lang=en` : link.href}
+                    className="hover:text-brand-purple transition-colors inline-block"
                   >
                     {link.label}
                   </Link>
@@ -244,12 +235,9 @@ export function Footer({ initialSettings }: FooterProps) {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-muted gap-3">
-          <p>© {currentYear} {dict.common.footer.copyright}</p>
-          <p className="text-brand-muted/70">
-            {settings.locationShort}
-          </p>
+        {/* Copyright notice */}
+        <div className="pt-6 sm:pt-8 text-center text-xs text-brand-muted">
+          <p>{allRightsReserved}</p>
         </div>
       </Container>
     </footer>

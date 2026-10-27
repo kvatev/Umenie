@@ -2,8 +2,8 @@ import { SITE_CONFIG } from "@/lib/constants";
 
 export interface AboutTextItem {
   title: string;
-  text: string;
   titleEn?: string;
+  text: string;
   textEn?: string;
 }
 
@@ -15,12 +15,28 @@ export interface SlideViewSetting {
 
 export interface ServiceOverride {
   title?: string;
+  titleEn?: string;
   shortTitle?: string;
+  shortTitleEn?: string;
+  badge?: string;
+  badgeEn?: string;
+  shortDescription?: string;
+  shortDescriptionEn?: string;
   sloganPart1?: string;
+  sloganPart1En?: string;
   sloganPart2?: string;
+  sloganPart2En?: string;
   intro?: string;
+  introEn?: string;
+  introNarrative?: string;
+  introNarrativeEn?: string;
   bulletPoints?: string[];
+  bulletPointsEn?: string[];
+  bullets?: string[];
+  bulletsEn?: string[];
   pageImages?: string[];
+  page1Image?: string;
+  page2Image?: string;
   sliderImages?: string[];
   galleryTitle?: string;
   hasSlider?: boolean;
@@ -28,18 +44,6 @@ export interface ServiceOverride {
   videos?: string[];
   videoPosters?: string[];
   showVideos?: boolean;
-
-  // English translations & manual overrides
-  titleEn?: string;
-  badgeEn?: string;
-  shortTitleEn?: string;
-  sloganPart1En?: string;
-  sloganPart2En?: string;
-  introNarrativeEn?: string;
-  introEn?: string;
-  bulletsEn?: string[];
-  bulletPointsEn?: string[];
-  galleryTitleEn?: string;
 }
 
 export interface SiteSettings {
@@ -47,20 +51,25 @@ export interface SiteSettings {
   phoneFull: string;
   phoneRaw: string;
   locationShort: string;
+  locationShortEn?: string;
   locationFull: string;
+  locationFullEn?: string;
   googleMapsUrl: string;
   email: string;
   tagline: string;
+  taglineEn?: string;
   facebookUrl: string;
   instagramUrl: string;
   tiktokUrl: string;
   // Hero Banner settings
+  heroTitle?: string;
+  heroTitleEn?: string;
+  heroSubtitle?: string;
+  heroSubtitleEn?: string;
   heroBannerUrl?: string;
+  heroImageUrl?: string;
   heroVideoUrl?: string;
   heroMediaType?: "image" | "video";
-  // Hero texts in English
-  heroTitleEn?: string;
-  heroSubtitleEn?: string;
   // Review Screenshot setting (single or multiple)
   reviewScreenshotUrl?: string;
   reviewScreenshots?: string[];
@@ -81,18 +90,24 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   phoneFull: SITE_CONFIG.phoneFull,
   phoneRaw: SITE_CONFIG.phoneRaw,
   locationShort: SITE_CONFIG.locationShort,
+  locationShortEn: "Burgas, Slaveykov, bl. 48",
   locationFull: SITE_CONFIG.locationFull,
+  locationFullEn: "Slaveykov complex, block 48, ground floor, Burgas",
   googleMapsUrl: SITE_CONFIG.googleMapsUrl,
   email: SITE_CONFIG.email,
   tagline: SITE_CONFIG.tagline,
+  taglineEn: "Educational club for successful children in Burgas",
+  heroTitle: "УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА",
+  heroTitleEn: "LESSONS, COURSES AND ACTIVITIES FOR SUCCESSFUL CHILDREN",
+  heroSubtitle: "Образователен клуб „УМеНИе“ – Бургас, к-с Славейков",
+  heroSubtitleEn: "Educational Club 'Umenie' – Burgas, Slaveykov complex",
   facebookUrl: SITE_CONFIG.social.facebook,
   instagramUrl: SITE_CONFIG.social.instagram,
   tiktokUrl: SITE_CONFIG.social.tiktok,
   heroBannerUrl: "",
+  heroImageUrl: "",
   heroVideoUrl: "",
   heroMediaType: "image",
-  heroTitleEn: "",
-  heroSubtitleEn: "",
   reviewScreenshotUrl: "",
   reviewScreenshots: [],
   kidsGalleryOrder: [],
@@ -101,41 +116,41 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   aboutValues: [
     {
       title: "УМЕНИЯ ОТВЪД УРОЦИТЕ",
-      text: "Децата развиват умения отвъд уроците, които ще носят цял живот – увереност, отговорност, работа в екип и критично мислене.",
       titleEn: "SKILLS BEYOND LESSONS",
+      text: "Децата развиват умения отвъд уроците, които ще носят цял живот – увереност, отговорност, работа в екип и критично мислене.",
       textEn: "Children develop lifelong skills beyond lessons – confidence, responsibility, teamwork, and critical thinking.",
     },
     {
       title: "СРЕДА, БЛИЗКА ДО ДОМА",
+      titleEn: "HOME-LIKE ENVIRONMENT",
       text: "Място, където всяко дете се чувства прието и спокойно да бъде себе си, а уважението, добротата и отношението към другите са част от всеки ден.",
-      titleEn: "A HOME-LIKE ENVIRONMENT",
-      textEn: "A place where every child feels accepted and at ease to be themselves, where respect, kindness, and empathy are practiced daily.",
+      textEn: "A place where every child feels accepted and at ease to be themselves, with kindness and respect in everyday interactions.",
     },
     {
       title: "ИНДИВИДУАЛЕН ПОДХОД",
-      text: "В малки групи всяко дете получава лично внимание и подкрепа, защото започваме от неговото ниво и го издигаме нагоре.",
       titleEn: "INDIVIDUAL APPROACH",
-      textEn: "In small groups, each child receives personal attention and support, meeting them right at their level and elevating them.",
+      text: "В малки групи всяко дете получава лично внимание и подкрепа, защото започваме от неговото ниво и го издигаме нагоре.",
+      textEn: "In small groups, each child receives personal attention and support, meeting them at their level and lifting them higher.",
     },
   ],
   aboutFeatures: [
     {
       title: "БЕЗ ЕКРАНИ",
-      text: "Екраните остават настрана, за да има място за знание, мечти и истински приятелства.",
       titleEn: "SCREEN-FREE",
-      textEn: "Screens are set aside to make room for knowledge, imagination, and genuine friendships.",
+      text: "Екраните остават настрана, за да има място за знание, мечти и истински приятелства.",
+      textEn: "Screens are set aside to make room for knowledge, imagination, and real friendships.",
     },
     {
       title: "УЧЕНЕ ЧРЕЗ ПРАКТИКА",
+      titleEn: "HANDS-ON LEARNING",
       text: "Знанията влизат в действие чрез задачи, игри и практика, вместо да остават само на хартия.",
-      titleEn: "LEARNING THROUGH PRACTICE",
-      textEn: "Knowledge comes alive through hands-on tasks, games, and practice, rather than staying only on paper.",
+      textEn: "Knowledge comes to life through interactive tasks, games, and practice instead of staying on paper.",
     },
     {
       title: "РОДИТЕЛЯТ Е ЧАСТ ОТ ПРОЦЕСА",
+      titleEn: "PARENTS AS PARTNERS",
       text: "Регулярната обратна връзка ви държи близо до напредъка, интересите и нуждите на детето.",
-      titleEn: "PARENTS ARE PART OF THE JOURNEY",
-      textEn: "Regular open feedback keeps you closely connected to your child's progress, passions, and needs.",
+      textEn: "Regular feedback keeps you connected to your child's progress, interests, and needs.",
     },
   ],
   servicesOverrides: {},
@@ -143,8 +158,6 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 
 /**
  * Utility to normalize and automatically derive all phone formats
- * (display format, international/footer format, and dialable tel: format)
- * from a single user input string.
  */
 export function normalizePhoneNumber(input: string): {
   phoneDisplay: string;
@@ -156,20 +169,16 @@ export function normalizePhoneNumber(input: string): {
     return { phoneDisplay: "", phoneFull: "", phoneRaw: "" };
   }
 
-  // Strip spaces, dashes, brackets, dots, slashes
   let clean = trimmed.replace(/[\s\-\(\)\.\/]/g, "");
 
-  // Convert leading 00 to +
   if (clean.startsWith("00")) {
     clean = "+" + clean.slice(2);
   }
 
-  // Case 1: Bulgarian international (+359...)
   if (clean.startsWith("+359")) {
-    const rest = clean.slice(4); // digits after +359
+    const rest = clean.slice(4);
     const raw = "+359" + rest;
 
-    // Standard Bulgarian mobile (9 digits without leading 0, e.g. 877488481)
     if (rest.length === 9) {
       const part1 = rest.slice(0, 3);
       const part2 = rest.slice(3, 6);
@@ -181,10 +190,8 @@ export function normalizePhoneNumber(input: string): {
       };
     }
 
-    // Bulgarian landline 8 digits
     if (rest.length === 8) {
       if (rest.startsWith("2")) {
-        // Sofia (02)
         return {
           phoneDisplay: `02 ${rest.slice(1, 4)} ${rest.slice(4)}`,
           phoneFull: `+359 2 ${rest.slice(1, 4)} ${rest.slice(4)}`,
@@ -206,12 +213,10 @@ export function normalizePhoneNumber(input: string): {
     };
   }
 
-  // Case 2: Bulgarian national format (starts with 0)
   if (clean.startsWith("0")) {
     const rest = clean.slice(1);
     const raw = "+359" + rest;
 
-    // Mobile: 10 digits total (rest is 9 digits, e.g. 877488481)
     if (rest.length === 9) {
       const part1 = rest.slice(0, 3);
       const part2 = rest.slice(3, 6);
@@ -223,7 +228,6 @@ export function normalizePhoneNumber(input: string): {
       };
     }
 
-    // Landline: 9 digits total (rest is 8 digits)
     if (rest.length === 8) {
       if (rest.startsWith("2")) {
         return {
@@ -247,7 +251,6 @@ export function normalizePhoneNumber(input: string): {
     };
   }
 
-  // Case 3: Other international number (+...)
   if (clean.startsWith("+")) {
     const digitsOnly = "+" + clean.slice(1).replace(/\D/g, "");
     return {
@@ -257,7 +260,6 @@ export function normalizePhoneNumber(input: string): {
     };
   }
 
-  // Case 4: Digits without prefix (e.g. 877488481)
   if (clean.length === 9 && (clean.startsWith("8") || clean.startsWith("9"))) {
     const part1 = clean.slice(0, 3);
     const part2 = clean.slice(3, 6);
@@ -269,7 +271,6 @@ export function normalizePhoneNumber(input: string): {
     };
   }
 
-  // Fallback
   const digits = clean.replace(/\D/g, "");
   return {
     phoneDisplay: trimmed,

@@ -45,6 +45,10 @@ interface HomePageEditorProps {
   initialHeroUrl: string | null;
   initialHeroVideoUrl?: string;
   initialHeroMediaType?: "image" | "video";
+  initialHeroTitle?: string;
+  initialHeroTitleEn?: string;
+  initialHeroSubtitle?: string;
+  initialHeroSubtitleEn?: string;
   initialReviewScreenshotUrl?: string;
   initialReviewsImages?: ReviewImageRecord[];
   initialKidsGallery: StorageMediaItem[];
@@ -66,6 +70,10 @@ export function HomePageEditor({
   initialHeroUrl,
   initialHeroVideoUrl = "",
   initialHeroMediaType = "image",
+  initialHeroTitle = "",
+  initialHeroTitleEn = "",
+  initialHeroSubtitle = "",
+  initialHeroSubtitleEn = "",
   initialReviewScreenshotUrl = "",
   initialReviewsImages = [],
   initialKidsGallery,
@@ -75,7 +83,12 @@ export function HomePageEditor({
   const [activeSubTab, setActiveSubTab] = useState<"hero" | "reviews" | "kids">("hero");
   const [isPending, startTransition] = useTransition();
 
-  // 1. HERO BANNER STATE
+  // 1. HERO BANNER & TEXT STATE
+  const [heroTitle, setHeroTitle] = useState(initialHeroTitle);
+  const [heroTitleEn, setHeroTitleEn] = useState(initialHeroTitleEn);
+  const [heroSubtitle, setHeroSubtitle] = useState(initialHeroSubtitle);
+  const [heroSubtitleEn, setHeroSubtitleEn] = useState(initialHeroSubtitleEn);
+  const [heroTextSuccess, setHeroTextSuccess] = useState<string | null>(null);
   const [heroMediaType, setHeroMediaType] = useState<"image" | "video">(initialHeroMediaType);
   const [heroUrl, setHeroUrl] = useState<string>(initialHeroUrl || "/images/opening-photo.webp");
   const [heroVideoUrl, setHeroVideoUrl] = useState<string>(initialHeroVideoUrl);
@@ -193,6 +206,25 @@ export function HomePageEditor({
       });
     }
   });
+
+
+  const handleSaveHeroTexts = () => {
+    setHeroTextSuccess(null);
+    startTransition(async () => {
+      const { updateSiteSettingsAction } = await import("@/actions/admin-settings");
+      const res = await updateSiteSettingsAction({
+        heroTitle: heroTitle.trim(),
+        heroTitleEn: heroTitleEn.trim(),
+        heroSubtitle: heroSubtitle.trim(),
+        heroSubtitleEn: heroSubtitleEn.trim(),
+      });
+      if (res.success) {
+        setHeroTextSuccess("Заглавията на Hero секцията са запазени успешно!");
+      } else {
+        setHeroMessage({ type: "error", text: res.message || "Грешка при запазване на заглавията." });
+      }
+    });
+  };
 
   // --- HANDLERS: HERO ---
   const handleHeroFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -576,6 +608,87 @@ export function HomePageEditor({
                 <span>{heroMessage.text}</span>
               </div>
             )}
+
+            
+            {/* HERO TEXT EDIT SECTION (BG & EN) */}
+            <div className="p-5 rounded-2xl bg-brand-bg/50 border border-brand-purple/20 space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-brand-purple/10">
+                <h3 className="font-heading font-bold text-sm text-brand-dark flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-brand-purple" />
+                  Заглавия и текстове в Hero банера (Български и Английски)
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleSaveHeroTexts}
+                  disabled={isPending}
+                  className="px-4 py-2 rounded-xl bg-brand-purple text-white text-xs font-heading font-bold hover:bg-brand-purple-hover transition-all flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  <span>Запази заглавията</span>
+                </button>
+              </div>
+
+              {heroTextSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{heroTextSuccess}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
+                    Главно заглавие (BG) *
+                  </label>
+                  <input
+                    type="text"
+                    value={heroTitle}
+                    onChange={(e) => setHeroTitle(e.target.value)}
+                    placeholder="УРОЦИ, КУРСОВЕ И ЗАНИМАНИЯ ЗА УСПЕШНИ ДЕЦА"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white text-sm text-brand-dark border border-brand-purple/20 focus:outline-none focus:ring-2 focus:ring-brand-purple font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
+                    Main Title (EN) *
+                  </label>
+                  <input
+                    type="text"
+                    value={heroTitleEn}
+                    onChange={(e) => setHeroTitleEn(e.target.value)}
+                    placeholder="LESSONS, COURSES AND ACTIVITIES FOR SUCCESSFUL CHILDREN"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white text-sm text-brand-dark border border-brand-purple/20 focus:outline-none focus:ring-2 focus:ring-brand-purple font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
+                    Подзаглавие / Описание (BG)
+                  </label>
+                  <input
+                    type="text"
+                    value={heroSubtitle}
+                    onChange={(e) => setHeroSubtitle(e.target.value)}
+                    placeholder="Образователен клуб „УМеНИе“ – Бургас, к-с Славейков"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white text-sm text-brand-dark border border-brand-purple/20 focus:outline-none focus:ring-2 focus:ring-brand-purple"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
+                    Subtitle / Description (EN)
+                  </label>
+                  <input
+                    type="text"
+                    value={heroSubtitleEn}
+                    onChange={(e) => setHeroSubtitleEn(e.target.value)}
+                    placeholder="Educational Club 'Umenie' – Burgas, Slaveykov complex"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white text-sm text-brand-dark border border-brand-purple/20 focus:outline-none focus:ring-2 focus:ring-brand-purple"
+                  />
+                </div>
+              </div>
+            </div>
 
             {heroMediaType === "image" ? (
               /* A. Image Banner Upload Mode */

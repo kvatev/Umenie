@@ -9,12 +9,21 @@ import { ServiceSlider } from "@/components/services/ServiceSlider";
 import { QuickContactBanner } from "@/components/common/QuickContactBanner";
 import { BulletBulbIcon } from "@/components/common/BulletBulbIcon";
 import { getSiteSettings } from "@/lib/site-settings";
-import { getServerDictionary } from "@/lib/i18n/server";
+import { resolveServiceData, getLocaleFromContext } from "@/lib/dictionaries";
 import { ArrowRight, Video } from "lucide-react";
-
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ lang?: string }>;
+}
+
+export async function generateStaticParams() {
+  const params = SERVICES_DATA.map((service) => ({
+    slug: service.slug,
+  }));
+  // Alias for backward compatibility
+  params.push({ slug: "chitatelski-klub" });
+  return params;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -22,27 +31,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const baseService = getServiceBySlug(slug);
   if (!baseService) return { title: "Услугата не е намерена" };
 
-  const [{ locale, dict }, settings] = await Promise.all([
-    getServerDictionary(),
-    getSiteSettings(),
-  ]);
-
+  const settings = await getSiteSettings();
   const override = settings.servicesOverrides?.[baseService.slug] || settings.servicesOverrides?.[slug] || {};
-  const enItem = locale === "en" ? (dict.services.items as Record<string, any>)[baseService.slug] : null;
+  const service = { ...baseService, ...override };
 
-  const title =
-    locale === "en"
-      ? (override.titleEn?.trim() || enItem?.title || baseService.title)
-      : (override.title?.trim() || baseService.title);
-
-  const shortDescription =
-    locale === "en"
-      ? (override.introNarrativeEn?.trim() || override.introEn?.trim() || enItem?.shortDescription || baseService.shortDescription)
-      : (override.intro?.trim() || baseService.shortDescription);
-
-  const service = { ...baseService, ...override, title, shortDescription };
-  const fullTitle = `${title} | ${locale === "en" ? "Club Umenie Burgas" : "Клуб УМеНИе Бургас"}`;
-  const canonicalUrl = `https://www.umenie.net/uslugi/${baseService.slug}`;
+  const fullTitle = `${service.title} | Клуб УМеНИе Бургас`;
+  const canonicalUrl = `https://www.umenie.net/uslugi/${service.slug}`;
 
   return {
     title: fullTitle,
@@ -86,7 +80,7 @@ function renderHighlightedText(text: string) {
   });
 }
 
-export default async function ServiceDetailPage({ params }: PageProps) {
+export default async function ServiceDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const baseService = getServiceBySlug(slug);
 
@@ -94,74 +88,25 @@ export default async function ServiceDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const [{ locale, dict }, settings] = await Promise.all([
-    getServerDictionary(),
-    getSiteSettings(),
-  ]);
-
+  const locale = await getLocaleFromContext(searchParams);
+  const isEn = locale === "en";
+  const settings = await getSiteSettings();
   const override = settings.servicesOverrides?.[baseService.slug] || settings.servicesOverrides?.[slug] || {};
-  const enItem = locale === "en" ? (dict.services.items as Record<string, any>)[baseService.slug] : null;
 
-  const service = {
-    ...baseService,
-    title:
-      locale === "en"
-        ? (override.titleEn?.trim() || enItem?.title || baseService.title)
-        : (override.title?.trim() || baseService.title),
-    shortTitle:
-      locale === "en"
-        ? (override.badgeEn?.trim() || override.shortTitleEn?.trim() || enItem?.shortTitle || baseService.shortTitle)
-        : (override.shortTitle?.trim() || baseService.shortTitle),
-    sloganPart1:
-      locale === "en"
-        ? (override.sloganPart1En?.trim() || enItem?.sloganPart1 || baseService.sloganPart1)
-        : (override.sloganPart1?.trim() || baseService.sloganPart1),
-    sloganPart2:
-      locale === "en"
-        ? (override.sloganPart2En?.trim() || enItem?.sloganPart2 || baseService.sloganPart2)
-        : (override.sloganPart2?.trim() || baseService.sloganPart2),
-    intro:
-      locale === "en"
-        ? (override.introNarrativeEn?.trim() || override.introEn?.trim() || enItem?.intro || baseService.intro)
-        : (override.intro?.trim() || baseService.intro),
-    bulletPoints:
-      locale === "en"
-        ? ((override.bulletsEn && override.bulletsEn.length > 0)
-            ? override.bulletsEn
-            : (override.bulletPointsEn && override.bulletPointsEn.length > 0)
-              ? override.bulletPointsEn
-              : enItem?.bulletPoints || baseService.bulletPoints)
-        : (override.bulletPoints && override.bulletPoints.length > 0 ? override.bulletPoints : baseService.bulletPoints),
-    galleryTitle:
-      locale === "en"
-        ? (override.galleryTitleEn?.trim() || enItem?.galleryTitle || baseService.galleryTitle)
-        : (override.galleryTitle?.trim() || baseService.galleryTitle),
-    pageImages: [
-      override.pageImages?.[0] || baseService.pageImages[0],
-      override.pageImages?.[1] || baseService.pageImages[1] || baseService.pageImages[0],
-    ],
-    sliderImages: override.sliderImages && override.sliderImages.length > 0 ? override.sliderImages : baseService.sliderImages,
-    hasSlider: override.hasSlider !== undefined ? override.hasSlider : baseService.hasSlider,
-    sliderImageSettings: override.sliderImageSettings || {},
-    videos: override.videos && override.videos.length > 0 ? override.videos : baseService.videos,
-    videoPosters: override.videoPosters && override.videoPosters.length > 0 ? override.videoPosters : baseService.videoPosters,
-  };
+  const service = resolveServiceData(baseService, override, locale);
 
   return (
     <div className="w-full bg-[#f1f2f6] min-h-screen overflow-x-hidden pt-28 sm:pt-32 pb-16">
       {/* Service Header: Breadcrumbs & Title */}
       <div className="pt-2 sm:pt-4 mb-6 sm:mb-8">
         <Container size="xl">
-          <nav
-            aria-label={dict.services.breadcrumbs.ariaLabel}
-            className="inline-flex items-center gap-2 text-xs font-bold text-brand-purple uppercase tracking-wider mb-4 sm:mb-6"
-          >
+          <nav aria-label="Хлебни трохи" className="inline-flex items-center gap-2 text-xs font-bold text-brand-purple uppercase tracking-wider mb-4 sm:mb-6">
             <Link href="/" className="hover:underline">
-              {dict.common.nav.home}
+              Начало
             </Link>
             <span>/</span>
             <Link href="/uslugi" className="hover:underline">
-              {dict.common.nav.services}
+              Услуги
             </Link>
             <span>/</span>
             <span className="text-brand-purple/70">{service.shortTitle}</span>
@@ -238,7 +183,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             <ul className="space-y-3 sm:space-y-4 text-sm sm:text-base leading-relaxed text-white/95">
               {service.bulletPoints.map((bullet: string, idx: number) => (
                 <li key={idx} className="flex items-start gap-3">
-                  <BulletBulbIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 mt-0.5" />
+                  <BulletBulbIcon className="text-white drop-shadow-sm mt-0.5" />
                   <span className="text-white/95 leading-snug">
                     {renderHighlightedText(bullet)}
                   </span>
@@ -248,10 +193,10 @@ export default async function ServiceDetailPage({ params }: PageProps) {
 
             <div>
               <Link
-                href="/grafik"
+                href={isEn ? "/grafik?lang=en" : "/grafik"}
                 className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-[#887ed8] font-heading font-bold text-sm sm:text-base shadow-xl hover:bg-[#ede9fe] transition-all transform hover:scale-[1.02] active:scale-[0.98] uppercase cursor-pointer"
               >
-                <span>{dict.services.viewSchedule}</span>
+                <span>{isEn ? "VIEW SCHEDULE" : "ВИЖТЕ ГРАФИКА"}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -266,22 +211,19 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             <div className="max-w-2xl mx-auto text-center mb-8 sm:mb-12 space-y-2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-purple/10 text-brand-purple font-heading font-bold text-xs uppercase tracking-wider">
                 <Video className="w-3.5 h-3.5" />
-                {dict.services.videoShowcase.badge}
+                ВИДЕА ОТ ЗАНИМАНИЯТА
               </span>
               <h2 className="font-heading font-extrabold text-2xl sm:text-4xl text-brand-purple tracking-wide uppercase">
-                {dict.services.videoShowcase.title}
+                ВИЖТЕ УМЕНИЕТО В ДЕЙСТВИЕ
               </h2>
               <p className="text-brand-muted text-xs sm:text-base max-w-xl mx-auto">
-                {locale === "en"
-                  ? `${dict.services.videoShowcase.descPrefix} ${service.shortTitle.toLowerCase()} ${dict.services.videoShowcase.descClub}`
-                  : `Реални кадри от творческия процес и занятията по ${service.shortTitle.toLowerCase()} в образователен клуб „УМеНИе“`}
+                Реални кадри от творческия процес и занятията по {service.shortTitle.toLowerCase()} в образователен клуб „УМеНИе“.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto items-stretch">
               {service.videos.map((vidSrc, vidIdx) => {
                 const posterSrc = service.videoPosters?.[vidIdx];
-                const card = dict.services.videoShowcase.cards[vidIdx] || dict.services.videoShowcase.cards[0];
                 return (
                   <div
                     key={vidIdx}
@@ -299,10 +241,14 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                     </div>
                     <div className="p-5 text-left space-y-1.5 mt-auto bg-white border-t border-brand-purple/10">
                       <h4 className="font-heading font-bold text-base sm:text-lg text-brand-dark">
-                        {card.title}
+                        {vidIdx === 0
+                          ? "Учим първите бримки"
+                          : "Резултатът от търпението"}
                       </h4>
                       <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">
-                        {card.desc}
+                        {vidIdx === 0
+                          ? "Индивидуално внимание, спокойна атмосфера и усвояване на основните техники в малка група."
+                          : "Сръчност, креативност и истинска гордост от създаденото със собствените ръце."}
                       </p>
                     </div>
                   </div>

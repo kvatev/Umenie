@@ -25,8 +25,8 @@ import {
 export interface ScheduleRecord {
   id: string;
   title: string;
-  title_en?: string;
   titleEn?: string;
+  title_en?: string;
   category: string;
   day_of_week: number;
   start_time: string;
@@ -39,8 +39,6 @@ export interface ScheduleRecord {
   recurrence?: RecurrenceRule | null;
   seriesId?: string | null;
   series_id?: string | null;
-  excludedDates?: string[];
-  excluded_dates?: string[];
 }
 
 interface ScheduleModalProps {
@@ -76,7 +74,6 @@ export function ScheduleModal({
   // Form states
   const [title, setTitle] = useState("");
   const [titleEn, setTitleEn] = useState("");
-  const [isTranslatingTitle, setIsTranslatingTitle] = useState(false);
   const [category, setCategory] = useState("art");
   const [startDateStr, setStartDateStr] = useState<string>(() => formatDateKey(new Date()));
   const [dayOfWeek, setDayOfWeek] = useState<number>(1);
@@ -106,7 +103,7 @@ export function ScheduleModal({
 
     if (scheduleToEdit) {
       setTitle(scheduleToEdit.title);
-      setTitleEn(scheduleToEdit.titleEn || scheduleToEdit.title_en || "");
+      setTitleEn(scheduleToEdit.titleEn || (scheduleToEdit as any).title_en || "");
       setCategory(scheduleToEdit.category);
       setDayOfWeek(scheduleToEdit.day_of_week);
       setStartTime(scheduleToEdit.start_time.slice(0, 5));
@@ -131,6 +128,7 @@ export function ScheduleModal({
     } else {
       // New item reset
       setTitle("");
+      setTitleEn("");
       setCategory("art");
       const d = initialDate || formatDateKey(new Date());
       setStartDateStr(d);
@@ -228,27 +226,6 @@ export function ScheduleModal({
 
   if (!isOpen) return null;
 
-
-  const handleAutoTranslateTitle = async () => {
-    if (!title.trim()) return;
-    setIsTranslatingTitle(true);
-    try {
-      const res = await fetch("/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: title }),
-      });
-      const data = await res.json();
-      if (data.success && data.text) {
-        setTitleEn(data.text);
-      }
-    } catch (err) {
-      console.error("Auto translate schedule title failed:", err);
-    } finally {
-      setIsTranslatingTitle(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -262,8 +239,6 @@ export function ScheduleModal({
 
     const payload: ScheduleFormData = {
       title: title.trim(),
-      titleEn: titleEn.trim() || undefined,
-      title_en: titleEn.trim() || undefined,
       category,
       day_of_week: Number(dayOfWeek),
       start_time: startTime,
@@ -384,7 +359,7 @@ export function ScheduleModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
-                Заглавие на занятието (BG) *
+                Заглавие на занятието *
               </label>
               <input
                 type="text"

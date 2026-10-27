@@ -23,6 +23,10 @@ export default async function AdminHomePageEditorPage() {
       initialHeroUrl={settings.heroBannerUrl || null}
       initialHeroVideoUrl={settings.heroVideoUrl || ""}
       initialHeroMediaType={settings.heroMediaType || "image"}
+      initialHeroTitle={settings.heroTitle || ""}
+      initialHeroTitleEn={settings.heroTitleEn || ""}
+      initialHeroSubtitle={settings.heroSubtitle || ""}
+      initialHeroSubtitleEn={settings.heroSubtitleEn || ""}
       initialReviewScreenshotUrl={settings.reviewScreenshotUrl || ""}
       initialReviewsImages={reviewsRes.items || []}
       initialKidsGallery={kidsRes.items || []}
