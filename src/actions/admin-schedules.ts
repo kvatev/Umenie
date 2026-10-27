@@ -441,7 +441,12 @@ export async function toggleScheduleActiveAction(
 /**
  * Delete Schedule Item (Single or Entire Series)
  */
-export async function deleteScheduleAction(id: string, scope: "single" | "series" = "single") {
+export async function deleteScheduleAction(
+  id: string,
+  scopeOrOptions: "single" | "series" | { scope?: "single" | "series" | "dates"; targetDates?: string[] } = "single"
+) {
+  const scope = typeof scopeOrOptions === "object" ? (scopeOrOptions.scope || "single") : scopeOrOptions;
+  const targetDates = typeof scopeOrOptions === "object" ? scopeOrOptions.targetDates : undefined;
   try {
     const currentList = await getSchedulesAction();
     const target = currentList.find((item) => item.id === id);

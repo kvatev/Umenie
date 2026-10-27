@@ -1746,7 +1746,7 @@ export function ScheduleTable({
 
                     {/* Scrollable list of occurrence dates */}
                     <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
-                      {occurrences.map((dKey) => {
+                      {occurrences.map((dKey: string) => {
                         const isSelected = selectedDeleteDates.includes(dKey);
                         const isTarget = dKey === deleteTargetDate;
                         return (

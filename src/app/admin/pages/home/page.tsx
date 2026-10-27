@@ -31,7 +31,6 @@ export default async function AdminHomePageEditorPage() {
       initialReviewsImages={reviewsRes.items || []}
       initialKidsGallery={kidsRes.items || []}
       initialKidsGalleryOrder={settings.kidsGalleryOrder || []}
-      initialHeroTitleEn={settings.heroTitleEn || ""}
     />
   );
 }

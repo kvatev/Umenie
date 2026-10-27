@@ -53,7 +53,6 @@ interface HomePageEditorProps {
   initialReviewsImages?: ReviewImageRecord[];
   initialKidsGallery: StorageMediaItem[];
   initialKidsGalleryOrder?: string[];
-  initialHeroTitleEn?: string;
 }
 
 const DEFAULT_KIDS_PHOTOS = [
@@ -78,7 +77,6 @@ export function HomePageEditor({
   initialReviewsImages = [],
   initialKidsGallery,
   initialKidsGalleryOrder = [],
-  initialHeroTitleEn = "",
 }: HomePageEditorProps) {
   const [activeSubTab, setActiveSubTab] = useState<"hero" | "reviews" | "kids">("hero");
   const [isPending, startTransition] = useTransition();
@@ -98,7 +96,6 @@ export function HomePageEditor({
 
 
   // Hero bilingual text state
-  const [heroTitleEn, setHeroTitleEn] = useState<string>(initialHeroTitleEn || "EDUCATIONAL CLUB UMENIE");
   const [heroTextLocale, setHeroTextLocale] = useState<"bg" | "en">("bg");
   const [isTranslatingHeroText, setIsTranslatingHeroText] = useState(false);
 
@@ -109,7 +106,7 @@ export function HomePageEditor({
       const res = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: "ОБРАЗОВАТЕЛЕН КЛУБ УМЕНИЕ", from: "bg", to: "en" }),
+        body: JSON.stringify({ text: heroTitle || "ОБРАЗОВАТЕЛЕН КЛУБ УМЕНИЕ", from: "bg", to: "en" }),
       });
       const data = await res.json();
       if (data.success && data.text) {
@@ -125,27 +122,6 @@ export function HomePageEditor({
     } finally {
       setIsTranslatingHeroText(false);
     }
-  };
-
-  const handleSaveHeroTexts = () => {
-    setHeroMessage(null);
-    startTransition(async () => {
-      const { updateSiteSettingsAction } = await import("@/actions/admin-settings");
-      const res = await updateSiteSettingsAction({
-        heroTitleEn: heroTitleEn.trim(),
-      });
-      if (res.success) {
-        setHeroMessage({
-          type: "success",
-          text: "Текстовете на началния банер бяха запазени успешно на живо!",
-        });
-      } else {
-        setHeroMessage({
-          type: "error",
-          text: res.message || "Грешка при запазване.",
-        });
-      }
-    });
   };
 
   // 2. REVIEWS SCREENSHOTS & CAROUSEL STATE

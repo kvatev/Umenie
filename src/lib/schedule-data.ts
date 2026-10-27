@@ -31,6 +31,9 @@ export interface ScheduleItem {
   seriesId?: string | null;       // Shared UUID for recurring series
   capacity?: number;
   isActive?: boolean;
+  title_en?: string;
+  excludedDates?: string[];
+  excluded_dates?: string[];
 }
 
 export const DAYS_OF_WEEK = [
@@ -359,13 +362,14 @@ export function isEventOnDate(
     isActive?: boolean;
     is_active?: boolean;
   },
-  targetDate: Date
+  targetDateOrKey: Date | string
 ): boolean {
+  const targetDate = typeof targetDateOrKey === "string" ? parseDateKey(targetDateOrKey) : targetDateOrKey;
+  const targetDateKey = typeof targetDateOrKey === "string" ? targetDateOrKey : formatDateKey(targetDate);
+  const targetDow = getDayOfWeekNumber(targetDate);
   if (item.isActive === false || item.is_active === false) return false;
 
   const dow = item.dayOfWeek ?? item.day_of_week ?? 1;
-  const targetDateKey = formatDateKey(targetDate);
-  const targetDow = getDayOfWeekNumber(targetDate);
 
   // 1. If it's a legacy weekly item with NO specific date anchor:
   if (!item.date) {
@@ -436,6 +440,158 @@ export function isEventOnDate(
 /**
  * Returns all events scheduled for a specific date, sorted chronologically.
  */
+
+/**
+ * Calculates all occurrence dates for an event based on its start date and recurrence rule.
+ */
+export function getEventOccurrenceDates(
+  item: {
+    date?: string | null;
+    startDate?: string | null;
+    event_date?: string | null;
+    recurrence?: RecurrenceRule | null;
+    dayOfWeek?: number;
+    day_of_week?: number;
+    excludedDates?: string[];
+    excluded_dates?: string[];
+  },
+  includeExcluded = false,
+  maxDates = 52
+): string[] {
+  const dates: string[] = [];
+  const excluded = new Set(item.excludedDates || item.excluded_dates || []);
+
+  const startDateStr = item.startDate || item.date || (item as any).event_date;
+  if (!startDateStr) {
+    const dow = item.dayOfWeek ?? item.day_of_week ?? 1;
+    const now = new Date();
+    const currentDow = getDayOfWeekNumber(now);
+    const startOffset = (dow - currentDow + 7) % 7;
+    const firstDate = new Date(now);
+    firstDate.setDate(firstDate.getDate() + startOffset);
+
+    const limit = Math.min(maxDates, 12);
+    for (let i = 0; i < limit; i++) {
+      const d = new Date(firstDate);
+      d.setDate(d.getDate() + i * 7);
+      const k = formatDateKey(d);
+      if (includeExcluded || !excluded.has(k)) {
+        dates.push(k);
+      }
+    }
+    return dates;
+  }
+
+  const anchorDate = parseDateKey(startDateStr);
+  const rule = item.recurrence;
+
+  if (!rule || rule.type === "none") {
+    const k = formatDateKey(anchorDate);
+    if (includeExcluded || !excluded.has(k)) {
+      dates.push(k);
+    }
+    return dates;
+  }
+
+  const anchorYear = anchorDate.getFullYear();
+
+  switch (rule.type) {
+    case "weekly_count": {
+      const count = rule.count && rule.count > 0 ? rule.count : 2;
+      for (let i = 0; i < count; i++) {
+        const d = new Date(anchorDate);
+        d.setDate(d.getDate() + i * 7);
+        const k = formatDateKey(d);
+        if (includeExcluded || !excluded.has(k)) {
+          dates.push(k);
+        }
+      }
+      break;
+    }
+
+    case "weekly_eoy": {
+      let current = new Date(anchorDate);
+      let count = 0;
+      while (current.getFullYear() === anchorYear && count < maxDates) {
+        const k = formatDateKey(current);
+        if (includeExcluded || !excluded.has(k)) {
+          dates.push(k);
+        }
+        current = new Date(current);
+        current.setDate(current.getDate() + 7);
+        count++;
+      }
+      break;
+    }
+
+    case "biweekly": {
+      if (rule.biweeklySpan === "count" && rule.count) {
+        const count = rule.count;
+        for (let i = 0; i < count; i++) {
+          const d = new Date(anchorDate);
+          d.setDate(d.getDate() + i * 14);
+          const k = formatDateKey(d);
+          if (includeExcluded || !excluded.has(k)) {
+            dates.push(k);
+          }
+        }
+      } else if (rule.untilDate) {
+        let current = new Date(anchorDate);
+        let count = 0;
+        while (formatDateKey(current) <= rule.untilDate && count < maxDates) {
+          const k = formatDateKey(current);
+          if (includeExcluded || !excluded.has(k)) {
+            dates.push(k);
+          }
+          current = new Date(current);
+          current.setDate(current.getDate() + 14);
+          count++;
+        }
+      } else {
+        let current = new Date(anchorDate);
+        let count = 0;
+        while (current.getFullYear() === anchorYear && count < maxDates) {
+          const k = formatDateKey(current);
+          if (includeExcluded || !excluded.has(k)) {
+            dates.push(k);
+          }
+          current = new Date(current);
+          current.setDate(current.getDate() + 14);
+          count++;
+        }
+      }
+      break;
+    }
+
+    case "custom_until": {
+      const untilKey = rule.untilDate;
+      let current = new Date(anchorDate);
+      let count = 0;
+      while (count < maxDates) {
+        const k = formatDateKey(current);
+        if (untilKey && k > untilKey) break;
+        if (includeExcluded || !excluded.has(k)) {
+          dates.push(k);
+        }
+        current = new Date(current);
+        current.setDate(current.getDate() + 7);
+        count++;
+      }
+      break;
+    }
+
+    default: {
+      const k = formatDateKey(anchorDate);
+      if (includeExcluded || !excluded.has(k)) {
+        dates.push(k);
+      }
+      break;
+    }
+  }
+
+  return dates;
+}
+
 export function getEventsForDate(events: ScheduleItem[], targetDate: Date): ScheduleItem[] {
   return events
     .filter((e) => isEventOnDate(e, targetDate))
@@ -532,6 +688,8 @@ export function itemToRecord(item: ScheduleItem): {
   recurrence?: RecurrenceRule | null;
   seriesId?: string | null;
   series_id?: string | null;
+  excludedDates?: string[];
+  excluded_dates?: string[];
 } {
   return {
     id: item.id,
@@ -550,5 +708,7 @@ export function itemToRecord(item: ScheduleItem): {
     recurrence: item.recurrence,
     seriesId: item.seriesId,
     series_id: item.seriesId,
+    excludedDates: item.excludedDates || [],
+    excluded_dates: item.excludedDates || [],
   };
 }

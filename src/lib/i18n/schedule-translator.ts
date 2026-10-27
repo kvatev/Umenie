@@ -106,7 +106,7 @@ export function translateScheduleEvent(event: ScheduleItem, locale: Locale): Sch
 
   return {
     ...event,
-    title: event.titleEn?.trim() || event.title_en?.trim() || translateScheduleTitle(event.title, locale),
+    title: event.titleEn?.trim() || (event as any).title_en?.trim() || translateScheduleTitle(event.title, locale),
     ageGroup: translateAgeGroup(event.ageGroup, locale),
     dayName: translatedDayName,
     location: translatedLocation,
